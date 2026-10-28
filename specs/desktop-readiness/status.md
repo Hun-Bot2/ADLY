@@ -13,7 +13,7 @@ agent's claim, not re-run; **unverified** = nobody has checked.
 |---|---|---|
 | Users | One learner, the repository owner (AGENTS.md "Current direction") | Other learners on Windows/macOS, authorized by the user desktop-product brief |
 | Problem | Plan practice from one's own solution history across LeetCode, Codeforces, AtCoder, with explainable reasons | Same |
-| Platforms | macOS arm64, Node 26.8.1, Apple Git (exec) | Windows x64, macOS arm64/x64 (unverified) |
+| Platforms | Apple Silicon Mac: macOS26.6.2 arm64, Node26.8.1 (exec) | Apple Silicon Mac first; Windows later; Intel Mac support optional and undecided |
 | Runtime deps | Node with built-in `node:sqlite`, system `git` on PATH, no npm runtime deps; `wrangler` dev-only (static: hosted/package.json) | Bundled runtime; Git presence or bundling is undecided (D4) |
 | Catalog | Immutable `catalog-vN.sqlite3` (catalog-v4: 265 MB file, 333 MB dir) built offline by Python + MiniLM under git-ignored `private-learning/` (exec: `ls -la`) | Must be shipped or downloaded; distribution rights unresolved (specs/distribution-rights/report.md) |
 
@@ -53,13 +53,13 @@ not import Node-only modules. Specs: mastery-system/design.md (engine), ADR 003 
 
 | Area | State | Evidence | Gate |
 |---|---|---|---|
-| Path handling | F1–F3 fixed; special-character path fixtures pass on macOS | exec, iteration-3 | Actual Windows run remains required |
+| Path handling | F1–F3 fixed; special-character path fixtures pass on macOS | exec, iteration-3 | Apple Silicon runtime verified; Windows validation deferred |
 | Data location | Repo-relative `private-learning/`; no per-OS app-data contract | static | Requirement DR-1 below |
 | Migrations | SQLite pre-migration snapshot; rejects newer schemas and receipt drift | exec, migration tests | Stop concurrent writers before upgrade; see data-safety.md |
 | Git dependency | Requires `git` on PATH; sync subprocess, 256 MiB buffer | static | D4 |
 | Catalog distribution | Built privately; rights unresolved | distribution-rights report | Release blocker |
 | AI providers | NVIDIA trial terms forbid giving outputs to others; Gemini free tier age/EEA limits | distribution-rights report | Off by default in any distributed build |
-| Windows | Never executed | unverified | Run full suite on Windows |
+| Windows | Deferred by user priority | unverified | Validate after Apple Silicon Mac milestone |
 | Installer size/memory | Not measured | unverified | Measure per candidate framework (D2) |
 | Auto-update | No design | — | D5 |
 | Authentication | None needed locally; GitHub auth only matters for remote sync, which does not exist | static | D3 |
@@ -110,3 +110,7 @@ Asia/Seoul today), empty/loading/offline states (missing catalog, missing Git, n
 ## Implementation follow-up (2026-10-29)
 
 See iteration-3.md: F1–F5 implemented, including pre-migration snapshots and runtime adapter ownership. Windows remains unverified. D1 audience is resolved by the user desktop-product instruction.
+
+## Platform priority correction (2026-10-29)
+
+User uses Apple Silicon, not Intel. Priority: validate current Apple Silicon Mac first, Windows afterward. Intel macOS is optional feasibility scope and is not a gate for the current Mac milestone. Already executed on this Mac: Node286/286, Python74/74, Chrome synthetic workspace3/3 (progression-v2 validation receipts). Installer launch, bundling, signing/notarization and installed user-data behavior remain unverified because a desktop framework/package has not been selected; runtime/browser tests do not prove these.

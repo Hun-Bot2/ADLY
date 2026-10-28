@@ -755,3 +755,5 @@ Keep these distinctions clear in summaries and docs:
 - No independent relevance labels and only 9 real attempts exist: do not report precision, calibration or learning effects as measured.
 
 - Progression-v2 T1-T9 implemented 2026-10-29. Fresh concepts retain authored priors (user clarification); updates begin after own LC evidence. Never use future ratings in evidence-prefix transitions. Review and progression lanes are independent; CLI journal --progression v1 and local PROGRESSION_VERSION=v1 preserve old output. T8 is synthetic behavioral evidence, not human gold, calibration or learning benefit.
+
+- Platform priority (user correction, 2026-10-29): Apple Silicon Mac first, Windows validation later. User machine is arm64; Intel Mac support is optional/undecided, not a current gate. Existing Node286/Python74/Chrome3 checks ran on Apple Silicon; they do not prove an installed desktop package.
