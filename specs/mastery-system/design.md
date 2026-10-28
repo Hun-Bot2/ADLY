@@ -473,6 +473,15 @@ are Node-only), migrations `007_git_evidence.sql` and `008_mastery_ledger.sql`, 
 | AtCoder concepts | per-problem AI batch | bounded pilot of 120 ABC C-F tasks; both judges are Claude models whose recognition comes from overlapping training memory, so their agreement (73/73 on jointly recognized items) is not independent verification | cost and weak title-only evidence |
 | AtCoder concepts (MS-603b) | all eligible problems | 450-problem random calibration sample with blind decoys, merged with the pilot into catalog-v4 (211 AtCoder problems with a trusted concept); unlabeled problems get a labelled semantic-only fallback in related-v1 | full run projected at 5M-11M tokens for 2,650-3,100 labels; user declined |
 
+Deviations found by the 2026-10-29 statistical audit (`research/recommendation_audit/REPORT.md`). Resolved for the
+progression path by ADR 006 (`specs/adaptive-progression/`); the legacy `plan` CLI keeps these behaviours:
+
+| Topic | Design | Implemented |
+|---|---|---|
+| Remediation trigger | failed or assisted review (R4.5) | latest attempt on any problem is a failure, any activity type, no time bound |
+| Maintenance (section 5 item 6) | concept with mean >= 0.75 and n >= 6 leaves exploit | not implemented |
+| Visible plan | planner slots | the journal (default UI) shows planner reviews plus one progression item; exploit, explore and related slots are discarded |
+
 Explore rotation is reproducible scheduling. It does not establish that any sub-kind or channel is
 better; channel comparisons in reports are descriptive.
 

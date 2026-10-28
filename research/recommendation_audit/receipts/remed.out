@@ -1,0 +1,5 @@
+2026-08-03 slots: review:leetcode:x | remediation:leetcode:p03 | exploit/placement:leetcode:p00 rotation: remediation
+2026-10-28 slots: review:leetcode:x | remediation:leetcode:p03 | exploit/placement:leetcode:p00 rotation: remediation
+CF same problem solved x1: mean=1097 sd=265 status=insufficient_evidence
+CF same problem solved x5: mean=1219 sd=190 status=insufficient_evidence
+CF same problem solved x20: mean=1341 sd=135 status=estimated

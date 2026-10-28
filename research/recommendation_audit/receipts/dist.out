@@ -1,0 +1,130 @@
+platform total/eligible/recommendable(free|free_at_collection & eligible)
+('atcoder', 9793, 9613, 9613)
+('codeforces', 11457, 10897, 10897)
+('leetcode', 3053, 2949, 2949)
+access x platform [('atcoder', 'free', 9793), ('codeforces', 'free', 11457), ('leetcode', 'free_at_collection', 3053)]
+exclusion reasons [('atcoder', 'at_heuristic_contest', 75), ('atcoder', 'at_non_problem_page', 8), ('atcoder', 'at_practice_contest', 2), ('atcoder', 'at_tutorial_contest', 95), ('codeforces', 'cf_special_problem', 560), ('leetcode', 'lc_non_algorithmic_tag', 104)]
+difficulty_kind x platform [('atcoder', 'atc_irt', 4866, 0), ('atcoder', 'none', 4927, 4927), ('codeforces', 'cf_rating', 11152, 0), ('codeforces', 'none', 305, 305), ('leetcode', 'lc_level', 3053, 0)]
+LC levels (all / recommendable) [(1.0, 792, 735), (2.0, 1538, 1498), (3.0, 723, 716)]
+CF rating n 11152 {0: 800.0, 5: 800.0, 25: 1300.0, 50: 1800.0, 75: 2400.0, 95: 3200.0, 100: 3500.0}
+CF rating hist [(800, 2312), (1200, 1875), (1600, 2080), (2000, 1847), (2400, 1535), (2800, 872), (3200, 631)]
+AtC IRT n 4866 difficulty {0: -1438.0, 5: -921.0, 25: 277.0, 50: 1310.0, 75: 2281.0, 95: 3497.0, 100: 4383.0} experimental 514
+AtC discrimination distinct [(0.004479399, 4866)]
+AtC extreme difficulty [(-1438.0, 'atcoder:abc186_a'), (-1424.0, 'atcoder:abc214_a'), (-1422.0, 'atcoder:abc231_a')] [(4310.0, 'atcoder:agc056_f'), (4347.0, 'atcoder:agc043_f'), (4383.0, 'atcoder:agc045_f')]
+AtC difficulty < -1000 167 <0 947
+concept status/via [('abstained', 'atcoder-full-v1', 137), ('abstained', 'atcoder-pilot-v1', 52), ('abstained', 'tag:Brainteaser', 17), ('abstained', 'tag:Bucket Sort', 6), ('abstained', 'tag:Counting Sort', 9), ('abstained', 'tag:Depth-First Search', 255), ('abstained', 'tag:Doubly-Linked List', 9), ('abstained', 'tag:Hash Function', 31), ('abstained', 'tag:Monotonic Queue', 18), ('abstained', 'tag:Randomized', 24), ('abstained', 'tag:communication', 10), ('abstained', 'tag:expression parsing', 41), ('abstained', 'tag:hashing', 239), ('abstained', 'tag:schedules', 32), ('ai_reviewed', 'atcoder-full-v1', 186), ('ai_reviewed', 'atcoder-pilot-v1', 112), ('ai_reviewed', 'tag:2-sat', 42), ('ai_reviewed', 'tag:Backtracking', 92), ('ai_reviewed', 'tag:Biconnected Component', 1), ('ai_reviewed', 'tag:Binary Indexed Tree', 34), ('ai_reviewed', 'tag:Binary Search', 281), ('ai_reviewed', 'tag:Binary Search Tree', 58), ('ai_reviewed', 'tag:Binary Tree', 130), ('ai_reviewed', 'tag:Bit Manipulation', 238), ('ai_reviewed', 'tag:Bitmask', 47), ('ai_reviewed', 'tag:Breadth-First Search', 200), ('ai_reviewed', 'tag:Bucket Sort', 6), ('ai_reviewed', 'tag:Combinatorics', 51), ('ai_reviewed', 'tag:Counting', 163), ('ai_reviewed', 'tag:Counting Sort', 9), ('ai_reviewed', 'tag:Data Stream', 14), ('ai_reviewed', 'tag:Depth-First Search', 255), ('ai_reviewed', 'tag:Design', 95), ('ai_reviewed', 'tag:Divide and Conquer', 52), ('ai_reviewed', 'tag:Doubly-Linked List', 9), ('ai_reviewed', 'tag:Dynamic Programming', 558), ('ai_reviewed', 'tag:Enumeration', 129), ('ai_reviewed', 'tag:Eulerian Circuit', 3), ('ai_reviewed', 'tag:Game Theory', 25), ('ai_reviewed', 'tag:Geometry', 38), ('ai_reviewed', 'tag:Graph', 143), ('ai_reviewed', 'tag:Greedy', 404), ('ai_reviewed', 'tag:Hash Function', 31), ('ai_reviewed', 'tag:Hash Table', 653), ('ai_reviewed', 'tag:Heap (Priority Queue)', 175), ('ai_reviewed', 'tag:Interactive', 5), ('ai_reviewed', 'tag:Iterator', 5), ('ai_reviewed', 'tag:Line Sweep', 12), ('ai_reviewed', 'tag:Linked List', 66), ('ai_reviewed', 'tag:Memoization', 41), ('ai_reviewed', 'tag:Merge Sort', 22), ('ai_reviewed', 'tag:Minimum Spanning Tree', 3), ('ai_reviewed', 'tag:Monotonic Queue', 18), ('ai_reviewed', 'tag:Monotonic Stack', 56), ('ai_reviewed', 'tag:Number Theory', 81), ('ai_reviewed', 'tag:Ordered Set', 60), ('ai_reviewed', 'tag:Prefix Sum', 209), ('ai_reviewed', 'tag:Probability and Statistics', 6), ('ai_reviewed', 'tag:Queue', 40), ('ai_reviewed', 'tag:Quickselect', 16), ('ai_reviewed', 'tag:Radix Sort', 3), ('ai_reviewed', 'tag:Recursion', 42), ('ai_reviewed', 'tag:Rejection Sampling', 2), ('ai_reviewed', 'tag:Reservoir Sampling', 4), ('ai_reviewed', 'tag:Rolling Hash', 25), ('ai_reviewed', 'tag:Segment Tree', 65), ('ai_reviewed', 'tag:Shortest Path', 30), ('ai_reviewed', 'tag:Simulation', 179), ('ai_reviewed', 'tag:Sliding Window', 139), ('ai_reviewed', 'tag:Sort', 1), ('ai_reviewed', 'tag:Sorting', 426), ('ai_reviewed', 'tag:Stack', 144), ('ai_reviewed', 'tag:String', 725), ('ai_reviewed', 'tag:String Matching', 33), ('ai_reviewed', 'tag:Strongly Connected Component', 3), ('ai_reviewed', 'tag:Suffix Array', 5), ('ai_reviewed', 'tag:Topological Sort', 28), ('ai_reviewed', 'tag:Tree', 195), ('ai_reviewed', 'tag:Trie', 45), ('ai_reviewed', 'tag:Two Pointers', 199), ('ai_reviewed', 'tag:Union Find', 79), ('ai_reviewed', 'tag:binary search', 1305), ('ai_reviewed', 'tag:bitmasks', 720), ('ai_reviewed', 'tag:brute force', 2014), ('ai_reviewed', 'tag:chinese remainder theorem', 26), ('ai_reviewed', 'tag:combinatorics', 850), ('ai_reviewed', 'tag:constructive algorithms', 2135), ('ai_reviewed', 'tag:dfs and similar', 1083), ('ai_reviewed', 'tag:divide and conquer', 368), ('ai_reviewed', 'tag:dp', 2547), ('ai_reviewed', 'tag:dsu', 420), ('ai_reviewed', 'tag:expression parsing', 41), ('ai_reviewed', 'tag:fft', 117), ('ai_reviewed', 'tag:flows', 162), ('ai_reviewed', 'tag:games', 310), ('ai_reviewed', 'tag:geometry', 431), ('ai_reviewed', 'tag:graph matchings', 106), ('ai_reviewed', 'tag:graphs', 1235), ('ai_reviewed', 'tag:greedy', 3592), ('ai_reviewed', 'tag:hashing', 239), ('ai_reviewed', 'tag:implementation', 3071), ('ai_reviewed', 'tag:interactive', 313), ('ai_reviewed', 'tag:matrices', 142), ('ai_reviewed', 'tag:meet-in-the-middle', 52), ('ai_reviewed', 'tag:number theory', 909), ('ai_reviewed', 'tag:probabilities', 269), ('ai_reviewed', 'tag:shortest paths', 295), ('ai_reviewed', 'tag:sortings', 1262), ('ai_reviewed', 'tag:string suffix structures', 102), ('ai_reviewed', 'tag:strings', 827), ('ai_reviewed', 'tag:ternary search', 71), ('ai_reviewed', 'tag:trees', 982), ('ai_reviewed', 'tag:two pointers', 661), ('proposed', 'atcoder-full-v1', 4)]
+recommendable with >=1 trusted concept [(('atcoder', 'rec'), 9613), (('atcoder', 'rec_with_concept'), 211), (('codeforces', 'rec'), 10897), (('codeforces', 'rec_with_concept'), 10345), (('leetcode', 'rec'), 2949), (('leetcode', 'rec_with_concept'), 2735)]
+concepts per recommendable problem [(('atcoder', 0), 9402), (('atcoder', 1), 131), (('atcoder', 2), 78), (('atcoder', 3), 2), (('codeforces', 0), 552), (('codeforces', 1), 2616), (('codeforces', 2), 3431), (('codeforces', 3), 2377), (('codeforces', 4), 1160), (('codeforces', 5), 529), (('codeforces', 6), 171), (('codeforces', 7), 47), (('codeforces', 8), 10), (('codeforces', 9), 4), (('leetcode', 0), 214), (('leetcode', 1), 804), (('leetcode', 2), 976), (('leetcode', 3), 614), (('leetcode', 4), 252), (('leetcode', 5), 78), (('leetcode', 6), 9), (('leetcode', 7), 2)]
+concept x platform (recommendable)
+  greedy                 lc=  404 cf= 3533 at=   19
+  implementation         lc=  179 cf= 2963 at=   30
+  dynamic-programming    lc=  558 cf= 2498 at=   31
+  search-enumeration     lc=  208 cf= 2005 at=   19
+  graph-traversal        lc=  390 cf= 1706 at=   18
+  constructive           lc=    0 cf= 2100 at=    2
+  sorting                lc=  440 cf= 1234 at=   19
+  binary-search          lc=  281 cf= 1275 at=    8
+  string-processing      lc=  725 cf=  821 at=   10
+  trees                  lc=  195 cf=  964 at=   13
+  combinatorics-probability lc=   61 cf= 1037 at=   13
+  number-theory          lc=   81 cf=  900 at=   20
+  bitmasks               lc=  238 cf=  711 at=   12
+  two-pointers           lc=  199 cf=  654 at=    0
+  arrays-hashing         lc=  675 cf=    0 at=   19
+  union-find             lc=   79 cf=  414 at=    5
+  geometry               lc=   43 cf=  416 at=    5
+  divide-and-conquer     lc=   94 cf=  363 at=    2
+  string-algorithms      lc=   50 cf=  291 at=    0
+  game-theory            lc=   25 cf=  302 at=    3
+  shortest-paths         lc=   30 cf=  291 at=    6
+  interactive            lc=    5 cf=  301 at=    1
+  flows-matching         lc=    0 cf=  220 at=    3
+  prefix-sums            lc=  209 cf=    0 at=   11
+  stacks-queues          lc=  177 cf=    0 at=    4
+  heaps                  lc=  175 cf=    0 at=    3
+  linear-algebra         lc=    0 cf=  141 at=    2
+  sliding-window         lc=  139 cf=    0 at=    2
+  polynomials-fft        lc=    0 cf=  115 at=    0
+  data-structure-design  lc=   95 cf=    0 at=    0
+  ordered-structures     lc=   89 cf=    0 at=    1
+  range-structures       lc=   71 cf=    0 at=    7
+  graph-ordering         lc=   35 cf=   41 at=    1
+  ternary-search         lc=    0 cf=   69 at=    0
+  linked-lists           lc=   66 cf=    0 at=    0
+  tries                  lc=   45 cf=    0 at=    3
+  spanning-trees         lc=    3 cf=    0 at=    1
+LC concept x level (recommendable) E/M/H
+  arrays-hashing          176  379  120
+  binary-search            27  144  110
+  bitmasks                 48  102   88
+  combinatorics-probability    3   24   34
+  data-structure-design    10   61   24
+  divide-and-conquer       16   46   32
+  dynamic-programming      12  262  284
+  game-theory               3   13    9
+  geometry                  9   18   16
+  graph-ordering            0   10   25
+  graph-traversal          38  210  142
+  greedy                   48  268   88
+  heaps                    15   98   62
+  implementation           78   89   12
+  interactive               2    1    2
+  linked-lists             12   47    7
+  number-theory            12   34   35
+  ordered-structures       12   39   38
+  prefix-sums              20  127   62
+  range-structures          1   15   55
+  search-enumeration       29  118   61
+  shortest-paths            0   17   13
+  sliding-window           18   83   38
+  sorting                  87  252  101
+  spanning-trees            0    1    2
+  stacks-queues            26   96   55
+  string-algorithms        12   13   25
+  string-processing       217  347  161
+  trees                    38  105   52
+  tries                     3   22   20
+  two-pointers             58  114   27
+  union-find                1   40   38
+transfer-stage pool per concept (cf<=1000 / atc<=800 non-exp)
+  arrays-hashing         cf=   0 at=  14
+  binary-search          cf=  28 at=   4
+  bitmasks               cf=  32 at=   0
+  combinatorics-probability cf=  29 at=   1
+  constructive           cf= 343 at=   1
+  data-structure-design  cf=   0 at=   0
+  divide-and-conquer     cf=   0 at=   2
+  dynamic-programming    cf=  59 at=   3
+  flows-matching         cf=   4 at=   0
+  game-theory            cf=  43 at=   0
+  geometry               cf=  42 at=   3
+  graph-ordering         cf=   1 at=   0
+  graph-traversal        cf=  16 at=   8
+  greedy                 cf= 693 at=   6
+  heaps                  cf=   0 at=   0
+  implementation         cf= 831 at=  24
+  interactive            cf=   0 at=   0
+  linear-algebra         cf=   1 at=   0
+  linked-lists           cf=   0 at=   0
+  number-theory          cf= 113 at=  11
+  ordered-structures     cf=   0 at=   0
+  polynomials-fft        cf=   1 at=   0
+  prefix-sums            cf=   0 at=   6
+  range-structures       cf=   0 at=   0
+  search-enumeration     cf= 346 at=   8
+  shortest-paths         cf=   2 at=   0
+  sliding-window         cf=   0 at=   1
+  sorting                cf= 215 at=  13
+  spanning-trees         cf=   0 at=   0
+  stacks-queues          cf=   0 at=   2
+  string-algorithms      cf=   2 at=   0
+  string-processing      cf= 208 at=   7
+  ternary-search         cf=   2 at=   0
+  trees                  cf=   2 at=   1
+  tries                  cf=   0 at=   0
+  two-pointers           cf=  35 at=   0
+  union-find             cf=   2 at=   0
+reliability [('atcoder', 'degraded', 1564), ('atcoder', 'reliable', 8223), ('atcoder', 'unreliable', 6), ('codeforces', 'reliable', 11415), ('codeforces', 'unreliable', 42), ('leetcode', 'reliable', 3053)]
+language_class [('atcoder', 'en', 7575), ('atcoder', 'ja_other', 140), ('atcoder', 'ja_parallel', 655), ('atcoder', 'ja_pure', 1421), ('atcoder', 'ko', 1), ('atcoder', 'ru', 1), ('codeforces', 'en', 11415), ('codeforces', 'ru', 42), ('leetcode', 'en', 3053)]
+aliases [(3,)]
+tags per platform: problems with >=1 native tag [('codeforces', 11277), ('leetcode', 2992)]

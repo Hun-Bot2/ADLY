@@ -1,0 +1,46 @@
+cold => arrays-hashing leetcode_easy leetcode:best-poker-hand diff=1 concepts=[arrays-hashing] {"p_mean":0.8,"p_conservative":0.621,"p_optimistic":0.979,"basis":"lc_level_beta","status":"insufficient_evidence"}
+easy arrays-hashing pool size 176 first [
+  'leetcode:best-poker-hand',
+  'leetcode:buddy-strings',
+  'leetcode:check-array-formation-through-concatenation',
+  'leetcode:check-distances-between-same-letters',
+  'leetcode:check-if-all-characters-have-equal-number-of-occurrences'
+]
+greedy all-solved path:
+ arrays-hashing/leetcode_easy/leetcode:best-poker-hand
+ arrays-hashing/leetcode_easy/leetcode:buddy-strings
+ arrays-hashing/leetcode_easy/leetcode:check-array-formation-through-concatenation
+ arrays-hashing/leetcode_medium/leetcode:3sum-with-multiplicity
+ arrays-hashing/leetcode_medium/leetcode:4sum-ii
+ arrays-hashing/cross_platform_transfer/atcoder:abc413_b
+ string-processing/leetcode_easy/leetcode:add-binary
+ string-processing/leetcode_easy/leetcode:add-strings
+ string-processing/leetcode_medium/leetcode:accounts-merge
+ string-processing/leetcode_medium/leetcode:adding-spaces-to-a-string
+ string-processing/cross_platform_transfer/atcoder:abc394_a
+ sorting/leetcode_easy/leetcode:absolute-difference-between-maximum-and-minimum-k-elements
+status counts [
+  [ 'in_progress:retention_review', 2 ],
+  [ 'blocked_prerequisite:leetcode_easy', 10 ],
+  [ 'in_progress:leetcode_easy', 25 ]
+]
+per-concept after 3E+2M (prereqs ignored): [concept, stage, candidate, semantic_fallback]
+  ["arrays-hashing","cross_platform_transfer","atcoder:abc413_b",null] diff=-426
+  ["string-processing","cross_platform_transfer","atcoder:abc394_a",null] diff=-993
+  ["sorting","cross_platform_transfer","atcoder:abc365_b",null] diff=-757
+  ["two-pointers","cross_platform_transfer","codeforces:1462A",null] diff=800
+  ["sliding-window","cross_platform_transfer","atcoder:abc401_c",null] diff=209
+  ["prefix-sums","cross_platform_transfer","atcoder:abc405_c",null] diff=-146
+  ["binary-search","cross_platform_transfer","codeforces:1566A",null] diff=800
+  ["linked-lists","cross_platform_transfer",null,"atcoder:abc076_b"] 
+  ["stacks-queues","cross_platform_transfer","atcoder:abc307_d",null] diff=666
+  ["trees","cross_platform_transfer","codeforces:1843C",null] diff=800
+  ["graph-traversal","cross_platform_transfer","atcoder:abc225_b",null] diff=-345
+  ["heaps","cross_platform_transfer",null,"atcoder:abc080_a"] 
+  ["search-enumeration","cross_platform_transfer","codeforces:1060A",null] diff=800
+  ["greedy","cross_platform_transfer","atcoder:abc416_b",null] diff=-390
+  ["dynamic-programming","cross_platform_transfer","codeforces:1180A",null] diff=800
+  ["union-find","easy/medium variation shortage",1,2] 
+  ["shortest-paths","easy/medium variation shortage",0,2] 
+  ["tries","cross_platform_transfer",null,"atcoder:abc321_c"] 
+  ["range-structures","easy/medium variation shortage",1,2] 

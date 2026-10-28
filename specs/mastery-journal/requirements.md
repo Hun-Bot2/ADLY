@@ -5,9 +5,11 @@
 - Every attempt SHALL receive a problem review schedule. Independent no-hint
   success uses normal spaced review; failed/assisted outcomes use priority review
   and concept remediation. Imported completion SHALL never become mastery evidence.
+  (Superseded 2026-10-28 by ADR 005 / policy v3: every completion now counts as solved evidence.)
 - Priority SHALL account for overdue aging and failure severity without starving
   old normal reviews. Recovery MUST preserve historical failures.
-- Versioned pattern rules SHALL default to three distinct Easy variations then
+- (progression-v1; the journal default is progression-v2 since 2026-10-29, ADR 006 / specs/adaptive-progression/.)
+  Versioned pattern rules SHALL default to three distinct Easy variations then
   one or two Medium applications then unseen independent cross-platform transfer.
   Counts alone SHALL NOT imply mastery. Retention evidence is required; Easy,
   application, transfer and advanced evidence remain separate.

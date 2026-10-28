@@ -1,0 +1,27 @@
+sources 196 pool size median/p5/p95 2040 22 4368
+top3 overlap with base (mean over sources):
+  no_jaccard 0.357
+  no_channel 0.565
+  no_difficulty 0.493
+  jaccard_x2 0.718
+  difficulty_x0_5 0.859
+  channel_x2 0.544
+within-pool SD per component (mean over sources):
+  reviewed_edge 0.000
+  concept_jaccard 0.437
+  channel_rank 0.205
+  difficulty_fit 0.222
+  degraded_title 0.029
+  semantic_only 0.159
+top3: semantic_only share 0.010 with channel rank 0.439
+top3 difficulty values (most common) [
+  [ 'codeforces:800', 166 ],
+  [ 'codeforces:900', 33 ],
+  [ 'atcoder:-426', 27 ],
+  [ 'codeforces:1100', 22 ],
+  [ 'codeforces:1300', 17 ],
+  [ 'codeforces:1600', 16 ],
+  [ 'atcoder:138', 16 ],
+  [ 'codeforces:2100', 15 ]
+]
+top3 p_conservative median 0.118 p5 0 p95 0.832
