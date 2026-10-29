@@ -11,6 +11,9 @@
 - **풀이 기록 저장소**: 별도 private repo `algorithm-solution`. 이 저장소의 커밋을 `node hosted/cli.mjs repo ingest`가 읽습니다.
   push 없이 로컬 Git을 읽으며, 현재 커리큘럼 추천은 `node hosted/cli.mjs journal` 또는 로컬 학습 일지에서 확인합니다. 기존 `plan`의 일별 동결 계약도 보존합니다.
 - **연구** (`research/`): 세 플랫폼 24,297문제의 제목 기반 유사도 지도, 언어 편향 보정, AtCoder 개념 분류. 결과는 `research/*/REPORT.md`와 `specs/`에 있습니다.
+- **데스크톱 앱 (설계 완료, 구현 전, 2026-10-29)**: 기존 엔진과 화면을 그대로 옮기고 편집기, 로컬 실행·테스트, Git 커밋과 수동 push,
+  GitHub 로그인, 회사별 문제 준비를 더한 macOS·Windows 앱입니다. [요구사항](specs/desktop-app/requirements.md),
+  [작업 순서](specs/desktop-app/tasks.md), [ADR 007](specs/adaptive-learning/adrs/007-desktop-architecture.md), [ADR 008](specs/adaptive-learning/adrs/008-company-prep-data.md).
 - 초기 파이프라인 코드(`src/main/`, `Dockerfile`, `docker-compose.yml` 등)는 2026-10-18에 삭제했고 git 태그 `legacy-pipeline-final`에서 복구할 수 있습니다.
 
 

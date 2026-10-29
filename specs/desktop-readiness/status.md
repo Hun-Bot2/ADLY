@@ -13,9 +13,9 @@ agent's claim, not re-run; **unverified** = nobody has checked.
 |---|---|---|
 | Users | One learner, the repository owner (AGENTS.md "Current direction") | Other learners on Windows/macOS, authorized by the user desktop-product brief |
 | Problem | Plan practice from one's own solution history across LeetCode, Codeforces, AtCoder, with explainable reasons | Same |
-| Platforms | Apple Silicon Mac: macOS26.6.2 arm64, Node26.8.1 (exec) | Apple Silicon Mac first; Windows later; Intel Mac support optional and undecided |
-| Runtime deps | Node with built-in `node:sqlite`, system `git` on PATH, no npm runtime deps; `wrangler` dev-only (static: hosted/package.json) | Bundled runtime; Git presence or bundling is undecided (D4) |
-| Catalog | Immutable `catalog-vN.sqlite3` (catalog-v4: 265 MB file, 333 MB dir) built offline by Python + MiniLM under git-ignored `private-learning/` (exec: `ls -la`) | Must be shipped or downloaded; distribution rights unresolved (specs/distribution-rights/report.md) |
+| Platforms | Apple Silicon Mac: macOS26.6.2 arm64, Node26.8.1 (exec) | macOS arm64 and Windows x64 release targets, Apple Silicon validated first; Intel Mac optional |
+| Runtime deps | Node with built-in `node:sqlite`, system `git` on PATH, no npm runtime deps; `wrangler` dev-only (static: hosted/package.json) | Bundled runtime; system Git (DA-D3), Windows bundling measured in DA-W |
+| Catalog | Immutable `catalog-vN.sqlite3` (catalog-v4: 265 MB file, 333 MB dir) built offline by Python + MiniLM under git-ignored `private-learning/` (exec: `ls -la`) | Shipped with the app with the company layer (ADR 008); rights tracked, not resolved (distribution-rights report, DC-5) |
 
 ### Capabilities that exist (static, current Node regression exec 254/254)
 
@@ -54,18 +54,22 @@ not import Node-only modules. Specs: mastery-system/design.md (engine), ADR 003 
 | Area | State | Evidence | Gate |
 |---|---|---|---|
 | Path handling | F1–F3 fixed; special-character path fixtures pass on macOS | exec, iteration-3 | Apple Silicon runtime verified; Windows validation deferred |
-| Data location | Repo-relative `private-learning/`; no per-OS app-data contract | static | Requirement DR-1 below |
+| Data location | Repo-relative `private-learning/`; no per-OS app-data contract | static | DR-F16, task DA-1 |
 | Migrations | SQLite pre-migration snapshot; rejects newer schemas and receipt drift | exec, migration tests | Stop concurrent writers before upgrade; see data-safety.md |
-| Git dependency | Requires `git` on PATH; sync subprocess, 256 MiB buffer | static | D4 |
-| Catalog distribution | Built privately; rights unresolved | distribution-rights report | Release blocker |
+| Git dependency | Requires `git` on PATH; sync subprocess, 256 MiB buffer | static | DA-D3, DR-F23 |
+| Catalog distribution | Built privately; rights unresolved | distribution-rights report | Tracked (DC-5); user review in DA-9 |
 | AI providers | NVIDIA trial terms forbid giving outputs to others; Gemini free tier age/EEA limits | distribution-rights report | Off by default in any distributed build |
 | Windows | Release target (final scope 2026-10-29); not yet executed | unverified | DA-0, DA-W CI, DA-9 |
-| Installer size/memory | Not measured | unverified | Measure per candidate framework (D2) |
-| Auto-update | No design | — | D5 |
-| Authentication | None needed locally; GitHub auth only matters for remote sync, which does not exist | static | D3 |
-| `node:sqlite` in packaged runtime | Unknown for Electron/Tauri-sidecar Node versions | unverified | D2 |
+| Installer size/memory | Not measured | unverified | DA-0 measurements |
+| Auto-update | Specified, not built (DR-F22) | — | DA-7 |
+| Authentication | None today; remote sync and GitHub sign-in specified, not built (DR-F10–F12) | static | DA-5, DA-6 |
+| `node:sqlite` in packaged runtime | Unknown for Electron/Tauri-sidecar Node versions | unverified | DA-0 hard gate |
 
-### Release requirements (DR-1/DR-3 specified in data-safety.md; remaining product requirements deferred)
+### Release requirements (DR-1/DR-3 specified in data-safety.md)
+
+Superseded for the desktop app by `specs/desktop-app/requirements.md`: DR-1 → DR-F16, DR-2 → DR-F20, DR-3 → DR-F22,
+DR-4 → DR-F21, DR-5 → DR-F23. Kept here for traceability.
+
 
 - DR-1: THE SYSTEM SHALL store learner data in a per-user OS data directory and SHALL NOT write inside the install directory.
 - DR-2: WHEN a path contains spaces, non-ASCII, `#`, `%` or a Windows drive letter, THE SYSTEM SHALL open the DB,
@@ -85,21 +89,23 @@ Asia/Seoul today), empty/loading/offline states (missing catalog, missing Git, n
 
 ## 5. Open decisions
 
-- D1 Audience: personal tool vs. distribution to other learners. AGENTS.md still says personal-only; the desktop brief
-  implies others. The user explicitly selected desktop productization for other learners in the Productization & Desktop Readiness instruction; record that direction in the desktop ADR.
-- D2 Desktop shell: **ADR 007** (Tauri + Rust backend + JS engine as Node sidecar), final after the DA-0 measurement gate;
-  Electron is the measured fallback.
+Resolved by the final scope (2026-10-29) unless noted.
+
+- D1 Audience: resolved, distribution to other learners (ADR 007 context; AGENTS.md updated).
+- D2 Desktop shell: open until DA-0. ADR 007 rule: Tauri + Rust backend + Node sidecar if every hard gate passes on both OSes,
+  otherwise Electron.
 - D3 GitHub authentication: approved as optional (DR-F10–F12, `specs/desktop-app/`); system Git credentials first, in-app
   sign-in later (DA-D4).
 - D4 Git: system `git` CLI recommended (DA-D3); bundling revisited for Windows.
-- D5 Auto-update and rollback, tied to DR-3.
-- D6 Catalog: ship, download, or build on device; blocked by distribution rights.
+- D5 Auto-update and rollback: specified (DR-F22, design §8); built in DA-7.
+- D6 Catalog: shipped with the app together with the company layer (ADR 008); rights tracked as DC-5, reviewed by the user in DA-9.
 
 ## 6. Documentation inventory (2026-10-29)
 
 | Class | Documents |
 |---|---|
-| Accurate, retained | AGENTS.md (direction, gotchas); specs/mastery-system, mastery-journal, calendar-workspace, mock-contest, contest-discovery, recommendation-explanations; ADR 001-005; specs/distribution-rights |
+| Accurate, retained | AGENTS.md (direction, gotchas); specs/mastery-system, mastery-journal, calendar-workspace, mock-contest, contest-discovery, recommendation-explanations, adaptive-progression; ADR 001-008; specs/distribution-rights |
+| Governing the desktop work (2026-10-29) | specs/desktop-app (requirements, design, ordered tasks), specs/company-prep, ADR 007, ADR 008, research/company_prep/REPORT.md |
 | Accurate, needs consolidation | specs/mastery-system/runbook.md and mastery-journal/runbook.md overlap (both are command references); merge when the desktop onboarding is specified |
 | Outdated, corrected now | ReadME.md top section (assisted/independent wording after ADR 005; "no paid API" vs optional explanations); RECOMMENDATION_ENGINE/ (pre-policy-v3 audit, banner added) |
 | Historical, keep as is | ReadME.md lower half, STAR.md, specs/production-recommender, specs/adaptive-learning deployment/oci/notifications (superseded by ADR 003), research/* reports |

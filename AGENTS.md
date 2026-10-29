@@ -180,6 +180,10 @@ These constraints are mandatory for the final platform direction.
 
 ### Online Judge
 
+Applies to a hosted judge, which is not being built. The desktop app's local runner executes the user's own code on
+their machine with limits but no sandbox (specs/desktop-app/requirements.md DR-F5); it has no hidden tests.
+
+
 - User code MUST NEVER execute inside API containers.
 - Judge workers MUST be sandboxed.
 - Hidden tests MUST NEVER be exposed.
@@ -230,7 +234,7 @@ files; their receipts are committed, and re-running them needs those files resto
 
 ## Current Important Caveats
 
-- No GitHub Actions workflow, schedule, Docker image or hosted service exists in this repository.
+- No GitHub Actions workflow, schedule, Docker image or hosted service exists in this repository (desktop task DA-W adds a CI workflow).
 - FAISS and OpenAI-based code is gone from the tree; do not reintroduce FAISS, PyTorch in production dependencies, paid APIs or cloud storage.
 - Local data under `data/`, `indexes/` and `algorithm_indexes_v1.tar.gz` is untracked and pinned by `assets/*.manifest*.json`; the stored
   LeetCode statements stay quarantined (see "Statement sources and terms").
@@ -251,11 +255,12 @@ Do not delete or regenerate pinned files unless the user asks.
 
 The roadmap is the local-first mastery system (`specs/mastery-system/`, ADR 003): explainable plans from the learner's own solution
 history, AI-reviewed concepts kept separate from user-confirmed ones, no paid services. Research results are exploratory and never
-promoted to recommendations without evaluation. The older platform vision (judge, AI problem generation, hosted app) is not being built.
+promoted to recommendations without evaluation. The older platform vision (judge, AI problem generation, hosted app) is not being built. The current build target is the
+desktop app (specs/desktop-app/, ADR 007/008): a migration of this engine and UI, not a new product.
 
 ## Coding Guidelines
 
-- Prefer small, focused changes that preserve the current batch pipeline.
+- Prefer small, focused changes that preserve existing behaviour (the batch pipeline is removed; see Project Snapshot).
 - Keep production dependencies lightweight. Do not reintroduce FAISS, PyTorch, or
   sentence-transformers into production requirements without a clear reason.
 - Use structured JSON/JSONL handling instead of ad hoc text parsing where
@@ -619,6 +624,8 @@ Keep these distinctions clear in summaries and docs:
   `Problem:`, `Outcome:`, `Hints:`). Its own Actions only check naming and trailers. Pushing never produces recommendations: run
   `node hosted/cli.mjs repo ingest` and `plan` locally.
 - This repository is not a portfolio or a commercial service. Do not add features for external users.
+  (Superseded 2026-10-29: the user approved a desktop app for other learners on macOS and Windows; see "Desktop app and company
+  preparation scope". No hosting and no paid APIs still hold.)
 
 ## Local mastery journal (2026-10-18)
 
@@ -738,7 +745,7 @@ Keep these distinctions clear in summaries and docs:
 
 ## Desktop readiness (2026-10-29)
 
-- User desktop-product instructions authorize Windows/macOS distribution direction; the older personal-only audience is historical. Framework and catalog distribution remain undecided. See specs/desktop-readiness/status.md and data-safety.md.
+- User desktop-product instructions authorize Windows/macOS distribution direction; the older personal-only audience is historical. The shell (Tauri or Electron) is chosen by the DA-0 rule in ADR 007; LeetCode catalog and company-layer distribution rights stay open in specs/distribution-rights/ and specs/company-prep/distribution-considerations.md. See specs/desktop-readiness/status.md and data-safety.md.
 - Convert filesystem file URLs with fileURLToPath/pathToFileURL. CLI roots and catalog SQLite URI paths have regressions for spaces, Korean, # and %; real Windows execution remains unverified.
 - hosted/runtime/database.mjs owns the SQLite adapter. Test helpers re-export it for compatibility. Existing nonempty DBs receive a SQLite VACUUM INTO snapshot before pending migrations; newer schemas and receipt drift are rejected. Stop concurrent writers before upgrading. No automatic relocation, restore or backup deletion.
 - Full Node tests require loopback sockets; EPERM in restricted runs is environmental. Final 2026-10-29 regression: Node 254/254 and Python 74/74 passed; no real learner DB was used.

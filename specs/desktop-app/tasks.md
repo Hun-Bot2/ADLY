@@ -1,6 +1,6 @@
 # Desktop app and company preparation: ordered tasks (Codex handoff)
 
-Supersedes the earlier folder-import-first task list (2026-10-29). Execute in order; a task starts only when its
+Supersedes the earlier folder-import-first task list (2026-10-29). Execute in order and tick the Done box when a task's acceptance evidence is recorded; a task starts only when its
 dependencies are done and their evidence is recorded (commit message or `specs/desktop-readiness/iteration-N.md`).
 
 ## Global rules
@@ -18,22 +18,22 @@ dependencies are done and their evidence is recorded (commit message or `specs/d
 
 ## Order
 
-| # | Task | Depends on | Parallel with |
-|---|---|---|---|
-| 1 | CP-1 Company layer builder | — | DA-0 |
-| 2 | DA-0 Shell spike and decision (macOS + Windows) | — | CP-1 |
-| 3 | DA-W Cross-platform CI | DA-0 | CP-2 |
-| 4 | CP-2 Company layer loading and progression scope | CP-1 | DA-W, DA-1 |
-| 5 | DA-1 App foundation (supervisor, app data, token, bundled UI, first-run copy) | DA-0 | CP-2 |
-| 6 | CP-3 Company views and mock interviews in the UI | CP-2, DA-1 | DA-2 |
-| 7 | DA-2 Repository management and editor | DA-1 | CP-3 |
-| 8 | DA-3 Runner and tests (macOS + Windows) | DA-2 | DA-4 |
-| 9 | DA-4 Record result and commit | DA-2 | DA-3 |
-| 10 | DA-5 Remote sync with system credentials, manual push | DA-4 | — |
-| 11 | DA-6 GitHub sign-in (device flow, OS credential store) | DA-5 (+ GitHub App client id from the user) | DA-8a |
-| 12 | DA-8a Contest periodic sync setting | DA-1 | DA-6 |
-| 13 | DA-7 Packaging, signing, updates (macOS + Windows) | all above | — |
-| 14 | DA-9 Release validation (both OS) | DA-7 | — |
+| Done | # | Task | Depends on | Parallel with |
+|---|---|---|---|---|
+| [ ] | 1 | CP-1 Company layer builder | — | DA-0 |
+| [ ] | 2 | DA-0 Shell spike and decision (macOS + Windows) | — | CP-1 |
+| [ ] | 3 | DA-W Cross-platform CI | DA-0 | CP-2 |
+| [ ] | 4 | CP-2 Company layer loading and progression scope | CP-1 | DA-W, DA-1 |
+| [ ] | 5 | DA-1 App foundation (supervisor, app data, token, bundled UI, first-run copy) | DA-0 | CP-2 |
+| [ ] | 6 | CP-3 Company views and mock interviews in the UI | CP-2, DA-1 | DA-2 |
+| [ ] | 7 | DA-2 Repository management and editor | DA-1 | CP-3 |
+| [ ] | 8 | DA-3 Runner and tests (macOS + Windows) | DA-2 | DA-4 |
+| [ ] | 9 | DA-4 Record result and commit | DA-2 | DA-3 |
+| [ ] | 10 | DA-5 Remote sync with system credentials, manual push | DA-4 | — |
+| [ ] | 11 | DA-6 GitHub sign-in (device flow, OS credential store) | DA-5 (+ GitHub App client id from the user) | DA-8a |
+| [ ] | 12 | DA-8a Contest periodic sync setting | DA-1 | DA-6 |
+| [ ] | 13 | DA-7 Packaging, signing, updates (macOS + Windows) | all above | — |
+| [ ] | 14 | DA-9 Release validation (both OS) | DA-7 | — |
 
 ---
 
