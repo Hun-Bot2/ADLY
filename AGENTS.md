@@ -757,3 +757,16 @@ Keep these distinctions clear in summaries and docs:
 - Progression-v2 T1-T9 implemented 2026-10-29. Fresh concepts retain authored priors (user clarification); updates begin after own LC evidence. Never use future ratings in evidence-prefix transitions. Review and progression lanes are independent; CLI journal --progression v1 and local PROGRESSION_VERSION=v1 preserve old output. T8 is synthetic behavioral evidence, not human gold, calibration or learning benefit.
 
 - Platform priority (user correction, 2026-10-29): Apple Silicon Mac first, Windows validation later. User machine is arm64; Intel Mac support is optional/undecided, not a current gate. Existing Node286/Python74/Chrome3 checks ran on Apple Silicon; they do not prove an installed desktop package.
+
+## Desktop app and company preparation scope (2026-10-29, final)
+
+- Desktop = migration + extension of the existing app on macOS and Windows; never a rewrite. Keep progression-v2 outputs, the daily
+  Markdown format, SQLite data, migrations and the Node suite unchanged. Specs: specs/desktop-app/ (ordered tasks CP-1…DA-9),
+  specs/company-prep/, ADR 007 (Tauri vs Electron by the DA-0 rule; the engine is the only learner-DB writer; the shell owns repo writes,
+  processes, credentials), ADR 008.
+- Company prep is built in: an immutable company-vK.sqlite3 layer keyed by catalog keys (no duplicate problems, no catalog rebuild,
+  no user import). Never store Acceptance Rate (invalid, all < 1%) or use Frequency across lists. Say "share of our catalog found in
+  company lists", never interview coverage. Upstream CSVs are never committed; licence and LeetCode-terms items live in
+  specs/company-prep/distribution-considerations.md (non-blocking by user decision).
+- Local code execution has limits (timeout, CPU, output cap, process-group or Job Object kill), not a sandbox. Templates never
+  contain statements, examples or official signatures.

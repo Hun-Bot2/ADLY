@@ -1,0 +1,18 @@
+dataset commit 2b71796266751b4736a7ef180efb6847879166ee (2026-10-21), catalog-v4 sha256 27a4ca62...
+companies 470 csv files 2350 bad headers 0 empty files 1227 unexpected files {}
+files per window {'3. Six Months': 470, '4. More Than Six Months': 470, '5. All': 470, '1. Thirty Days': 470, '2. Three Months': 470}
+empty (header-only) files per window {'3. Six Months': 297, '1. Thirty Days': 422, '2. Three Months': 359, '4. More Than Six Months': 101, '5. All': 48}
+companies missing the All file 0
+rows (all windows) 36347 malformed rows/links 0 duplicate slug within a file 0
+unique slugs any window 3396 in All files 3396
+All-file row difficulty {'EASY': 4143, 'MEDIUM': 9538, 'HARD': 3217}
+Frequency (All rows) min/median/max 5.0 37.5 100.0 share == 100.0: 0.042
+Acceptance Rate (All rows) min/median/max 0.0013448184468592631 0.005897491477328709 0.009476266242376028 share <= 0.01: 1.0
+slugs with conflicting difficulty across files 0 conflicting titles 0
+companies per slug (All) median 3 max 113 slugs in exactly one company 1019
+rows per company All file: min/median/p90/max 0 5 51 2324 companies with <10 problems 304
+dataset slugs found in catalog-v4 2794 of 3396 (82.3%) eligible 2701
+dataset slugs NOT in catalog-v4 602 (premium-only at collection, newer, or renamed)
+catalog-v4 LeetCode rows covered by any company list 2794 of 3053 (91.5%)
+difficulty disagreement with catalog 1
+topic vs catalog tag Jaccard median 1.0 exact match share 0.835

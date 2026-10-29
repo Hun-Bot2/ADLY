@@ -59,7 +59,7 @@ not import Node-only modules. Specs: mastery-system/design.md (engine), ADR 003 
 | Git dependency | Requires `git` on PATH; sync subprocess, 256 MiB buffer | static | D4 |
 | Catalog distribution | Built privately; rights unresolved | distribution-rights report | Release blocker |
 | AI providers | NVIDIA trial terms forbid giving outputs to others; Gemini free tier age/EEA limits | distribution-rights report | Off by default in any distributed build |
-| Windows | Deferred by user priority | unverified | Validate after Apple Silicon Mac milestone |
+| Windows | Release target (final scope 2026-10-29); not yet executed | unverified | DA-0, DA-W CI, DA-9 |
 | Installer size/memory | Not measured | unverified | Measure per candidate framework (D2) |
 | Auto-update | No design | — | D5 |
 | Authentication | None needed locally; GitHub auth only matters for remote sync, which does not exist | static | D3 |
@@ -87,10 +87,11 @@ Asia/Seoul today), empty/loading/offline states (missing catalog, missing Git, n
 
 - D1 Audience: personal tool vs. distribution to other learners. AGENTS.md still says personal-only; the desktop brief
   implies others. The user explicitly selected desktop productization for other learners in the Productization & Desktop Readiness instruction; record that direction in the desktop ADR.
-- D2 Desktop shell (Electron, Tauri + Node sidecar, plain local server + browser). Decide only after packaging the same
-  workload and measuring installer size, idle memory, and `node:sqlite` availability.
-- D3 GitHub authentication: needed only if remote fetch/clone is in scope; no requirement exists yet.
-- D4 Git: require system Git, bundle it, or use a JS implementation.
+- D2 Desktop shell: **ADR 007** (Tauri + Rust backend + JS engine as Node sidecar), final after the DA-0 measurement gate;
+  Electron is the measured fallback.
+- D3 GitHub authentication: approved as optional (DR-F10–F12, `specs/desktop-app/`); system Git credentials first, in-app
+  sign-in later (DA-D4).
+- D4 Git: system `git` CLI recommended (DA-D3); bundling revisited for Windows.
 - D5 Auto-update and rollback, tied to DR-3.
 - D6 Catalog: ship, download, or build on device; blocked by distribution rights.
 
@@ -114,3 +115,12 @@ See iteration-3.md: F1–F5 implemented, including pre-migration snapshots and r
 ## Platform priority correction (2026-10-29)
 
 User uses Apple Silicon, not Intel. Priority: validate current Apple Silicon Mac first, Windows afterward. Intel macOS is optional feasibility scope and is not a gate for the current Mac milestone. Already executed on this Mac: Node286/286, Python74/74, Chrome synthetic workspace3/3 (progression-v2 validation receipts). Installer launch, bundling, signing/notarization and installed user-data behavior remain unverified because a desktop framework/package has not been selected; runtime/browser tests do not prove these.
+
+## Target product scope (2026-10-29, final)
+
+Desktop migration and extension of the existing app on macOS and Windows: all current features are inherited, plus an
+editor, local run/tests, Git management with manual push, GitHub sign-in and remote sync, contest sync, and built-in company
+preparation (no import). Specs: `specs/desktop-app/` (requirements, design, ordered tasks CP-1…DA-9), `specs/company-prep/`;
+ADR 007 (shell decided by the DA-0 rule; engine kept; SQLite kept; ownership table), ADR 008 (company metadata layer).
+Windows is a release target; Apple Silicon is validated first. Nothing of the new scope is implemented yet; the capability
+list above remains the statement of what exists.
