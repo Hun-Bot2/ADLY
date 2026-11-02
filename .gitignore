@@ -53,3 +53,14 @@ node_modules/
 .dev.vars
 .dev.vars.*
 hosted/dist/
+
+# Desktop prototype generated bundles and packages
+desktop/ui/editor-bundle.js
+desktop/dist/
+desktop/target/
+desktop/stage/
+desktop/src-tauri/target/
+desktop/src-tauri/gen/
+# Shared design assets copied into the native startup webview by build.rs
+desktop/src-tauri/placeholder/fonts/
+desktop/src-tauri/placeholder/design-system.css

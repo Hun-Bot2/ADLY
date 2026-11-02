@@ -1,0 +1,85 @@
+{
+  "date": "2026-10-29",
+  "platform": "macOS arm64",
+  "synthetic_learner_tests": true,
+  "node_engine": {
+    "passed": 298,
+    "failed": 0,
+    "command": "node --test hosted/test/*.test.mjs"
+  },
+  "node_desktop": {
+    "passed": 32,
+    "failed": 0,
+    "command": "node --test desktop/test/*.test.mjs"
+  },
+  "node_candidate": {
+    "passed": 11,
+    "failed": 0,
+    "command": "node --test desktop/electron/test/*.test.mjs"
+  },
+  "python_foundation": {
+    "passed": 74,
+    "failed": 0
+  },
+  "python_company_builder": {
+    "passed": 1,
+    "failed": 0
+  },
+  "native_runner_macos": {
+    "passed": 4,
+    "failed": 0
+  },
+  "native_runner_windows_compile": {
+    "passed": true,
+    "tests_compiled": true,
+    "executed": false,
+    "target": "x86_64-pc-windows-gnu"
+  },
+  "tauri_rust": {
+    "passed": 3,
+    "failed": 0
+  },
+  "chrome": {
+    "desktop_interactions": 11,
+    "company_interactions": 6,
+    "workspace_scenarios": 3,
+    "runtime_errors": []
+  },
+  "assets": {
+    "verified": 7,
+    "explicitly_missing": 1
+  },
+  "map_preservation": {
+    "all_checks_passed": true,
+    "preserved_files": 501
+  },
+  "worker_dry_run": true,
+  "remote_ci_executed": false,
+  "live_github_signin_executed": false,
+  "limits": [
+    "Windows runtime has not executed",
+    "Native credential/item probes are temporary fixtures",
+    "Unsigned candidate apps are not signed releases",
+    "Synthetic replay is not learning-effect evidence"
+  ],
+  "unsigned_packages": {
+    "electron": {
+      "unsigned_mac_build": true,
+      "portable_runtime": true,
+      "journal_http_status": 200,
+      "available": true,
+      "observed_survivors": 0,
+      "content_audit": true,
+      "installed_bytes": 687465001
+    },
+    "tauri": {
+      "unsigned_mac_build": true,
+      "portable_runtime": true,
+      "journal_http_status": 200,
+      "available": true,
+      "observed_survivors": 0,
+      "content_audit": true,
+      "installed_bytes": 433599728
+    }
+  }
+}

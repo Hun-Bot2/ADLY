@@ -1,0 +1,21 @@
+{
+  "synthetic": true,
+  "checks": [
+    "inherited workspace renders",
+    "create repository",
+    "recommendation opens editor",
+    "CodeMirror edit",
+    "draft restored after reload",
+    "save file",
+    "run exact test",
+    "record daily log",
+    "preview and commit listed paths",
+    "engine ingestion",
+    "return to workspace"
+  ],
+  "runtime_errors": [],
+  "committed_paths": [
+    "leetcode/26-10-29.md",
+    "leetcode/authored/solution.py"
+  ]
+}

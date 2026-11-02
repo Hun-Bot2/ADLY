@@ -1,6 +1,8 @@
 # ADR 007: Desktop architecture — migrate the existing app into a desktop shell
 
-Status: accepted 2026-10-29 (revised the same day with the final product decisions). The shell choice (Tauri or Electron)
+Current shell decision: [ADR 009](009-tauri-only.md) selects Tauri by user override on 2026-10-30. The dual-candidate rule and Electron fallback below are historical; ownership and security constraints remain in force.
+
+Historical status: accepted 2026-10-29 (revised the same day with the final product decisions). The shell choice (Tauri or Electron)
 is made by the DA-0 decision rule below. Related: ADR 003 (local SQLite canonical), ADR 006 (adaptive progression),
 ADR 008 (company metadata). Spec: `specs/desktop-app/`.
 

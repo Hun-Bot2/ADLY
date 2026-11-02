@@ -1,0 +1,1 @@
+{"name":"algorithm-mastery-da0-tauri-cli","version":"0.0.1","private":true,"scripts":{"dev":"tauri dev --config tauri.conf.json","package":"tauri build --config tauri.conf.json --bundles app","package:windows":"tauri build --config tauri.conf.json --bundles nsis"},"devDependencies":{"@tauri-apps/cli":"2.12.4"}}

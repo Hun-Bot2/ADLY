@@ -1,0 +1,66 @@
+name: Desktop fixture validation
+on:
+  push:
+    paths: ['hosted/**', 'desktop/**', 'research/company_prep/**', '.github/workflows/desktop-ci.yml']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26.8.1'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Record actual platform
+        run: |
+          node -p "process.platform + ' ' + process.arch"
+          rustc -vV
+      - name: Engine regression (authored fixtures)
+        run: node --test hosted/test/*.test.mjs
+      - name: Python foundation
+        run: python -m unittest discover -s tests -v
+      - name: Company builder
+        run: python -m unittest discover -s research/company_prep -v
+      - name: Native runner tests and release helper
+        run: |
+          cargo test --manifest-path desktop/native-runner/Cargo.toml --locked
+          cargo build --release --manifest-path desktop/native-runner/Cargo.toml --locked
+      - name: Desktop dependencies and UI bundle
+        run: |
+          npm ci --prefix desktop --ignore-scripts
+          npm run build --prefix desktop
+      - name: Desktop backend and integration fixtures
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            export MASTERY_NATIVE_RUNNER="$GITHUB_WORKSPACE/desktop/native-runner/target/release/mastery-native-runner.exe"
+          fi
+          node --test desktop/test/*.test.mjs
+      - name: Stage unsigned DA-0 prototype without private datasets
+        run: node desktop/package-stage.mjs --output desktop/stage
+      - name: Native shell unit tests and unsigned Tauri package
+        shell: bash
+        run: |
+          cargo test --manifest-path desktop/src-tauri/Cargo.toml --locked
+          npm ci --prefix desktop/src-tauri
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            npm run package:windows --prefix desktop/src-tauri
+          else
+            npm run package --prefix desktop/src-tauri
+          fi
+      - name: Archive fixture-only unsigned stage
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-prototype-${{ matrix.os }}
+          path: desktop/stage/
+          retention-days: 7

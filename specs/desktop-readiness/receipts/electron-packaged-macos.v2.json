@@ -1,0 +1,61 @@
+{
+  "candidate": "electron",
+  "platform": "darwin",
+  "arch": "arm64",
+  "recorded_at": "2026-10-29T14:21:58.138Z",
+  "node_version": "26.8.1",
+  "workload": "synthetic learner; supplied immutable catalog/company sources",
+  "first_ui_load_ms": 5131,
+  "first_journal_response_ms": 6642,
+  "journal_request_ms": 1401,
+  "journal_http_status": 200,
+  "journal_available": true,
+  "idle_after_seconds": 2,
+  "processes": [
+    {
+      "pid": 20343,
+      "ppid": 20342,
+      "rss_bytes": 153468928
+    },
+    {
+      "pid": 20376,
+      "ppid": 20343,
+      "rss_bytes": 73924608
+    },
+    {
+      "pid": 20377,
+      "ppid": 20343,
+      "rss_bytes": 50102272
+    },
+    {
+      "pid": 20378,
+      "ppid": 20343,
+      "rss_bytes": 77447168
+    },
+    {
+      "pid": 20408,
+      "ppid": 20378,
+      "rss_bytes": 553074688
+    },
+    {
+      "pid": 20423,
+      "ppid": 20343,
+      "rss_bytes": 120045568
+    },
+    {
+      "pid": 20555,
+      "ppid": 20378,
+      "rss_bytes": 1310720
+    }
+  ],
+  "rss_bytes_sum": 1029373952,
+  "memory_note": "Owned process-tree RSS/working-set only; shared pages counted multiple times. macOS system-managed WebKit processes may be outside this tree; not a full candidate memory comparison. No process command lines captured",
+  "installed_bytes": 687465001,
+  "exit": {
+    "code": 0,
+    "signal": null
+  },
+  "survivors": [],
+  "release_gate": "portable official runtime; unsigned macOS packaged launch/journal/quit only; 2-second smoke, not DA-0 idle benchmark",
+  "runtime_archive_receipt": "node-runtime-darwin-arm64.v1.json"
+}

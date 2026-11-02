@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="desktop-token" content="{{TOKEN}}"><title>ALDY — Algorithm Daily</title>
+  <link rel="stylesheet" href="/design-system.css"><link rel="stylesheet" href="/desktop/ui/style.css">
+</head>
+<body class="desktop-app">
+  <a class="skip-link" href="#desktop-content">본문으로 건너뛰기</a>
+  <aside class="app-sidebar" aria-label="앱 탐색">
+    <a class="app-brand" href="#dashboard" aria-label="ALDY 대시보드"><span class="brand-monogram" aria-hidden="true">A</span><span><strong>ALDY</strong><br>Algorithm Daily</span></a>
+    <div class="sidebar-caption">LEARNING WORKSPACE</div>
+    <div id="desktop-navigation"></div>
+    <div class="sidebar-foot"><button id="open-settings" class="sidebar-control" type="button">설정 · 저장소 · 계정</button><span class="local-label"><span class="status-dot" aria-hidden="true"></span> 로컬 학습 기록</span></div>
+  </aside>
+  <div class="desktop-main" id="desktop-content" tabindex="-1">
+    <header class="desktop-topbar"><span id="route-label">대시보드</span><div class="topbar-actions"><span id="connection" role="status">연결 확인 중</span><button id="keyboard-help" type="button" title="단축키 안내">단축키 <kbd>?</kbd></button></div></header>
+    <main id="workspace" class="learning-frame"><iframe id="learning-frame" title="학습 워크스페이스" src="/workspace/#dashboard"></iframe></main>
+    <main id="tools" class="code-workspace" hidden>
+      <div class="code-toolbar"><div class="code-heading"><h1>코드 워크스페이스</h1><span id="execution-state" role="status">대기</span></div><div class="toolbar-actions"><button id="toggle-explorer" type="button" aria-pressed="false" title="탐색기 접기 · ⌘/Ctrl+B">탐색기</button><button id="open-problem" type="button">문제 열기 <kbd>⌘ P</kbd></button><button id="save" type="button">저장 <kbd>⌘ S</kbd></button><button id="run" class="primary" type="button">실행 <kbd>⌘ ↵</kbd></button><button id="run-tests" type="button">테스트</button><button id="cancel-run" type="button" disabled>중지</button></div></div>
+      <div id="code-layout" class="code-layout">
+        <aside id="file-explorer" class="file-explorer" aria-label="저장소 파일 탐색기">
+          <div class="explorer-head"><span class="section-label">EXPLORER</span><button id="refresh-files" type="button" class="text-control" title="파일 새로고침">새로고침</button></div>
+          <label class="repo-selector"><span class="sr-only">연결된 저장소</span><select id="repositories" aria-label="연결된 저장소"></select></label>
+          <input id="file-search" type="search" placeholder="파일 검색" aria-label="파일 검색">
+          <ul id="files" role="tree" aria-label="저장소 파일"></ul>
+          <div id="explorer-empty" class="explorer-empty"><p>풀이 저장소를 연결해 시작하세요.</p><button id="connect-repository" type="button">저장소 연결</button></div>
+          <div class="explorer-foot"><span id="repo-branch">로컬 저장소</span><button id="repository-settings" type="button" class="text-control">설정</button></div>
+        </aside>
+        <div id="explorer-resizer" class="workspace-resizer vertical" role="separator" tabindex="0" aria-label="탐색기 너비 조정" aria-orientation="vertical"></div>
+        <section class="editor-workbench" aria-label="코드와 실행 결과">
+          <div id="buffer-tabs" class="buffer-tabs" role="tablist" aria-label="열린 파일"></div>
+          <div class="editor-context"><h2 id="filename">파일을 선택하세요</h2><span id="draft-state" role="status"></span></div>
+          <div id="editor" aria-label="코드 편집기"></div>
+          <div id="panel-resizer" class="workspace-resizer horizontal" role="separator" tabindex="0" aria-label="실행 패널 높이 조정" aria-orientation="horizontal"></div>
+          <section id="execution-panel" class="execution-panel" aria-label="실행과 학습 기록">
+            <div class="panel-tabs" role="tablist" aria-label="워크스페이스 패널">
+              <button type="button" data-panel="output" role="tab" aria-selected="true">실행 결과</button><button type="button" data-panel="input" role="tab">입력</button><button type="button" data-panel="tests" role="tab">테스트 <span id="test-count">0</span></button><button type="button" data-panel="record" role="tab">풀이 이력</button><button type="button" data-panel="git" role="tab">Git</button><button id="toggle-panel" class="panel-collapse" type="button" aria-expanded="true" title="패널 접기 · ⌘/Ctrl+J">접기</button>
+            </div>
+            <div id="panel-output" class="panel-body" role="tabpanel"><div id="run-result" aria-live="polite" class="run-results"><p class="compact-empty">저장한 파일을 실행하면 결과가 여기에 표시됩니다.</p></div></div>
+            <div id="panel-input" class="panel-body" role="tabpanel" hidden><label class="input-label" for="stdin">표준 입력</label><textarea id="stdin" class="code-input" spellcheck="false" placeholder="실행에 전달할 입력을 적으세요."></textarea></div>
+            <div id="panel-tests" class="panel-body" role="tabpanel" hidden><div class="panel-toolbar"><span>사용자 작성 테스트</span><div><button id="add-test" type="button">테스트 추가</button><button id="load-tests" type="button">불러오기</button><button id="save-tests" type="button">tests.json 저장</button></div></div><div id="test-cases"></div><details class="test-json"><summary>JSON 편집</summary><label class="sr-only" for="tests">사용자 테스트 JSON</label><textarea id="tests" class="code-input" rows="4" spellcheck="false" placeholder='[{"input":"","expected":"","comparison":"exact"}]'></textarea><button id="apply-test-json" type="button">JSON 반영</button></details></div>
+            <div id="panel-record" class="panel-body" role="tabpanel" hidden><details id="code-history" class="code-history"><summary>이 문제의 풀이 기록</summary><div id="code-history-content"></div><button id="open-all-records" type="button">문제 탐색에서 전체 기록 보기</button></details></div>
+            <div id="panel-git" class="panel-body" role="tabpanel" hidden><div class="git-grid"><label>선택 파일<textarea id="commit-paths" class="code-input" rows="3" placeholder="한 줄에 한 파일 경로"></textarea></label><div><label>커밋 메시지<input id="commit-message" placeholder="study: solve problem"></label><div class="button-row"><button id="preview" type="button">변경 미리보기</button><button id="commit" class="primary" type="button">선택 파일 커밋</button><button id="sync" type="button">가져오기 · FF</button><button id="push" type="button">수동 Push</button></div></div></div><pre id="diff" class="diff-output"></pre></div>
+          </section>
+          <div class="editor-statusbar"><span id="file-language">파일 미선택</span><span id="cursor-position">Ln 1, Col 1</span><span>저장한 파일 실행 · 사용자 권한</span><span class="memory-notice">macOS 메모리 제한 미적용 · 샌드박스 아님</span></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <dialog id="settings-drawer" class="settings-drawer" aria-labelledby="settings-title"><header class="drawer-head"><h2 id="settings-title">설정</h2><button id="close-settings" class="overlay-dismiss" type="button" aria-label="설정 닫기">×</button></header><div class="drawer-body"><section><h3>화면 모드</h3><label>테마<select id="appearance" data-autosave><option value="light">라이트</option><option value="system">시스템 설정 따르기</option><option value="dark">다크</option></select></label><p id="appearance-status" role="status" class="panel-note"></p></section>
+    <section><h3>풀이 저장소</h3><form id="repository-form"><label>연결 방식<select id="repo-operation"><option value="register">기존 저장소 연결</option><option value="create">새 저장소 만들기</option><option value="clone">GitHub에서 복제</option></select></label><label>로컬 절대 경로<input id="repo-path" required placeholder="/Users/me/solutions"></label><label id="clone-url-field" hidden>GitHub HTTPS 주소<input id="clone-url" placeholder="https://github.com/owner/repo"></label><button type="submit" class="primary">저장소 연결</button></form><label class="checkbox-label"><input type="checkbox" id="sync-enabled">현재 저장소 원격 동기화 사용</label><p class="panel-note">자동 Push는 하지 않습니다. 분기 이력이나 인증 오류가 있으면 동기화를 멈춥니다.</p></section>
+    <section><h3>학습 카탈로그</h3><label>사용 가능한 버전<select id="catalogs"></select></label><button id="use-catalog" type="button">카탈로그 사용</button><button id="learning-settings" type="button">목표 · 타이머 · 백업 열기</button></section>
+    <section><h3>GitHub 계정 <span class="optional-label">선택</span></h3><p class="panel-note">시스템 Git 인증으로도 사용할 수 있습니다. 앱 로그인은 OS 자격 증명 저장소를 사용합니다.</p><label>GitHub App Client ID<input id="github-client-id" autocomplete="off" placeholder="등록한 앱의 Client ID"></label><div class="button-row"><button id="github-sign-in" type="button">로그인</button><button id="github-sign-out" type="button">로그아웃</button></div><p id="github-status" role="status" class="panel-note"></p><div id="github-device"></div></section>
+    <section><h3>업데이트</h3><div class="button-row"><button id="update-check" type="button">업데이트 확인</button><button id="update-stage" type="button" disabled>다운로드</button></div><p id="update-status" role="status" class="panel-note"></p></section>
+  </div></dialog>
+  <dialog id="problem-dialog" class="problem-dialog" aria-labelledby="problem-dialog-title"><header class="drawer-head"><h2 id="problem-dialog-title">문제 열기</h2><button id="close-problem" class="overlay-dismiss" type="button" aria-label="문제 열기 취소">×</button></header><form id="problem-form"><label>플랫폼<select id="platform"><option value="leetcode">LeetCode</option><option value="codeforces">Codeforces</option><option value="atcoder">AtCoder</option></select></label><label>문제 ID<input id="problem-id" required placeholder="two-sum"></label><label>문제 URL<input id="problem-url" type="url" required placeholder="https://leetcode.com/problems/two-sum/"></label><label>언어<select id="language"><option value="python">Python 3</option><option value="cpp">C++17</option></select></label><p class="panel-note">새 파일에는 링크와 직접 작성한 템플릿만 넣습니다. 기존 파일은 덮어쓰지 않습니다.</p><button class="primary" type="submit">파일 열기</button></form></dialog>
+  <div id="shortcut-dialog" class="shortcut-dialog" popover="auto" role="region" aria-label="키보드 단축키"><header class="drawer-head"><h2>키보드 단축키</h2><button id="close-shortcuts" class="overlay-dismiss" type="button" aria-label="단축키 닫기">×</button></header><dl><dt>⌘ / Ctrl + S</dt><dd>현재 파일 저장</dd><dt>⌘ / Ctrl + Enter</dt><dd>현재 파일 실행</dd><dt>⌘ / Ctrl + Shift + Enter</dt><dd>사용자 테스트 실행</dd><dt>⌘ / Ctrl + P</dt><dd>문제 열기</dd><dt>⌘ / Ctrl + B</dt><dd>탐색기 접기</dd><dt>⌘ / Ctrl + J</dt><dd>실행 패널 접기</dd></dl></div>
+  <div id="notice" class="desktop-notice" role="status" aria-live="polite" hidden></div>
+  <button id="workspace-tab" type="button" hidden>학습 워크스페이스</button><button id="tools-tab" type="button" hidden>코드 · 실행 · 기록</button>
+  <script type="module" src="/desktop/ui/editor-bundle.js"></script>
+</body></html>

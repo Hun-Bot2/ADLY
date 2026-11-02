@@ -1,5 +1,7 @@
 # Desktop app and company preparation: ordered tasks (Codex handoff)
 
+Current shell: **Tauri only**, selected by user override (ADR 009, 2026-10-30). Electron comparison/selection steps below are historical. Current runtime paths and verification: [Tauri-only migration](../desktop-readiness/tauri-only.md). Historical measurement receipts are preserved.
+
 Supersedes the earlier folder-import-first task list (2026-10-29). Execute in order and tick the Done box when a task's acceptance evidence is recorded; a task starts only when its
 dependencies are done and their evidence is recorded (commit message or `specs/desktop-readiness/iteration-N.md`).
 
@@ -131,3 +133,25 @@ snapshot present, newer-schema refusal tested); update channel signed.
 Accept: on a clean macOS arm64 machine and a clean Windows x64 machine: the full end-to-end smoke (journal → open problem →
 run tests → record → commit → refreshed recommendation → company focus → mock interview → contest sync → backup/restore)
 with screenshots; Node suite and receipts reproduce; the distribution considerations register reviewed by the user.
+
+
+## Implementation ledger (2026-10-29, iteration-5)
+
+This table records implementation evidence and does not waive dependencies or installed release acceptance.
+
+| Task | Implemented / verified locally | Open acceptance |
+|---|---|---|
+| CP-1 | Hardened builder, actual company-v2 build and byte-identical reproduction | No builder acceptance gap; private layer is not a public release |
+| CP-2 | Read-only layer, focus/scope policy, snapshots, mocks and regression tests | Native packaged end-to-end scope parity |
+| CP-3 | Company views, focus, progress, mock flow, calendar badge; Chrome6 checks | Installed-native flow |
+| DA-0 | Both Mac native GUI/credential probes; both unsigned apps built | Windows, complete memory accounting, signing feasibility, final choice |
+| DA-W | Fixture-only macOS/Windows workflow source | Remote run not performed |
+| DA-1 | Engine API-only/token/roots; prototype supervisor/app data/import; native first-run dialog code | Final bundled UI/native IPC and ownership; Windows lifecycle |
+| DA-2 | Repo management, authored templates, CodeMirror, durable drafts, path fixtures | Final native implementation/installed per-OS checks |
+| DA-3 | Mac runs/test limits; Windows Job Object helper and cross-compiled tests | Windows host execution and installed checks |
+| DA-4 | Engine-validated records, byte-preserving append, scoped preview/commit, ingestion | Installed end-to-end, final shell ownership |
+| DA-5 | Explicit opt-in periodic FF sync, rewrite/divergence stops, manual push; local bare fixture | Real authenticated per-OS remote smoke |
+| DA-6 | Native OS stores, private device-flow handles, Git askpass pipe and fake-flow tests | User App client id + actual login/authenticated Git test |
+| DA-8a | Opt-in daily contest scheduler and UI/status tests | Installed online/offline smoke |
+| DA-7 | Portable runtime/license, allowlisted stage, actual Mac unsigned .apps, signature/download verifier | Signing, native update installation, Windows package execution |
+| DA-9 | Chrome synthetic local flows and packaged launch smoke | Clean-machine full release acceptance |

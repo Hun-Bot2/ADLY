@@ -1,0 +1,12 @@
+{
+  "synthetic": true,
+  "checks": [
+    "company list/progress/provenance",
+    "save focus",
+    "calendar company badge",
+    "create mock",
+    "reset general",
+    "missing layer"
+  ],
+  "runtime_errors": []
+}

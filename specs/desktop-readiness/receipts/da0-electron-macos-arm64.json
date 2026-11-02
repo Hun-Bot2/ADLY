@@ -1,0 +1,61 @@
+{
+  "candidate": "electron",
+  "platform": "darwin",
+  "arch": "arm64",
+  "recorded_at": "2026-10-29T14:10:44.721Z",
+  "node_version": "26.8.1",
+  "workload": "synthetic learner; supplied immutable catalog/company sources",
+  "first_ui_load_ms": 1417,
+  "first_journal_response_ms": 2433,
+  "journal_request_ms": 993,
+  "journal_http_status": 200,
+  "journal_available": true,
+  "idle_after_seconds": 60,
+  "processes": [
+    {
+      "pid": 82317,
+      "ppid": 82316,
+      "rss_bytes": 27901952
+    },
+    {
+      "pid": 82318,
+      "ppid": 82317,
+      "rss_bytes": 137281536
+    },
+    {
+      "pid": 82319,
+      "ppid": 82318,
+      "rss_bytes": 62128128
+    },
+    {
+      "pid": 82320,
+      "ppid": 82318,
+      "rss_bytes": 45940736
+    },
+    {
+      "pid": 82321,
+      "ppid": 82318,
+      "rss_bytes": 47759360
+    },
+    {
+      "pid": 82322,
+      "ppid": 82321,
+      "rss_bytes": 49496064
+    },
+    {
+      "pid": 82323,
+      "ppid": 82318,
+      "rss_bytes": 97140736
+    }
+  ],
+  "rss_bytes_sum": 467648512,
+  "memory_note": "Owned process-tree RSS/working-set only; shared pages counted multiple times. macOS system-managed WebKit processes may be outside this tree; not a full candidate memory comparison. No process command lines captured",
+  "installed_bytes": null,
+  "exit": {
+    "code": 0,
+    "signal": null
+  },
+  "survivors": [],
+  "release_gate": "partial native-development measurement; packaged/Windows gates remain",
+  "benchmark_control": "Concurrent development candidate runs; uncontrolled OS caches and contention; not a controlled framework benchmark"
+}

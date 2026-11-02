@@ -1,6 +1,9 @@
 # Desktop readiness: living baseline
 
-Owner: documentation/review role. Last verified 2026-10-29 after F1–F5 implementation (iteration-3.md).
+Current shell: **Tauri only**, selected by user override (ADR 009, 2026-10-30). Electron comparison/selection steps below are historical. Current runtime paths and verification: [Tauri-only migration](tauri-only.md). Historical measurement receipts are preserved.
+
+Owner: implementation/review. Updated 2026-10-29 after company and desktop batches (iteration-5.md).
+The original engine baseline below is retained; the latest implementation status is recorded at the end.
 This file states what the code does today, separately from what a desktop release would need. It does not choose a
 desktop framework or a visual design. Iteration reports: `iteration-N.md` (implementation) and `review-log.md` (review).
 
@@ -128,5 +131,19 @@ Desktop migration and extension of the existing app on macOS and Windows: all cu
 editor, local run/tests, Git management with manual push, GitHub sign-in and remote sync, contest sync, and built-in company
 preparation (no import). Specs: `specs/desktop-app/` (requirements, design, ordered tasks CP-1…DA-9), `specs/company-prep/`;
 ADR 007 (shell decided by the DA-0 rule; engine kept; SQLite kept; ownership table), ADR 008 (company metadata layer).
-Windows is a release target; Apple Silicon is validated first. Nothing of the new scope is implemented yet; the capability
-list above remains the statement of what exists.
+Windows is a release target; Apple Silicon is validated first. Company engine/UI and executable desktop candidate batches are now implemented; see the status below.
+Native candidates remain subject to DA-0 selection and release verification.
+
+
+## Latest implementation batches (2026-10-29)
+
+Company CP-1/2/3 now have actual private builds, policy/API integration and local browser evidence. Desktop tools provide
+repository management, CodeMirror, drafts, Python/C++ runs/tests, validated daily records, scoped commits, opt-in remote
+sync and manual push. Both native candidate shells implement first-run copy confirmation and OS-backed optional GitHub
+sign-in. Fake-flow tests are separate from live sign-in. Signed update verification/download staging exists; installation
+handoff remains code work. See iteration-5.md, receipts/implementation-validation.v1.json and da-0-measurements.md.
+
+The shell remains undecided: both unsigned Mac candidate apps are built from the same allowlisted stage and portable
+Node26.8.1. Windows runtime/packaging has not executed. The checked-in desktop CI source is not a green remote run.
+The final Rust/native resource-ownership boundary and bundled UI/API-only integration remain gated by shell selection.
+No signed release, installed upgrade or clean-host support is claimed.

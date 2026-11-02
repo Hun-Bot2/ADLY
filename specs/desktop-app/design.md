@@ -1,7 +1,6 @@
 # Desktop app: design
 
-Implements `requirements.md` under ADR 007. The shell is Tauri (option A) or Electron (option B), decided by the DA-0
-rule. Sections name "shell backend" for the Rust backend (A) or the Electron main process (B). Items marked *verify* must
+Implements `requirements.md` under ADR 007. The shell is Tauri (option A), selected by the user in ADR 009. Electron alternatives below are historical, not active implementation paths. Sections name "shell backend" for the Rust backend (A) or the Electron main process (B). Items marked *verify* must
 be confirmed by a task before later tasks rely on them.
 
 ## 1. Processes and trust

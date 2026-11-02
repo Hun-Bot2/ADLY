@@ -1,0 +1,12 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ALDY · 학습 기록 시작</title><link rel="stylesheet" href="/design-system.css"><style>
+body{padding:32px;background:var(--background);font-family:var(--font-ui);font-size:var(--text-body);color:var(--text-primary)}h1{font-size:var(--text-page);font-weight:700;margin-bottom:12px}p{line-height:1.6;color:var(--text-secondary)}button{display:block;font:inherit;cursor:pointer;border:1px solid var(--border-strong);border-radius:var(--radius-sm);background:var(--background);color:var(--text-primary);padding:12px 16px;text-align:left;width:100%;margin:12px 0}button strong,button span{display:block}button span{font-size:var(--text-meta);color:var(--text-secondary);margin-top:4px}button:hover{background:var(--surface-secondary);border-color:var(--text-primary)}button:disabled{opacity:.5;cursor:wait}#cancel{width:auto;padding:6px 16px;float:right}#status{min-height:24px;font-size:var(--text-meta);color:var(--text-primary)}
+</style></head><body>
+<h1>ALDY</h1><p>Algorithm Daily · 학습 기록 시작</p><p>이어서 학습하려면 기존 기록을 복사하세요.<br>원본 기록은 그대로 보존됩니다.</p>
+<button id="copy"><strong>기존 기록 복사</strong><span>이전 풀이 이력·설정·추천 상태를 이어갑니다.</span></button>
+<button id="new"><strong>새 학습 시작</strong><span>기록이 없는 새 학습 데이터로 시작합니다.</span></button>
+<p id="status" role="status" aria-live="polite"></p><button id="cancel">취소</button>
+<script>
+const status=document.getElementById('status');
+async function choose(choice){const buttons=[document.getElementById('copy'),document.getElementById('new')];buttons.forEach(b=>b.disabled=true);status.textContent=choice==='copy'?'복사할 파일을 선택하세요.':'학습 화면을 여는 중…';try{const opened=await window.__TAURI_INTERNALS__.invoke('first_run_choose',{choice});if(!opened)status.textContent='선택을 취소했습니다.';}catch{status.textContent='학습 기록을 열지 못했습니다. 원본 파일과 대상 폴더를 확인하세요.';}finally{buttons.forEach(b=>b.disabled=false);}}
+document.getElementById('copy').onclick=()=>choose('copy');document.getElementById('new').onclick=()=>choose('new');document.getElementById('cancel').onclick=()=>window.__TAURI_INTERNALS__.invoke('first_run_choose',{choice:'cancel'}).catch(()=>{});
+</script></body></html>

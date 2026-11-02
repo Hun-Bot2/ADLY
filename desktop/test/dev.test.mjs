@@ -1,0 +1,46 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createServer} from 'node:http';
+import {mkdtempSync,rmSync,readFileSync} from 'node:fs';
+import {join} from 'node:path';
+import {tmpdir} from 'node:os';
+import {execFileSync} from 'node:child_process';
+import {startDesktop} from '../dev.mjs';
+test('desktop bridge authenticates, edits, tests, records, commits and triggers engine ingestion',async()=>{
+ const root=mkdtempSync(join(tmpdir(),'desktop bridge 한 # % ')),calls=[];
+ const server=createServer((q,r)=>{calls.push(q.url);r.setHeader('content-type','application/json');r.end(JSON.stringify(q.url==='/api/local/daily-log/validate'?{flags:[],rows:[]}:{ok:true}));});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const app=await startDesktop({appData:join(root,'app'),catalogRoot:root,engineConnection:{url:'http://127.0.0.1:'+server.address().port,token:'fixture'}});
+ const request=(path,options={})=>fetch(app.url+path,{...options,headers:{Origin:app.url,'Content-Type':'application/json','X-Desktop-Token':app.token,...options.headers}});
+ const command=async(command,input={})=>{const r=await request('/desktop/api/command',{method:'POST',body:JSON.stringify({command,...input})});const data=await r.json();assert.equal(r.status,200,JSON.stringify(data));return data;};
+ try{
+  assert.equal((await fetch(app.url+'/desktop/api/state')).status,403);
+  assert.equal((await request('/api/state')).status,403);
+  assert.equal((await request('/api/events',{method:'POST',body:'{}'})).status,403);
+  assert.equal((await request('/desktop/api/state',{headers:{Origin:'https://evil.invalid'}})).status,403);
+  assert.equal((await request('/desktop/api/command',{method:'POST',body:'{}',headers:{Origin:''}})).status,403);
+  assert.equal((await(await request('/desktop/api/state')).json()).appearance,'light');
+  assert.equal((await command('appearance-setting',{appearance:'dark'})).appearance,'dark');
+  assert.equal((await(await request('/desktop/api/state')).json()).appearance,'dark');
+  assert.equal(JSON.parse(readFileSync(join(root,'app/state.json'),'utf8')).appearance,'dark');
+  assert.equal((await request('/desktop/api/command',{method:'POST',body:JSON.stringify({command:'appearance-setting',appearance:'bad'})})).status,400);
+  const savedLayout=await command('layout-setting',{layout:{explorerWidth:999,panelHeight:240,explorerCollapsed:false,panelCollapsed:false,panel:'tests'}});assert.equal(savedLayout.layout.explorerWidth,440);
+  assert.equal((await(await request('/desktop/api/state')).json()).layout.panel,'tests');
+  const invalidLayout=await request('/desktop/api/command',{method:'POST',body:JSON.stringify({command:'layout-setting',layout:{arbitrary:'no'}})});assert.equal(invalidLayout.status,400);
+  const created=await command('create',{path:join(root,'solutions')});const repoId=created.id;
+  execFileSync('git',['-C',created.path,'config','user.name','Fixture']);execFileSync('git',['-C',created.path,'config','user.email','fixture@example.invalid']);
+  const file=await command('open',{repoId,platform:'leetcode',id:'authored',url:'https://leetcode.com/problems/authored/',language:'python'});
+  const path=file.relative;
+  await command('draft',{repoId,path,content:'print(input())\n'});
+  assert.equal((await command('read',{repoId,path})).draft.content,'print(input())\n');
+  assert.ok((await command('read',{repoId,path})).content.includes('def solve'));
+  await command('save',{repoId,path,content:'print(input())\n'});
+  const run=await command('run',{repoId,path,tests:[{input:'fixture\n',expected:'fixture\n',comparison:'whitespace'}]});assert.equal(run.tests[0].verdict,'pass');
+  const recorded=await command('record',{repoId,date:'2026-10-29',folder:'leetcode',url:'https://leetcode.com/problems/authored/',solved:true,minutes:'15',review:false,memo:'authored'});
+  const preview=await command('preview',{repoId,paths:[path,recorded.relative]});assert.equal(preview.untracked.length,2);
+  const result=await command('commit',{repoId,paths:[path,recorded.relative],message:'study: fixture'});assert.match(result.commit,/^[a-f0-9]{40}$/);assert.ok(calls.includes('/api/local/repositories'));assert.ok(calls.includes('/api/local/ingest'));
+  assert.equal(execFileSync('git',['-C',created.path,'ls-files'],{encoding:'utf8'}).trim().split('\n').length,2);
+  const bad=await request('/desktop/api/command',{method:'POST',body:JSON.stringify({command:'save',repoId,path:'.git/config',content:'bad'})});assert.equal(bad.status,400);
+  assert.ok(!readFileSync(join(created.path,'.git/config'),'utf8').includes('bad'));
+  assert.equal((await command('sync',{repoId})).state,'disabled');
+ }finally{await app.close();await new Promise(resolve=>server.close(resolve));rmSync(root,{recursive:true,force:true});}
+});

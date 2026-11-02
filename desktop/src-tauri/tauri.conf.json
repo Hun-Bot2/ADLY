@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "ALDY",
+  "version": "0.0.1",
+  "identifier": "local.algorithm-mastery.da0.tauri",
+  "build": {
+    "frontendDist": "placeholder"
+  },
+  "app": {
+    "windows": [],
+    "security": {
+      "capabilities": [],
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "app"
+    ],
+    "resources": {
+      "../runtime/bootstrap.mjs": "runtime/bootstrap.mjs",
+      "../stage/prototype/": "prototype/",
+      "../stage/runtime/": "runtime-node/",
+      "../stage/datasets/": "datasets/",
+      "../runtime/askpass-helper.mjs": "runtime/askpass-helper.mjs",
+      "../runtime/native-store-reader.mjs": "runtime/native-store-reader.mjs"
+    },
+    "macOS": {
+      "minimumSystemVersion": "13.0"
+    }
+  }
+}

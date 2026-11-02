@@ -1,0 +1,6 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createSupervisor} from '../backend/supervisor.mjs';
+const script=`const http=require('node:http');const s=http.createServer((q,r)=>{if(q.headers['x-app-token']!==process.env.APP_TOKEN){r.writeHead(403);r.end();return;}r.end('ok');});s.listen(0,'127.0.0.1',()=>console.log('http://127.0.0.1:'+s.address().port));process.on('SIGTERM',()=>s.close(()=>process.exit(0)));`;
+test('supervisor authenticates health and stops its child',async()=>{const states=[];const s=createSupervisor({args:['-e',script],origin:'http://127.0.0.1:12345',onState:x=>states.push(x)});let url;try{const c=await s.start();url=c.url;assert.equal(c.token.length,64);assert.equal(s.state,'running');assert.equal((await fetch(url+'/api/health')).status,403);}finally{await s.stop();}assert.equal(s.connection,null);assert.equal(s.state,'stopped');await assert.rejects(fetch(url));assert.deepEqual(states,['starting','running','stopped']);});
+test('failed process yields no active connection',async()=>{const s=createSupervisor({command:'/nonexistent/algorithm-node',origin:'http://127.0.0.1:12345',healthTimeoutMs:200});await assert.rejects(s.start());await s.stop();assert.equal(s.connection,null);});

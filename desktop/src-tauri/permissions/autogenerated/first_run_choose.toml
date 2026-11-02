@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-first-run-choose"
+description = "Enables the first_run_choose command without any pre-configured scope."
+commands.allow = ["first_run_choose"]
+
+[[permission]]
+identifier = "deny-first-run-choose"
+description = "Denies the first_run_choose command without any pre-configured scope."
+commands.deny = ["first_run_choose"]
