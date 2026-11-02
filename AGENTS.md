@@ -234,7 +234,7 @@ files; their receipts are committed, and re-running them needs those files resto
 
 ## Current Important Caveats
 
-- No GitHub Actions workflow, schedule, Docker image or hosted service exists in this repository (desktop task DA-W adds a CI workflow).
+- `.github/workflows/desktop-ci.yml` defines fixture-only macOS/Windows desktop checks. It has not been pushed or observed remotely. No scheduled learning delivery, Docker image or hosted service is active.
 - FAISS and OpenAI-based code is gone from the tree; do not reintroduce FAISS, PyTorch in production dependencies, paid APIs or cloud storage.
 - Local data under `data/`, `indexes/` and `algorithm_indexes_v1.tar.gz` is untracked and pinned by `assets/*.manifest*.json`; the stored
   LeetCode statements stay quarantined (see "Statement sources and terms").
@@ -745,7 +745,7 @@ Keep these distinctions clear in summaries and docs:
 
 ## Desktop readiness (2026-10-29)
 
-- User desktop-product instructions authorize Windows/macOS distribution direction; the older personal-only audience is historical. The shell (Tauri or Electron) is chosen by the DA-0 rule in ADR 007; LeetCode catalog and company-layer distribution rights stay open in specs/distribution-rights/ and specs/company-prep/distribution-considerations.md. See specs/desktop-readiness/status.md and data-safety.md.
+- User desktop-product instructions authorize Windows/macOS distribution direction; the older personal-only audience is historical. The shell is Tauri by user override in ADR 009 (ADR 007 dual-candidate rule is historical); LeetCode catalog and company-layer distribution rights stay open in specs/distribution-rights/ and specs/company-prep/distribution-considerations.md. See specs/desktop-readiness/status.md and data-safety.md.
 - Convert filesystem file URLs with fileURLToPath/pathToFileURL. CLI roots and catalog SQLite URI paths have regressions for spaces, Korean, # and %; real Windows execution remains unverified.
 - hosted/runtime/database.mjs owns the SQLite adapter. Test helpers re-export it for compatibility. Existing nonempty DBs receive a SQLite VACUUM INTO snapshot before pending migrations; newer schemas and receipt drift are rejected. Stop concurrent writers before upgrading. No automatic relocation, restore or backup deletion.
 - Full Node tests require loopback sockets; EPERM in restricted runs is environmental. Final 2026-10-29 regression: Node 254/254 and Python 74/74 passed; no real learner DB was used.
@@ -769,7 +769,7 @@ Keep these distinctions clear in summaries and docs:
 
 - Desktop = migration + extension of the existing app on macOS and Windows; never a rewrite. Keep progression-v2 outputs, the daily
   Markdown format, SQLite data, migrations and the Node suite unchanged. Specs: specs/desktop-app/ (ordered tasks CP-1…DA-9),
-  specs/company-prep/, ADR 007 (Tauri vs Electron by the DA-0 rule; the engine is the only learner-DB writer; the shell owns repo writes,
+  specs/company-prep/, ADR 007/009 (Tauri selected by user override; the engine is the only learner-DB writer; the shell owns repo writes,
   processes, credentials), ADR 008.
 - Company prep is built in: an immutable company-vK.sqlite3 layer keyed by catalog keys (no duplicate problems, no catalog rebuild,
   no user import). Never store Acceptance Rate (invalid, all < 1%) or use Frequency across lists. Say "share of our catalog found in
@@ -777,3 +777,99 @@ Keep these distinctions clear in summaries and docs:
   specs/company-prep/distribution-considerations.md (non-blocking by user decision).
 - Local code execution has limits (timeout, CPU, output cap, process-group or Job Object kill), not a sandbox. Templates never
   contain statements, examples or official signatures.
+
+
+## Desktop implementation batches (2026-10-29)
+
+- Company metadata builder/runtime/UI now exist. Private company-v2 is the hardened-builder run; company-v1 is preserved.
+  Public receipts contain aggregates/hashes only. New company builds must use new versions; never edit existing layers.
+- `desktop/dev.mjs` is a loopback development adapter with CodeMirror tools, not a selected native production architecture.
+  Engine writes learner SQLite; backend modules write solution repositories. The selected native shell lives in `desktop/src-tauri/`; Electron was removed by user choice in ADR 009. Cross-OS release verification remains required.
+- Run `npm ci --prefix desktop --ignore-scripts`, `npm run build --prefix desktop`, and `node --test desktop/test/*.test.mjs`.
+  Browser smoke: `node desktop/browser-smoke.mjs`. The bundle is generated/ignored; do not commit node_modules or stage outputs.
+- Engine proxy requires an HttpOnly per-launch session cookie, desktop commands require the token, writes require the origin.
+  Validate prepared daily logs through the engine before saving. Report a successful commit separately from failed ingestion.
+- `desktop/native-runner/` enforces Windows Job limits; the helper path must be explicit or bundled. Windows execution needs
+  native host verification; a Windows-target cargo check is compile evidence only. Local runs are not sandboxed.
+- Code runs use an environment allowlist and cannot inherit provider tokens or the native Git credential broker capability.
+  Git operations intentionally inherit the broker environment; never expose auth tokens to the renderer.
+- Signed installers, live GitHub login, actual remote CI and Windows device behavior require separate receipts. Never turn
+  scaffold, compile, synthetic tests or an unsigned prototype into release proof.
+
+- Packaging must use a verified official standalone Node runtime and include its LICENSE. Homebrew Node can depend on
+  external `libnode`; a current-host launch is not portability proof. `package-stage.mjs --node-binary` rejects known
+  external-library layouts. Both final Mac unsigned candidates have portable-runtime launch receipts in the v2 files.
+- Existing-data import publishes a unique SQLite snapshot with an atomic no-overwrite hard link. Never delete a target
+  merely because an import failed; another process may have created it. WAL-copy tests preserve source DB/WAL bytes.
+
+## First-run native window lifecycle (2026-10-29)
+
+- Tauri first-run choices must be an owned onboarding Webview, not an unparented blocking native alert before windows
+  exist. Startup errors stay inline. Picker/confirmation dialogs must be parented to onboarding.
+- A user close of an app window requests full exit; destroying onboarding after opening main must bypass CloseRequested.
+  Shutdown is durable: background startup must not open another window/engine after cancellation.
+- Verify this flow without DESKTOP_SPIKE_SMOKE (which bypasses onboarding): `node desktop/onboarding-smoke.mjs --binary
+  <packaged executable>`. It exercises close/cancel/new using disposable data. Rust lifecycle tests alone are not UI proof.
+
+
+## Desktop redesign contracts (2026-10-30)
+
+- Governing UI specs: specs/desktop-redesign/. Plain DOM modules remain; do not introduce a second learner engine.
+- hosted/public/design-system.css owns typography, semantic Tableau colors and spacing. Fonts/licenses are vendored; keep stage allowlists and Tauri startup asset copies in sync.
+- ui.mjs owns the eight-route navigation. Legacy history aliases resolve to Explorer; attempts remain in calendar/details/analytics/IDE. Embedded learning hides its own sidebar; frame messages require both same origin and the expected frame source.
+- Layout preferences live in desktop shell state, not learner SQLite. layout-setting validates bounded numbers/enums. Problem search is metadata-only with bounded pagination.
+- Browser smokes use disposable authored fixtures: desktop/redesign-browser-smoke.mjs, desktop/browser-smoke.mjs, hosted/{workspace,company,analytics}-browser-smoke.mjs. Never run fixture writes against real learner data.
+- Tauri build copies executable resources. A stale generated target/{debug,release}/{runtime-node,runtime,prototype,datasets} may fail overwrite with EACCES; remove only these derived copies before rebuilding, never original stage inputs.
+
+
+## Overlay UX contracts (2026-10-30)
+
+- hosted/public/overlays.mjs owns shared nonmodal inspector and native HTML dialog lifecycle. Maintain explicit static-asset allowlists in hosted/local.mjs and desktop/dev.mjs when adding modules.
+- Repeated problem/day/attempt/contest/analytics/source reading uses openInspector; focused input uses openDialog. Inspectors do not set aria-modal, trap focus or inert the background. Route navigation closes stale inspectors.
+- configureDialog/requestDialogClose guard user-edited forms with an inline discard decision, never a stacked modal. Callers close directly only after successful operations; do not bypass guarded close for user cancellation.
+- Playwright validation: PLAYWRIGHT_MODULE=/absolute/path/to/playwright/index.mjs node desktop/inspector-playwright.mjs. Use --before only against the prior UI for a baseline. Browser fixtures are authored, temporary and never use real learner data or live providers. The historical baseline screenshots are preserved under specs/inspector-ux/.
+
+
+## Tauri-only runtime (2026-10-30)
+
+- ADR 009 selects Tauri by user override; remove no learner/runtime capabilities when cleaning discarded shell code.
+- Shared Node bootstrap, read-only native credential pipe and Git askpass broker now live in desktop/runtime/. Tauri resource mappings, development bootstrap and stage/audit paths must agree. Electron and its generated packages/dependencies are removed.
+- Helper tests now belong to desktop/test/; run that suite and cargo test for the shell. Measurement tool is desktop/measure.mjs. Historical Electron receipts remain evidence only; do not recreate removed build paths from those old instructions.
+
+
+## Appearance preference (2026-10-30)
+
+- hosted/public/appearance.mjs resolves system/light/dark into data-theme; explicit selection overrides OS media. Desktop shell state.json persists the enum across random loopback ports. The same-origin learning frame follows storage changes.
+- appearance-setting uses the existing authenticated desktop command boundary. set_appearance is a main-window-only bounded Tauri command; keep its generated permission, capability and bridge in sync. No learner DB schema/settings change.
+- Autosaved controls use data-autosave so dialog dirty snapshots do not treat a successfully saved preference as unsaved form input. Keep ordinary repository/input controls guarded.
+- Browser verification: desktop/appearance-playwright.mjs; native command round-trip: desktop/appearance-native-smoke.mjs --binary <packaged executable>. Native API receipt is not native screenshot/contrast certification.
+
+
+## VS Code-authored attempts (2026-10-30)
+
+- User removed app-side new solution-record entry: do not reintroduce add-attempt buttons/forms in Calendar, details, mock contests, settings, legacy journal or Code Workspace.
+- Preserve reading/search/history, manual correction, pending-write retry, backend/CLI compatibility and Git ingestion. Code Workspace's record panel is history-only.
+- IDE smoke writes an authored Markdown file externally (VS Code workflow), then verifies scoped commit and real fixture ingestion. No test should rely on the removed UI creation form.
+
+
+## Product name (2026-10-30)
+
+- User-facing name is ALDY (Algorithm Daily). Current native app bundle: desktop/src-tauri/target/release/bundle/macos/ALDY.app.
+- Keep the existing bundle identifier, AlgorithmMastery app-data/credential namespace and internal executable name for continuity. Do not move/reset learner data as part of branding. Historical receipts retain previous product names.
+
+
+## Git ancestry errors (2026-10-31)
+
+- merge-base --is-ancestor exit1 means non-ancestor; Git execution failures (128, ENOENT, EACCES, etc.) are unavailable checks, never evidence of rewritten history. Do not append a history_rewritten watermark for these errors.
+- Keep the explicit re-anchor gate. Before repairing a stale block, verify registered path/branch and the stored SHA against Git, take a consistent SQLite backup, stop concurrent writers and preserve observation/event rows. A same-SHA re-anchor does not skip or recreate attempts. Never commit uncommitted user solution files automatically.
+
+
+## External links and card direction (2026-11-02)
+
+- WebKit (wry) calls the navigation handler before createWebView for target=_blank links. A main-window on_navigation that
+  only allows the app origin silently cancels them, so on_new_window never runs. desktop/src-tauri/src/main.rs routes
+  allowlisted https hosts (external_link_allowed) to the OS browser from both handlers; add new link hosts there.
+- The UI follows the green-primary card direction (specs/desktop-redesign/design.md, reference/check-direction.png). Use
+  --primary/--primary-soft for primary actions and selection; status colours stay Tableau. Pretendard leads --font-ui.
+- In the inspector, build content with section()/facts() from workspace.mjs. Do not give inspector state elements the
+  generic `.empty` class: it draws a boxed empty state.

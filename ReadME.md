@@ -1,6 +1,6 @@
-# Algorithm RAG Engine — Adaptive Algorithm Mastery System
+# ALDY — Algorithm Daily
 
-## 현재 상태 (2026-10-18)
+## 현재 상태 (2026-10-30)
 
 백준이 서비스를 종료해서 아래 "초기 파이프라인"은 입력(백준 풀이 노트)을 잃었고, 그 GitHub Actions 워크플로우 2개
 (`daily_algorithm_pipeline.yml`, `publish_docker.yml`)는 삭제했습니다(git 이력에서 복구 가능). 현재 방향은 다음과 같습니다.
@@ -11,11 +11,23 @@
 - **풀이 기록 저장소**: 별도 private repo `algorithm-solution`. 이 저장소의 커밋을 `node hosted/cli.mjs repo ingest`가 읽습니다.
   push 없이 로컬 Git을 읽으며, 현재 커리큘럼 추천은 `node hosted/cli.mjs journal` 또는 로컬 학습 일지에서 확인합니다. 기존 `plan`의 일별 동결 계약도 보존합니다.
 - **연구** (`research/`): 세 플랫폼 24,297문제의 제목 기반 유사도 지도, 언어 편향 보정, AtCoder 개념 분류. 결과는 `research/*/REPORT.md`와 `specs/`에 있습니다.
-- **데스크톱 앱 (설계 완료, 구현 전, 2026-10-29)**: 기존 엔진과 화면을 그대로 옮기고 편집기, 로컬 실행·테스트, Git 커밋과 수동 push,
+- **데스크톱 앱 (Mac 후보 구현·검증, 2026-10-30)**: 기존 엔진과 데이터를 유지하고 편집기, 로컬 실행·테스트, Git 커밋과 수동 push,
   GitHub 로그인, 회사별 문제 준비를 더한 macOS·Windows 앱입니다. [요구사항](specs/desktop-app/requirements.md),
   [작업 순서](specs/desktop-app/tasks.md), [ADR 007](specs/adaptive-learning/adrs/007-desktop-architecture.md), [ADR 008](specs/adaptive-learning/adrs/008-company-prep-data.md).
 - 초기 파이프라인 코드(`src/main/`, `Dockerfile`, `docker-compose.yml` 등)는 2026-10-18에 삭제했고 git 태그 `legacy-pipeline-final`에서 복구할 수 있습니다.
 
+
+### 데스크톱 구현 현황
+
+기업별 준비 화면과 추천 범위, CodeMirror 편집·실행·일지·커밋 도구가 추가됐습니다.
+Tauri를 데스크톱 셸로 선택했고 Electron 후보·의존성은 제거했습니다. Mac 앱은 unsigned 빌드이며 Windows·서명·업데이트 설치는 검증 중입니다.
+[실행 안내](desktop/README.md) · [구현과 검증 범위](specs/desktop-readiness/iteration-5.md).
+
+### 데스크톱 UI 재설계 (2026-10-30)
+
+8개 워크플로 내비게이션, 날짜 중심 기록 탐색, 실제 기록 기반 분석, 기업별 준비 표, 크기 조절 가능한 코드 작업 공간을 구현했습니다.
+Pretendard·JetBrains Mono는 라이선스와 함께 오프라인 포함합니다. 별도 풀이 이력 메뉴의 기능은 문제 탐색·달력·상세에 통합했습니다.
+[설계](specs/desktop-redesign/design.md) · [실제 화면과 최종 검증](specs/desktop-redesign/validation.md).
 
 ### 학습 일지 실행
 
@@ -33,7 +45,7 @@ node hosted/local.mjs
 
 ### 캘린더 워크스페이스 (2026-10-20)
 
-첫 화면은 실제 풀이 시각을 기준으로 한 월간 캘린더입니다. 주간 보기, 날짜별 상세,
+현재 첫 화면은 오늘 계획·복습 대기·최근 활동을 모은 대시보드입니다. 전체 달력은 학습 캘린더에서 실제 풀이 시각을 기준으로 탐색합니다. 주간 보기, 날짜별 상세,
 검색 가능한 풀이 이력, 원본 기록으로 내려가는 학습 분석과 시간순 대회 목록을 제공합니다.
 조회된 대회는 메인 캘린더의 실제 날짜에도 표시됩니다. 날짜 선택은 오른쪽 패널을 갱신하고,
 더보기는 하루 상세 모달을 엽니다. 월간 활동과 해결·미해결 분포도 기록에 맞춰 확인할 수 있습니다.
