@@ -887,3 +887,18 @@ Keep these distinctions clear in summaries and docs:
 - App icon source is `desktop/src-tauri/icons/source/aldy.svg`. Regenerate with `rsvg-convert -w 1024 -h 1024` then `tauri icon <png> -o <scratch>`,
   copying only the desktop files listed in tauri.conf.json `bundle.icon`. Company rows use initials, never logos.
 - hosted/app.mjs `render()` must toggle the nav `active` class with `aria-current`, or two items stay highlighted.
+
+
+## New-user workspace and GitHub sign-in (2026-11-02)
+
+- Spec: specs/desktop-app/new-user-workspace.md (NW-1..NW-10). The Code Workspace edits the user's daily logs: "오늘 기록" opens
+  `<platform>/YY-MM-DD.md` from `templates/daily.md`; "문제 열기" adds a row with an EMPTY result (no attempt, parser flag
+  `daily_outcome_unrecorded`) plus a `## title` section and empty code block. Never fill the result for the user (NW-10).
+  `open`/solution.py stays in the backend for compatibility only.
+- Run/tests on `.md` execute the fenced python/cpp block at the cursor (`extractCodeBlock` in desktop/backend/runner.mjs).
+- GitHub: device flow asks for `repo`; `github_repositories`/`github_create_repository` live in auth.rs and return metadata only.
+  Client ID comes from `ALDY_GITHUB_CLIENT_ID` or `desktop/src-tauri/github-client-id.txt` (public, committed). Live sign-in has not
+  been exercised; `desktop/start-panel-smoke.mjs` uses a mocked bridge.
+- `desktop/stage` refuses to be overwritten by package-stage.mjs: move the old stage aside first. The portable Node runtime last used
+  is recorded in specs/desktop-readiness/receipts/node-runtime-darwin-arm64.v1.json.
+- In Runtime.evaluate (CDP smokes) top-level `const` persists between calls: wrap repeated snippets in `{}`.

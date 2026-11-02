@@ -79,11 +79,23 @@ Never archive a repository root. Stage output, dependencies, compiled helpers an
 `DESKTOP_PACKAGED=1` copies shipped datasets into app data with hash verification; existing immutable versions are never
 replaced. See the Tauri commands below for unsigned builds. Distribution considerations still require user review.
 
+## GitHub sign-in (one-time maintainer setup)
+
+The app signs in with GitHub's device flow, which needs a public client ID (there is no secret):
+
+1. github.com → Settings → Developer settings → OAuth Apps → New OAuth App.
+2. Name `ALDY`, homepage and callback URL can both be `https://github.com/<you>/Algorithm-RAG-Engine` (unused by the device flow).
+3. After creating it, tick **Enable Device Flow** and save.
+4. Put the Client ID (e.g. `Ov23li...`) in `desktop/src-tauri/github-client-id.txt`, or set `ALDY_GITHUB_CLIENT_ID` for one build.
+5. Rebuild the app. The start panel then shows **GitHub로 로그인**; sign-in asks for the `repo` scope.
+
+Without a client ID, cloning by HTTPS URL and push still work through the computer's own Git credentials.
+
 ## Open release gates
 
 Final Rust/system ownership; broader native lifecycle and first-run acceptance;
 Windows-host execution; installed-app end-to-end checks; signed installers and update installation. Native GitHub login
-requires the user's GitHub App client id. Certificates, account registration and final distribution review are user work.
+requires the registered OAuth App client id (see above). Certificates, account registration and final distribution review are user work.
 A checked-in CI workflow is not a remote green run. An unsigned candidate is not a release.
 
 ## Signed update staging

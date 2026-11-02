@@ -44,4 +44,5 @@ make GitHub sign-in work, and make the Code Workspace edit the daily Markdown lo
 - [x] T2 Adapter commands and UI: today's log, add problem, run block; update IDE smoke.
 - [x] T3 Native GitHub commands, scope, built-in client ID; cargo tests for name validation.
 - [x] T4 Start panel step flow (sign in, repository list, create on GitHub); browser check with a mocked native bridge.
-- [ ] T5 Rebuild ALDY.app; record what was and was not verified natively (live GitHub sign-in needs the registered client ID).
+- [x] T5 Rebuilt ALDY.app (2026-11-02, unsigned, Apple Silicon); onboarding smoke passes close/cancel/new on the packaged binary.
+  Not verified natively: live GitHub sign-in (no client ID registered yet), the folder picker dialog, Windows.
