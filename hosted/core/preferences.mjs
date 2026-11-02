@@ -6,7 +6,7 @@ export const defaultPreferences = () => ({weekday_minutes:60,target_keys:[],week
 export const DEFAULT_MASTERY = {practice_platform:'leetcode',contest_platforms:['codeforces','atcoder'],target_concepts:[],cooldown_days:30,
   explore_cap:0.25,weekend_window:{sat:['20:00','24:00'],sun:['14:00','24:00']}};
 export function normalizeMastery(input={}) {
-  if (!input || typeof input!=='object' || Array.isArray(input) || Object.keys(input).some(k=>!(k in DEFAULT_MASTERY))) throw new Error('invalid mastery settings');
+  if (!input || typeof input!=='object' || Array.isArray(input) || Object.keys(input).some(k=>!(k in DEFAULT_MASTERY)&&k!=='company_focus')) throw new Error('invalid mastery settings');
   const m={...structuredClone(DEFAULT_MASTERY),...structuredClone(input)};
   if (!['leetcode','codeforces','atcoder'].includes(m.practice_platform) || !Array.isArray(m.contest_platforms) || !m.contest_platforms.length || m.contest_platforms.some(p=>!['codeforces','atcoder'].includes(p)) || new Set(m.contest_platforms).size!==m.contest_platforms.length) throw new Error('invalid mastery platforms');
   if (!Array.isArray(m.target_concepts) || m.target_concepts.some(c=>typeof c!=='string' || !/^[a-z0-9-]{1,60}$/.test(c))) throw new Error('invalid mastery target concepts');
@@ -15,6 +15,10 @@ export function normalizeMastery(input={}) {
   const hhmm=/^([01]\d|2[0-3]):[0-5]\d$|^24:00$/;
   if (!m.weekend_window || typeof m.weekend_window!=='object' || Object.keys(m.weekend_window).sort().join('|')!=='sat|sun') throw new Error('invalid mastery weekend window');
   for (const day of ['sat','sun']) { const w=m.weekend_window[day]; if (!Array.isArray(w) || w.length!==2 || w.some(t=>typeof t!=='string' || !hhmm.test(t)) || w[0]>=w[1]) throw new Error('invalid mastery weekend window'); }
+  if ('company_focus' in input) {
+    const f=input.company_focus;
+    if(f!==null&&(!f||Object.keys(f).sort().join('|')!=='company_id|fill_from_general|window'||typeof f.company_id!=='string'||!/^[a-z0-9-]{1,120}$/.test(f.company_id)||!['30d','3m','6m','gt6m','all'].includes(f.window)||typeof f.fill_from_general!=='boolean'))throw new Error('invalid company focus');
+  }
   return m;
 }
 export function normalizePreferences(input) {

@@ -1,0 +1,26 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {desktopResponse} from '../local-desktop.mjs';
+import {createDatabase} from './helpers/d1.mjs';
+import {readLedger} from '../mastery/ledger.mjs';
+import {catalogFromData} from '../mastery/catalog.mjs';
+import {createJournalService} from '../mastery/journal.mjs';
+import {COMPANY_WINDOWS} from '../mastery/company.mjs';
+const problem=(key,level)=>({key:'leetcode:'+key,platform:'leetcode',title:key,difficulty_kind:'lc_level',difficulty_value:level,tags:['arrays'],concepts:[{id:'arrays',status:'approved'}]});
+test('company interview freeze is per company/window/layer and inherits evidence-backed weak concepts',async t=>{
+ const db=createDatabase();t.after(()=>db.close());const learnerId='company-api-fixture';
+ const problems=[...Array.from({length:6},(_,i)=>problem('new-'+i,1+i%3)),...Array.from({length:4},(_,i)=>problem('old-'+i,1))];
+ const catalog=catalogFromData({problems}),list=problems.slice(0,6).map((p,i)=>({problem_key:p.key,rank:i+1}));
+ let layer={available:true,version:'company-v1',sha256:'first',meta:{commit_date:'2026-10-29'},companies:[{company_id:'a',name:'A'},{company_id:'b',name:'B'}],lists:new Map(['a','b'].map(id=>[id,new Map(COMPANY_WINDOWS.map(w=>[w,list]))]))};
+ const ledger=await readLedger(db,learnerId);ledger.attempts=problems.slice(6).map((p,i)=>({id:'old-'+i,problem_key:p.key,outcome:'failed',hints:null,occurred_at:new Date().toISOString(),evidence_source:'manual',activity_type:'practice'}));
+ const context={db,learnerId,catalogRoot:'/unused',loadCatalog:async()=>({catalog,ledger}),loadCompany:async()=>layer};
+ const create=async(company_id='a',window='all')=>desktopResponse(new Request('http://localhost/api/company/mock',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({focus:{company_id,window,fill_from_general:false}})}),context);
+ const first=await create();assert.equal(first.status,201);const record=await first.json();assert.deepEqual(record.weak_concepts,['arrays']);
+ const repeated=await(await create()).json();assert.equal(repeated.frozen,true);assert.deepEqual(repeated.problems,record.problems);
+ const other=await create('b');assert.equal(other.status,201);assert.equal((await other.json()).scope.company_id,'b');
+ assert.equal((await create('a','30d')).status,201);
+ layer={...layer,sha256:'second'};assert.equal((await create()).status,201);
+ const journal=await createJournalService({db,catalogRoot:'/unused',catalogProvider:()=>catalog,companyProvider:()=>layer}).view(learnerId);
+ assert.equal(journal.mock_contests.length,4);
+ assert.equal(journal.days.flatMap(d=>d.entries).filter(e=>e.snapshot_id?.startsWith('company_mock')).length,0);
+});

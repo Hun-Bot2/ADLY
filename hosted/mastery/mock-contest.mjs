@@ -3,6 +3,7 @@
 import {fitLeetCode,practiceObservations,predict} from './calibration.mjs';
 import {canonicalKey,recommendable,trustedConcepts} from './related.mjs';
 
+export const isMockSnapshotKind=kind=>kind==='mock_contest'||kind==='company_mock'||typeof kind==='string'&&/^company_mock-[a-f0-9]{24}$/.test(kind);
 export const MOCK_CONTEST_VERSION = 'mock-contest-v2';
 export const MOCK_COUNT = {min:5,max:7,default:6};
 // Unvalidated practice heuristic (R3.4): aim for 60% of the problems solved under conservative estimates.
@@ -19,8 +20,8 @@ function levelPredictions(abilities) {
 
 // R3: choose (easy, medium, hard) with e>=1, m>=1 and per-level pool limits, minimizing |E - T|.
 // Ties prefer more Hard, then more Medium.
-export function composeLevels({abilities,pools,count=MOCK_COUNT.default}) {
-  if (!Number.isInteger(count) || count<MOCK_COUNT.min || count>MOCK_COUNT.max) throw new Error(`mock contest count must be an integer in [${MOCK_COUNT.min}, ${MOCK_COUNT.max}]`);
+export function composeLevels({abilities,pools,count=MOCK_COUNT.default,company=false}) {
+  if (!Number.isInteger(count) || count<(company?2:MOCK_COUNT.min) || count>MOCK_COUNT.max) throw new Error(`mock contest count must be an integer in [${company?2:MOCK_COUNT.min}, ${MOCK_COUNT.max}]`);
   for (const level of LEVELS) if (!Number.isInteger(pools?.[level]) || pools[level]<0) throw new Error('invalid mock contest pool sizes');
   const probabilities=levelPredictions(abilities);
   const target=round(TARGET_RATIO*count);
@@ -51,15 +52,17 @@ export function fnv1a(text) {
 // R2: unattempted, recommendable LeetCode problems with a native level and at least one native tag, outside the
 // exposure cooldown. Untagged rows in catalog-v4 are JavaScript/Pandas/SQL exercises, not algorithm problems (R2.1).
 // `exposures` is [{date, problem_keys}] from daily plan and earlier mock contest snapshots.
-export function candidatePool({catalog,attempts=[],exposures=[],date,cooldownDays}) {
+export function candidatePool({catalog,attempts=[],exposures=[],date,cooldownDays,restrictTo=null}) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date ?? '')) throw new Error('invalid mock contest date');
   if (!Number.isInteger(cooldownDays) || cooldownDays<0) throw new Error('invalid cooldown days');
+  const allowed=restrictTo===null?null:new Set(restrictTo);
   const attempted=new Set(attempts.map(a=>canonicalKey(catalog,a.problem_key)));
   const from=addDays(date,-cooldownDays), exposed=new Set();
   for (const e of exposures) if (e.date>=from && e.date<date) for (const key of e.problem_keys ?? []) exposed.add(canonicalKey(catalog,key));
   const byLevel={1:[],2:[],3:[]}, excluded={attempted:0,exposed:0,untagged:0};
   for (const p of catalog.problems.values()) {
     if (p.platform!=='leetcode' || !recommendable(p) || p.difficulty_kind!=='lc_level' || !LEVELS.includes(p.difficulty_value) || canonicalKey(catalog,p.key)!==p.key) continue;
+    if(allowed&&!allowed.has(p.key))continue;
     if (!(p.tags ?? []).length) { excluded.untagged++; continue; }
     if (attempted.has(p.key)) { excluded.attempted++; continue; }
     if (exposed.has(p.key)) { excluded.exposed++; continue; }
@@ -102,14 +105,14 @@ export const MOCK_MINUTES = {min:30,max:300,default:120};
 
 // T4: one immutable mock contest record (design.md section 3.5). Only LeetCode evidence is read (R3.3):
 // the ability comes from LeetCode practice observations, and only LeetCode attempts are listed as inputs.
-export function mockContest({catalog,attempts=[],exposures=[],weakConcepts=[],learnerId,date,mastery,count=MOCK_COUNT.default,minutes=null}) {
+export function mockContest({catalog,attempts=[],exposures=[],weakConcepts=[],learnerId,date,mastery,count=MOCK_COUNT.default,minutes=null,restrictTo=null}) {
   if (typeof learnerId!=='string' || !learnerId) throw new Error('invalid learner id');
   const durationMinutes=minutes ?? MOCK_MINUTES.default;
   if (!Number.isInteger(durationMinutes) || durationMinutes<MOCK_MINUTES.min || durationMinutes>MOCK_MINUTES.max) throw new Error(`mock contest minutes must be an integer in [${MOCK_MINUTES.min}, ${MOCK_MINUTES.max}]`);
   const lcAttempts=attempts.filter(a=>catalog.problems.get(canonicalKey(catalog,a.problem_key))?.platform==='leetcode');
   const leetcode=fitLeetCode(practiceObservations(lcAttempts,catalog,'leetcode'));
-  const pool=candidatePool({catalog,attempts:lcAttempts,exposures,date,cooldownDays:mastery.cooldown_days});
-  const composed=composeLevels({abilities:{leetcode},pools:pool.sizes,count});
+  const pool=candidatePool({catalog,attempts:lcAttempts,exposures,date,cooldownDays:mastery.cooldown_days,restrictTo});
+  const composed=composeLevels({abilities:{leetcode},pools:pool.sizes,count,company:restrictTo!==null});
   const weak=[...new Set(weakConcepts)].sort();
   const selection=selectProblems({pool,composition:composed.composition,weakConcepts:weak,learnerId,date});
   const from=addDays(date,-mastery.cooldown_days);
@@ -137,10 +140,17 @@ export function snapshotExposures(rows) {
   for (const r of rows) {
     const p=r.payload;
     if (!p || p.archive_type==='recommendation_snapshot') continue;
-    if (r.kind==='mock_contest') out.push({date:r.local_date,problem_keys:(p.problems ?? []).map(x=>x.problem_key)});
+    if (isMockSnapshotKind(r.kind)) out.push({date:r.local_date,problem_keys:(p.problems ?? []).map(x=>x.problem_key)});
     else out.push({date:p.date ?? r.local_date,problem_keys:(p.slots ?? []).map(s=>s.problem_key).filter(Boolean)});
   }
   return out;
 }
 // Plan-shaped exposures so planDay/planProgression skip mock contest problems without changing their logic.
 export const mockExposurePlans = mocks => mocks.map(m=>({date:m.local_date,source_kind:'mock_contest',slots:m.problems.map(p=>({problem_key:p.problem_key}))}));
+
+// Company interviews keep the same composition and evidence model with a restricted pool.
+export function companyMockContest(args){
+  if(!args.scope||!Array.isArray(args.scope.list))throw new Error('company scope required');
+  const result=mockContest({...args,count:args.count??2,minutes:args.minutes??45,restrictTo:args.scope.list.map(r=>r.problem_key)});
+  return {...result,kind:'company_mock',scope:{company_id:args.scope.company_id,company_name:args.scope.company_name,window:args.scope.window,layer_version:args.scope.layer_version,layer_sha256:args.scope.layer_sha256,upstream_commit_date:args.scope.upstream_commit_date}};
+}

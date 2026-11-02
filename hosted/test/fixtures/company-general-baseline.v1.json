@@ -1,0 +1,619 @@
+{
+  "source_commit": "f6fce90f8cd95bc8a1f6f537175f0e12ea9123dd",
+  "source_sha256": "092e00d499e5e52a083fa28ffb225cc97e729d8c053390427098c5def115e773",
+  "problems": [
+    {
+      "key": "leetcode:authored-easy",
+      "platform": "leetcode",
+      "title": "Authored easy",
+      "url": "https://leetcode.com/problems/authored-easy/",
+      "difficulty_kind": "lc_level",
+      "difficulty_value": 1,
+      "tags": [
+        "authored"
+      ],
+      "concepts": [
+        {
+          "id": "arrays-hashing",
+          "status": "approved"
+        }
+      ]
+    },
+    {
+      "key": "leetcode:authored-medium",
+      "platform": "leetcode",
+      "title": "Authored medium",
+      "url": "https://leetcode.com/problems/authored-medium/",
+      "difficulty_kind": "lc_level",
+      "difficulty_value": 2,
+      "tags": [
+        "authored"
+      ],
+      "concepts": [
+        {
+          "id": "arrays-hashing",
+          "status": "approved"
+        }
+      ]
+    },
+    {
+      "key": "leetcode:authored-hard",
+      "platform": "leetcode",
+      "title": "Authored hard",
+      "url": "https://leetcode.com/problems/authored-hard/",
+      "difficulty_kind": "lc_level",
+      "difficulty_value": 3,
+      "tags": [
+        "authored"
+      ],
+      "concepts": [
+        {
+          "id": "arrays-hashing",
+          "status": "approved"
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "fresh",
+      "attempts": [],
+      "expected": {
+        "policy": "progression-v2",
+        "config_version": "progression-v2-config-1",
+        "config_sha256": "0d6fb2848dfbf6a6698069c904c48747e0cb054a62c1be921531b5d91ac42b29",
+        "status": "available",
+        "next": {
+          "policy": "progression-v2",
+          "config_version": "progression-v2-config-1",
+          "config_sha256": "0d6fb2848dfbf6a6698069c904c48747e0cb054a62c1be921531b5d91ac42b29",
+          "catalog_version": "authored-company-invariance",
+          "concept": "arrays-hashing",
+          "action": "consolidate",
+          "kind": "practice",
+          "problem_key": "leetcode:authored-easy",
+          "platform": "leetcode",
+          "level": 1,
+          "estimate": {
+            "p": 0.8,
+            "interval": [
+              0.5349903410414305,
+              0.9830809454876033
+            ],
+            "n_own": 0,
+            "n_level_outside": 0,
+            "prior": "authored"
+          },
+          "components": {
+            "D": 0.857142857142857,
+            "I": 0.2,
+            "C": 1,
+            "F": 0,
+            "K": 0
+          },
+          "weights": {
+            "challenge_fit": 0.5,
+            "information": 0.3,
+            "coverage": 0.2,
+            "follow_up": 0.3,
+            "continuity": 0.2
+          },
+          "benefit_proxy": 0.6885714285714285,
+          "readiness": {
+            "medium": {
+              "state": "not_ready",
+              "probability": 0.21599999999999997,
+              "cell": {
+                "level": 2,
+                "alpha": 2,
+                "beta": 2,
+                "n_own": 0,
+                "n_level_outside": 0,
+                "prior": "authored",
+                "p": 0.5,
+                "interval": null
+              }
+            },
+            "prerequisites": [],
+            "eligible": true
+          },
+          "follow_up": {
+            "open": false,
+            "failed_observation_id": null,
+            "expires": null
+          },
+          "coverage": {
+            "consolidate": "ok",
+            "step_up": "ok"
+          },
+          "tie_break": {
+            "coverage_gain": 1,
+            "purity": 1,
+            "hash": 2437008476
+          },
+          "eligible": true,
+          "reason": "arrays-hashing: consolidate; estimated solve probability 0.800, heuristic benefit 0.689.",
+          "limitations": [
+            "estimates are not calibrated",
+            "benefit is a heuristic"
+          ],
+          "alternatives": [
+            {
+              "concept": "arrays-hashing",
+              "action": "step_up",
+              "benefit_proxy": 0.6171428571428572
+            }
+          ]
+        },
+        "concepts": {
+          "arrays-hashing": {
+            "concept": "arrays-hashing",
+            "cells": [
+              {
+                "level": 1,
+                "alpha": 3.2,
+                "beta": 0.7999999999999998,
+                "n_own": 0,
+                "n_level_outside": 0,
+                "prior": "authored",
+                "p": 0.8,
+                "interval": [
+                  0.5349903410414305,
+                  0.9830809454876033
+                ]
+              },
+              {
+                "level": 2,
+                "alpha": 2,
+                "beta": 2,
+                "n_own": 0,
+                "n_level_outside": 0,
+                "prior": "authored",
+                "p": 0.5,
+                "interval": [
+                  0.19580010565909173,
+                  0.8041998943409083
+                ]
+              },
+              {
+                "level": 3,
+                "alpha": 0.8,
+                "beta": 3.2,
+                "n_own": 0,
+                "n_level_outside": 0,
+                "prior": "authored",
+                "p": 0.2,
+                "interval": [
+                  0.016919054512396788,
+                  0.4650096589585694
+                ]
+              }
+            ],
+            "readiness": {
+              "medium": {
+                "state": "not_ready",
+                "probability": 0.21599999999999997,
+                "cell": {
+                  "level": 2,
+                  "alpha": 2,
+                  "beta": 2,
+                  "n_own": 0,
+                  "n_level_outside": 0,
+                  "prior": "authored",
+                  "p": 0.5,
+                  "interval": null
+                }
+              },
+              "prerequisites": [],
+              "eligible": true
+            },
+            "follow_up": {
+              "open": false,
+              "failed_observation_id": null,
+              "expires": null
+            },
+            "coverage": {
+              "consolidate": "ok",
+              "step_up": "ok"
+            },
+            "best_action": "consolidate",
+            "best_level": 1
+          }
+        },
+        "diagnostics": {
+          "unknown_problems": [],
+          "invalid_attempts": []
+        },
+        "alternatives": [
+          {
+            "concept": "arrays-hashing",
+            "action": "step_up",
+            "benefit_proxy": 0.6171428571428572
+          }
+        ]
+      }
+    },
+    {
+      "name": "solved-easy",
+      "attempts": [
+        {
+          "id": "a",
+          "problem_key": "leetcode:authored-easy",
+          "outcome": "independent",
+          "hints": false,
+          "activity_type": "practice",
+          "occurred_at": "2026-10-28T00:00:00Z"
+        }
+      ],
+      "expected": {
+        "policy": "progression-v2",
+        "config_version": "progression-v2-config-1",
+        "config_sha256": "0d6fb2848dfbf6a6698069c904c48747e0cb054a62c1be921531b5d91ac42b29",
+        "status": "available",
+        "next": {
+          "policy": "progression-v2",
+          "config_version": "progression-v2-config-1",
+          "config_sha256": "0d6fb2848dfbf6a6698069c904c48747e0cb054a62c1be921531b5d91ac42b29",
+          "catalog_version": "authored-company-invariance",
+          "concept": "arrays-hashing",
+          "action": "step_up",
+          "kind": "practice",
+          "problem_key": "leetcode:authored-medium",
+          "platform": "leetcode",
+          "level": 2,
+          "estimate": {
+            "p": 0.5339394440353281,
+            "interval": [
+              0.22570263533878976,
+              0.832273527975542
+            ],
+            "n_own": 0,
+            "n_level_outside": 0,
+            "prior": "authored"
+          },
+          "components": {
+            "D": 0.7627706343361831,
+            "I": 0.2,
+            "C": 1,
+            "F": 0,
+            "K": 1
+          },
+          "weights": {
+            "challenge_fit": 0.5,
+            "information": 0.3,
+            "coverage": 0.2,
+            "follow_up": 0.3,
+            "continuity": 0.2
+          },
+          "benefit_proxy": 0.8413853171680916,
+          "readiness": {
+            "medium": {
+              "state": "not_ready",
+              "probability": 0.2635275650383708,
+              "cell": {
+                "level": 2,
+                "alpha": 2.1357577761413125,
+                "beta": 1.8642422238586875,
+                "n_own": 0,
+                "n_level_outside": 0,
+                "prior": "authored",
+                "p": 0.5339394440353281,
+                "interval": null
+              }
+            },
+            "prerequisites": [],
+            "eligible": true
+          },
+          "follow_up": {
+            "open": false,
+            "failed_observation_id": null,
+            "expires": null
+          },
+          "coverage": {
+            "consolidate": "insufficient_catalog_coverage",
+            "step_up": "ok",
+            "stretch": "ok"
+          },
+          "tie_break": {
+            "coverage_gain": 1,
+            "purity": 1,
+            "hash": 3482481809
+          },
+          "eligible": true,
+          "reason": "arrays-hashing: step_up; estimated solve probability 0.534, heuristic benefit 0.841.",
+          "limitations": [
+            "estimates are not calibrated",
+            "benefit is a heuristic"
+          ],
+          "alternatives": [
+            {
+              "concept": "arrays-hashing",
+              "action": "stretch",
+              "benefit_proxy": 0.6028571428571429
+            }
+          ]
+        },
+        "concepts": {
+          "arrays-hashing": {
+            "concept": "arrays-hashing",
+            "cells": [
+              {
+                "level": 1,
+                "alpha": 4.2,
+                "beta": 0.7999999999999998,
+                "n_own": 1,
+                "n_level_outside": 0,
+                "prior": "authored",
+                "p": 0.8400000000000001,
+                "interval": [
+                  0.6227669385802155,
+                  0.9871723665477783
+                ]
+              },
+              {
+                "level": 2,
+                "alpha": 2.1357577761413125,
+                "beta": 1.8642422238586875,
+                "n_own": 0,
+                "n_level_outside": 0,
+                "prior": "authored",
+                "p": 0.5339394440353281,
+                "interval": [
+                  0.22570263533878976,
+                  0.832273527975542
+                ]
+              },
+              {
+                "level": 3,
+                "alpha": 0.8,
+                "beta": 3.2,
+                "n_own": 0,
+                "n_level_outside": 0,
+                "prior": "authored",
+                "p": 0.2,
+                "interval": [
+                  0.016919054512396788,
+                  0.4650096589585694
+                ]
+              }
+            ],
+            "readiness": {
+              "medium": {
+                "state": "not_ready",
+                "probability": 0.2635275650383708,
+                "cell": {
+                  "level": 2,
+                  "alpha": 2.1357577761413125,
+                  "beta": 1.8642422238586875,
+                  "n_own": 0,
+                  "n_level_outside": 0,
+                  "prior": "authored",
+                  "p": 0.5339394440353281,
+                  "interval": null
+                }
+              },
+              "prerequisites": [],
+              "eligible": true
+            },
+            "follow_up": {
+              "open": false,
+              "failed_observation_id": null,
+              "expires": null
+            },
+            "coverage": {
+              "consolidate": "insufficient_catalog_coverage",
+              "step_up": "ok",
+              "stretch": "ok"
+            },
+            "best_action": "step_up",
+            "best_level": 2
+          }
+        },
+        "diagnostics": {
+          "unknown_problems": [],
+          "invalid_attempts": []
+        },
+        "alternatives": [
+          {
+            "concept": "arrays-hashing",
+            "action": "stretch",
+            "benefit_proxy": 0.6028571428571429
+          }
+        ]
+      }
+    },
+    {
+      "name": "failed-medium",
+      "attempts": [
+        {
+          "id": "b",
+          "problem_key": "leetcode:authored-medium",
+          "outcome": "failed",
+          "hints": null,
+          "activity_type": "practice",
+          "occurred_at": "2026-10-28T00:00:00Z"
+        }
+      ],
+      "expected": {
+        "policy": "progression-v2",
+        "config_version": "progression-v2-config-1",
+        "config_sha256": "0d6fb2848dfbf6a6698069c904c48747e0cb054a62c1be921531b5d91ac42b29",
+        "status": "available",
+        "next": {
+          "policy": "progression-v2",
+          "config_version": "progression-v2-config-1",
+          "config_sha256": "0d6fb2848dfbf6a6698069c904c48747e0cb054a62c1be921531b5d91ac42b29",
+          "catalog_version": "authored-company-invariance",
+          "concept": "arrays-hashing",
+          "action": "step_down",
+          "kind": "practice",
+          "problem_key": "leetcode:authored-easy",
+          "platform": "leetcode",
+          "level": 1,
+          "estimate": {
+            "p": 0.8,
+            "interval": [
+              0.5349903410414305,
+              0.9830809454876033
+            ],
+            "n_own": 0,
+            "n_level_outside": 0,
+            "prior": "authored"
+          },
+          "components": {
+            "D": 0.857142857142857,
+            "I": 0.2,
+            "C": 1,
+            "F": 1,
+            "K": 0
+          },
+          "weights": {
+            "challenge_fit": 0.5,
+            "information": 0.3,
+            "coverage": 0.2,
+            "follow_up": 0.3,
+            "continuity": 0.2
+          },
+          "benefit_proxy": 0.9885714285714284,
+          "readiness": {
+            "medium": {
+              "state": "waived",
+              "probability": 0.08369999999999977,
+              "waiver": "exhausted",
+              "cell": {
+                "level": 2,
+                "alpha": 2,
+                "beta": 3,
+                "n_own": 1,
+                "n_level_outside": 0,
+                "prior": "authored",
+                "p": 0.4,
+                "interval": null
+              }
+            },
+            "prerequisites": [],
+            "eligible": true
+          },
+          "follow_up": {
+            "open": true,
+            "failed_observation_id": "b",
+            "expires": "2026-11-11"
+          },
+          "coverage": {
+            "step_down": "ok",
+            "consolidate": "insufficient_catalog_coverage",
+            "step_up": "ok",
+            "transfer": "insufficient_catalog_coverage"
+          },
+          "tie_break": {
+            "coverage_gain": 1,
+            "purity": 1,
+            "hash": 2437008476
+          },
+          "eligible": true,
+          "reason": "arrays-hashing: step_down; estimated solve probability 0.800, heuristic benefit 0.989.",
+          "limitations": [
+            "estimates are not calibrated",
+            "benefit is a heuristic"
+          ],
+          "alternatives": [
+            {
+              "concept": "arrays-hashing",
+              "action": "step_up",
+              "benefit_proxy": 0.6810863194275265
+            }
+          ]
+        },
+        "concepts": {
+          "arrays-hashing": {
+            "concept": "arrays-hashing",
+            "cells": [
+              {
+                "level": 1,
+                "alpha": 3.2,
+                "beta": 0.7999999999999998,
+                "n_own": 0,
+                "n_level_outside": 0,
+                "prior": "authored",
+                "p": 0.8,
+                "interval": [
+                  0.5349903410414305,
+                  0.9830809454876033
+                ]
+              },
+              {
+                "level": 2,
+                "alpha": 2,
+                "beta": 3,
+                "n_own": 1,
+                "n_level_outside": 0,
+                "prior": "authored",
+                "p": 0.4,
+                "interval": [
+                  0.14255931671003086,
+                  0.6795394162781814
+                ]
+              },
+              {
+                "level": 3,
+                "alpha": 0.678083388794149,
+                "beta": 3.321916611205851,
+                "n_own": 0,
+                "n_level_outside": 0,
+                "prior": "authored",
+                "p": 0.16952084719853724,
+                "interval": [
+                  0.009244041813025471,
+                  0.41730262218177894
+                ]
+              }
+            ],
+            "readiness": {
+              "medium": {
+                "state": "waived",
+                "probability": 0.08369999999999977,
+                "waiver": "exhausted",
+                "cell": {
+                  "level": 2,
+                  "alpha": 2,
+                  "beta": 3,
+                  "n_own": 1,
+                  "n_level_outside": 0,
+                  "prior": "authored",
+                  "p": 0.4,
+                  "interval": null
+                }
+              },
+              "prerequisites": [],
+              "eligible": true
+            },
+            "follow_up": {
+              "open": true,
+              "failed_observation_id": "b",
+              "expires": "2026-11-11"
+            },
+            "coverage": {
+              "step_down": "ok",
+              "consolidate": "insufficient_catalog_coverage",
+              "step_up": "ok",
+              "transfer": "insufficient_catalog_coverage"
+            },
+            "best_action": "step_down",
+            "best_level": 1
+          }
+        },
+        "diagnostics": {
+          "unknown_problems": [],
+          "invalid_attempts": []
+        },
+        "alternatives": [
+          {
+            "concept": "arrays-hashing",
+            "action": "step_up",
+            "benefit_proxy": 0.6810863194275265
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Company-specific preparation: requirements
 
-Status: accepted 2026-10-29 (ADR 008, revised). Not implemented. Tasks: `specs/desktop-app/tasks.md` (CP-1…CP-4).
+Status: accepted 2026-10-29 (ADR 008, revised). Builder, engine integration and local UI implemented and fixture-tested; installed distribution remains gated. Tasks: `specs/desktop-app/tasks.md` (CP-1…CP-4).
 Evidence: `research/company_prep/REPORT.md`. Distribution considerations: `distribution-considerations.md` (non-blocking).
 (P) = provisional default, shown and never called optimised.
 

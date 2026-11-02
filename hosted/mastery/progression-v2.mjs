@@ -112,8 +112,13 @@ export function conceptFollowUp(observations,concept,date,config=defaultConfig){
 
 const variation=p=>JSON.stringify([...(p.tags??[])].map(String).sort());
 const fnv=text=>{let h=2166136261;for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;};
-export function planProgressionV2({date,ledger,catalog,preferences={},priorPlans=[],config=defaultConfig,prerequisites=curriculum.prerequisites,learnerId='local-owner',configHash=null}){
+export function planProgressionV2({date,ledger,catalog,preferences={},priorPlans=[],config=defaultConfig,prerequisites=curriculum.prerequisites,learnerId='local-owner',configHash=null,scope=null}){
   configHash??=canonicalConfigHash(config);
+  if(scope&&(scope.kind!=='company'||!Array.isArray(scope.list)))throw new Error('invalid company scope');
+  const companyRanks=scope?new Map(scope.list.filter(r=>catalog.problems.get(r.problem_key)?.platform==='leetcode').map(r=>[r.problem_key,r.rank])):null;
+  const companyCounts=new Map();
+  if(scope)for(const key of companyRanks.keys())for(const concept of conceptsFor(catalog.problems.get(key)))companyCounts.set(concept,(companyCounts.get(concept)??0)+1);
+  const maxCompanyCount=Math.max(1,...companyCounts.values());
   const attempts=(ledger.attempts??[]).filter(a=>a.occurred_at&&seoulDate(new Date(a.occurred_at))<=date&&(!ledger.cutoff||Date.parse(a.occurred_at)<=Date.parse(ledger.cutoff)));
   const derived=deriveObservations(attempts,catalog),obs=derived.observations;
   const cutoff=ledger.cutoff?Date.parse(ledger.cutoff):Date.parse(`${date}T23:59:59.999+09:00`);
@@ -142,13 +147,16 @@ export function planProgressionV2({date,ledger,catalog,preferences={},priorPlans
     for(const level of [1,2,3]){
       const action=level<highest?'step_down':level===highest?'consolidate':level===highest+1?'step_up':'stretch';
       if(action==='stretch'&&!own.length)continue;
-      const candidates=(poolByConcept.get(concept)??[]).filter(p=>p.platform==='leetcode'&&Number(p.difficulty_value)===level&&conceptsFor(p).has(concept));
-      const ties=p=>({coverage_gain:seenVariations.get(level).has(variation(p))?0:1,purity:conceptsFor(p).size,hash:fnv(`${learnerId}|${date}|${concept}|${p.key}`)});
-      candidates.sort((a,b)=>{const x=ties(a),y=ties(b);return y.coverage_gain-x.coverage_gain||x.purity-y.purity||x.hash-y.hash;});
-      coverage[action]=candidates.length?'ok':'insufficient_catalog_coverage';
-      if(candidates.length){const problem=candidates[0],cell=cells[level-1];actions.push({action,problem,estimate:cell,information:betaInformation(cell.alpha,cell.beta),tie_break:ties(problem),level});}
+      const general=(poolByConcept.get(concept)??[]).filter(p=>p.platform==='leetcode'&&Number(p.difficulty_value)===level&&conceptsFor(p).has(concept));
+      let candidates=scope?general.filter(p=>companyRanks.has(p.key)):general;
+      const scopeMatch=!scope||candidates.length>0;
+      if(scope&&!candidates.length&&scope.fill_from_general)candidates=general;
+      const ties=p=>({coverage_gain:seenVariations.get(level).has(variation(p))?0:1,...(scope?{rank:companyRanks.get(p.key)??Number.MAX_SAFE_INTEGER}:{}),purity:conceptsFor(p).size,hash:fnv(`${learnerId}|${date}|${concept}|${p.key}`)});
+      candidates.sort((a,b)=>{const x=ties(a),y=ties(b);return y.coverage_gain-x.coverage_gain||(scope?x.rank-y.rank:0)||x.purity-y.purity||x.hash-y.hash;});
+      coverage[action]=scope&&!scopeMatch?'insufficient_company_coverage':candidates.length?'ok':'insufficient_catalog_coverage';
+      if(candidates.length){const problem=candidates[0],cell=cells[level-1];actions.push({action,problem,estimate:cell,information:betaInformation(cell.alpha,cell.beta),tie_break:ties(problem),level,...(scope?{scope_match:scopeMatch}:{})});}
     }
-    if(readiness.medium.state!=='not_ready'&&!transferDone){
+    if(!scope&&readiness.medium.state!=='not_ready'&&!transferDone){
       const candidates=(poolByConcept.get(concept)??[]).filter(p=>config.transfer_platforms.includes(p.platform)&&conceptsFor(p).has(concept)&&!(config.exclude_experimental_atcoder&&p.platform==='atcoder'&&p.atc_experimental)&&
         (config.transfer_native_difficulty_floor===null||p.difficulty_value>=config.transfer_native_difficulty_floor)).map(problem=>({problem,estimate:platformPrediction(problem,abilities,config)})).filter(p=>p.estimate);
       const tie=p=>({coverage_gain:obs.some(o=>o.concepts.includes(concept)&&o.platform===p.platform&&variation(catalog.problems.get(o.problem_key))===variation(p))?0:1,purity:conceptsFor(p).size,hash:fnv(`${learnerId}|${date}|${concept}|${p.key}`)});
@@ -158,15 +166,17 @@ export function planProgressionV2({date,ledger,catalog,preferences={},priorPlans
     }
     for(const a of actions){
       const components={D:1-Math.abs(a.estimate.p-config.tau)/Math.max(config.tau,1-config.tau),I:a.information,C:a.tie_break.coverage_gain,F:follow_up.open?1:0,K:latest?.concepts.includes(concept)&&readiness.medium.state==='not_ready'?1:0};
-      const w=config.weights,B=w.challenge_fit*components.D+w.information*components.I+w.coverage*components.C+w.follow_up*components.F+w.continuity*components.K;
+      if(scope)components.company_share=(companyCounts.get(concept)??0)/maxCompanyCount;
+      const w=scope?{...config.weights,company_share:0.3}:config.weights,B=w.challenge_fit*components.D+w.information*components.I+w.coverage*components.C+w.follow_up*components.F+w.continuity*components.K+(scope?0.3*components.company_share:0);
       const p=a.problem;
       all.push({policy:'progression-v2',config_version:config.version,config_sha256:configHash??canonicalConfigHash(config),catalog_version:catalog.version,concept,action:a.action,kind:a.action==='transfer'?'transfer':'practice',
         problem_key:p.key,platform:p.platform,...(a.level?{level:a.level}:{rating:a.rating}),estimate:{p:a.estimate.p,interval:a.estimate.interval,n_own:a.estimate.n_own,n_level_outside:a.estimate.n_level_outside,prior:a.estimate.prior},components,weights:w,benefit_proxy:B,
+        ...(scope?{scope:{kind:'company',company_id:scope.company_id,company_name:scope.company_name,window:scope.window,layer_version:scope.layer_version,layer_sha256:scope.layer_sha256,upstream_commit_date:scope.upstream_commit_date},scope_match:a.scope_match,company_rank:companyRanks.get(p.key)??null,scope_label:a.scope_match?'Company list membership does not mean the problem will be asked.':`not in ${scope.company_name??scope.company_id} list`}:{}),
         readiness,follow_up,coverage,tie_break:a.tie_break,eligible:readiness.eligible,reason:`${concept}: ${a.action}; estimated solve probability ${a.estimate.p.toFixed(3)}, heuristic benefit ${B.toFixed(3)}.`,limitations:['estimates are not calibrated','benefit is a heuristic']});
     }
     states[concept]={concept,cells,readiness,follow_up,coverage};
   }
-  const order=(a,b)=>b.benefit_proxy-a.benefit_proxy||b.tie_break.coverage_gain-a.tie_break.coverage_gain||a.tie_break.purity-b.tie_break.purity||a.tie_break.hash-b.tie_break.hash;
+  const order=(a,b)=>b.benefit_proxy-a.benefit_proxy||b.tie_break.coverage_gain-a.tie_break.coverage_gain||(scope?(a.tie_break.rank??Number.MAX_SAFE_INTEGER)-(b.tie_break.rank??Number.MAX_SAFE_INTEGER):0)||a.tie_break.purity-b.tie_break.purity||a.tie_break.hash-b.tie_break.hash;
   let available=all.filter(a=>a.eligible).sort(order),deadlockWaiver=false;
   if(!available.length&&all.length){available=all.sort(order);deadlockWaiver=true;}
   for(const [concept,state] of Object.entries(states)){
@@ -178,5 +188,5 @@ export function planProgressionV2({date,ledger,catalog,preferences={},priorPlans
     winner.alternatives=available.slice(1,4).map(a=>({concept:a.concept,action:a.action,benefit_proxy:a.benefit_proxy}));
     if(deadlockWaiver){winner.readiness={...winner.readiness,waiver:'candidate_coverage_deadlock'};winner.reason+=' Prerequisite coverage waiver prevents a deadlock.';}
   }
-  return {policy:'progression-v2',config_version:config.version,config_sha256:configHash??canonicalConfigHash(config),status:winner?'available':'insufficient_catalog_coverage',next:winner,concepts:states,diagnostics:{unknown_problems:derived.unknown_problems,invalid_attempts:derived.invalid_attempts},alternatives:winner?.alternatives??[]};
+  return {policy:'progression-v2',config_version:config.version,config_sha256:configHash??canonicalConfigHash(config),status:winner?'available':scope?'insufficient_company_coverage':'insufficient_catalog_coverage',next:winner,concepts:states,diagnostics:{unknown_problems:derived.unknown_problems,invalid_attempts:derived.invalid_attempts},alternatives:winner?.alternatives??[]};
 }

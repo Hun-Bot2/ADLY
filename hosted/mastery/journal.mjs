@@ -18,7 +18,8 @@ import {planProgression} from './progression.mjs';
 import {defaultConfig,loadProgressionConfig} from './progression-v2-config.mjs';
 import {canonicalConfigHash} from './progression-hash.mjs';
 import {journalPlanV2,v2ReviewQueue,v2Transitions} from './journal-v2.mjs';
-import {mockExposurePlans} from './mock-contest.mjs';
+import {companyScope} from './company.mjs';
+import {mockExposurePlans,isMockSnapshotKind} from './mock-contest.mjs';
 
 const digest=value=>createHash('sha256').update(canonicalJson(value)).digest('hex');
 const V2_POLICY_CODE_HASH=digest(Object.fromEntries(['./journal.mjs','./journal-v2.mjs','./progression-v2.mjs','./observations.mjs','./beta-math.mjs','./progression-v2-config.mjs','./progression-hash.mjs','./reviews-v2.mjs','./related.mjs','./reviews.mjs','./interview-curriculum.v1.json','./calibration.mjs','../core/policy.mjs'].map(path=>[path,readFileSync(new URL(path,import.meta.url),'utf8')])));
@@ -30,14 +31,14 @@ export function activeLocalCatalog(db,ledger,root) {
   if (!current) throw new Error('no active catalog: run node hosted/cli.mjs catalog use --version catalog-v4');
   const info=attachCatalog(db.sqlite,join(root,current.payload.to_version,`${current.payload.to_version}.sqlite3`));
   if(info.sha256!==current.payload.catalog_sha256)throw new Error('active catalog file differs from the logged switch');
-  const catalog=loadCatalog(db.sqlite);catalog.base_version=switches[0].payload.to_version;return catalog;
+  const catalog=loadCatalog(db.sqlite);catalog.sha256=info.sha256;catalog.base_version=switches[0].payload.to_version;return catalog;
 }
 const level=p=>p?.platform==='leetcode'?({1:'Easy',2:'Medium',3:'Hard'}[p.difficulty_value] ?? p.difficulty_value):p?.difficulty_value ?? null;
 const stageRows=p=>p.concepts?Object.entries(p.concepts).map(([pattern,s])=>({...s,status:s.status ?? (s.readiness ? s.readiness.eligible ? 'in_progress' : 'blocked_prerequisite' : undefined),pattern,stage:s.next_stage ?? s.stage ?? s.best_action ?? s.stages?.[s.stage_index]?.id ?? null})):p.patterns ?? p.stages ?? [];
 const nextCandidate=p=>p.next ?? p.candidate ?? stageRows(p).find(x=>x.candidate)?.candidate ?? null;
 
-export function journalPlan({date,now,ledger,catalog,preferences,priorPlans=[],progressionVersion='v2',progressionConfig=defaultConfig,learnerId='local-owner'}) {
-  if(progressionVersion==='v2')return journalPlanV2({date,now,ledger,catalog,preferences,priorPlans,learnerId,config:progressionConfig,implementationHash:V2_POLICY_CODE_HASH});
+export function journalPlan({date,now,ledger,catalog,preferences,priorPlans=[],progressionVersion='v2',progressionConfig=defaultConfig,learnerId='local-owner',scope=null}) {
+  if(progressionVersion==='v2')return journalPlanV2({date,now,ledger,catalog,preferences,priorPlans,learnerId,scope,config:progressionConfig,implementationHash:V2_POLICY_CODE_HASH});
   if(progressionVersion!=='v1')throw new Error('unknown progression version');
   const rhythm=[...preferences.weekly_rhythm],day=weekInfo(date).weekday;
   const contestDay=['virtual','upsolve'].includes(rhythm[day]);
@@ -68,7 +69,7 @@ export function journalPlan({date,now,ledger,catalog,preferences,priorPlans=[],p
     budget_minutes:budget,curriculum_version:interview.version,progression_config_sha256:digest({interview,patternConfig}),implementation_sha256:POLICY_CODE_HASH};
 }
 
-export function createJournalService({db,catalogRoot,catalogProvider=null,progressionVersion='v2',progressionConfig=defaultConfig}) {
+export function createJournalService({db,catalogRoot,catalogProvider=null,progressionVersion='v2',progressionConfig=defaultConfig,companyProvider=null}) {
   if(!['v1','v2'].includes(progressionVersion))throw new Error('unknown progression version');
   progressionConfig=loadProgressionConfig(progressionConfig);
   const load=ledger=>catalogProvider?catalogProvider(ledger):activeLocalCatalog(db,ledger,catalogRoot);
@@ -77,16 +78,18 @@ export function createJournalService({db,catalogRoot,catalogProvider=null,progre
     let catalog;
     try{catalog=await load(ledger);}catch(error){if(error.message.startsWith('no active catalog'))return {available:false,reason:error.message};throw error;}
     const preferences=await getPreferences(db,learnerId);
+    const companyLayer=companyProvider?await companyProvider(catalog):null;
+    const scope=progressionVersion==='v2'?companyScope(companyLayer,preferences.mastery?.company_focus):null;
     const prior=(await db.prepare('SELECT kind,local_date,payload FROM recommendation_snapshots WHERE learner_id=? ORDER BY local_date,kind').bind(learnerId).all()).results;
     // Mock contests are not plans (no slots); they only add exposures for new daily plans (specs/mock-contest R6.4).
-    const rows=prior.map(r=>({...r,raw:JSON.parse(r.payload)})),isMock=r=>r.kind==='mock_contest' || r.raw.original_kind==='mock_contest';
+    const rows=prior.map(r=>({...r,raw:JSON.parse(r.payload)})),isMock=r=>isMockSnapshotKind(r.kind) || isMockSnapshotKind(r.raw.original_kind);
     // Restored backups wrap them as inert archives: shown as history, never used as exposures (like archived plans).
-    const mockContests=rows.filter(isMock).map(r=>r.kind==='mock_contest'?{...r.raw,archived:false}:{...r.raw.original_payload,local_date:r.local_date,archived:true});
+    const mockContests=rows.filter(isMock).map(r=>isMockSnapshotKind(r.kind)?{...r.raw,archived:false}:{...r.raw.original_payload,local_date:r.local_date,archived:true});
     const historyPlans=rows.filter(r=>!isMock(r)).map(r=>{const raw=r.raw,archived=raw.archive_type==='recommendation_snapshot',p=archived?raw.original_payload:raw;return {...p,snapshot_id:p.snapshot_id ?? `${archived?raw.original_kind:r.kind}-${r.local_date}`,local_date:r.local_date,archived};});
     const plans=historyPlans.filter(p=>!p.archived);
-    const key='journal-'+digest({date,version:JOURNAL_VERSION,catalog:catalog.version,attempts:ledger.attempts,ratings:ledger.rating_observations,preferences,interview,patternConfig,implementation:progressionVersion==='v1'?POLICY_CODE_HASH:V2_POLICY_CODE_HASH,...(progressionVersion==='v2'?{progressionVersion,config_hash:canonicalConfigHash(progressionConfig)}:{})}).slice(0,40);
+    const key='journal-'+digest({...(scope?{scope:{company_id:scope.company_id,window:scope.window,layer_sha256:scope.layer_sha256}}:{}),date,version:JOURNAL_VERSION,catalog:catalog.version,attempts:ledger.attempts,ratings:ledger.rating_observations,preferences,interview,patternConfig,implementation:progressionVersion==='v1'?POLICY_CODE_HASH:V2_POLICY_CODE_HASH,...(progressionVersion==='v2'?{progressionVersion,config_hash:canonicalConfigHash(progressionConfig)}:{})}).slice(0,40);
     let plan=await getSnapshot(db,learnerId,key,date);
-    if(!plan){plan=journalPlan({date,now:at,ledger,catalog,preferences,learnerId,progressionVersion,progressionConfig,priorPlans:[...plans,...mockExposurePlans(mockContests.filter(m=>!m.archived))]});plan.snapshot_id=key;plan=await saveSnapshot(db,learnerId,key,date,plan);}
+    if(!plan){plan=journalPlan({date,now:at,ledger,catalog,preferences,learnerId,scope,progressionVersion,progressionConfig,priorPlans:[...plans,...mockExposurePlans(mockContests.filter(m=>!m.archived))]});plan.snapshot_id=key;plan=await saveSnapshot(db,learnerId,key,date,plan);}
     const all=[...historyPlans.filter(p=>p.archived || p.snapshot_id!==key),plan];
     const queue=progressionVersion==='v2'?v2ReviewQueue(ledger,catalog,date,progressionConfig):reviewQueue(problemStates(ledger.attempts,catalog),catalog,date);
     const entries=[];

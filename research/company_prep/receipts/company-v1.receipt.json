@@ -1,0 +1,24 @@
+{
+  "build_time_policy": "database timestamp uses upstream commit time; executed_at is actual build time",
+  "builder_version": "1",
+  "built_at": "2026-10-20T21:30:33-04:00",
+  "catalog_sha256": "27a4ca622de50bfa6b86eb7d789abcc856bf40dd8fd511001e91edba20cffde4",
+  "catalog_version": "catalog-v4",
+  "commit": "2b71796266751b4736a7ef180efb6847879166ee",
+  "commit_date": "2026-10-20T21:30:33-04:00",
+  "executed_at": "2026-10-29T13:50:42.930299+00:00",
+  "output_sha256": "592ce94543e3adcf66344d1b63bfc547df44613a8f7945a73762749bc537dd72",
+  "report": {
+    "companies": 470,
+    "difficulty_disagreements": 1,
+    "duplicate_rows": 0,
+    "empty_files": 1227,
+    "files": 2350,
+    "malformed_rows": 0,
+    "matched": 2794,
+    "slugs": 3396,
+    "unmatched": 602
+  },
+  "upstream_url": "https://github.com/liquidslr/leetcode-company-wise-problems",
+  "version": "company-v1"
+}

@@ -14,8 +14,8 @@ export function v2ReviewQueue(ledger,catalog,date,config=defaultConfig){
   for(const row of rows)row.retention_risk=Math.min(1,(row.overdue_days+1)/config.review_days[row.review_stage]);
   return rows.sort((a,b)=>Number(b.due)-Number(a.due)||b.urgency-a.urgency||b.retention_risk-a.retention_risk||a.due_date.localeCompare(b.due_date)||a.problem_key.localeCompare(b.problem_key));
 }
-export function journalPlanV2({date,now,ledger,catalog,preferences,priorPlans=[],config=defaultConfig,implementationHash,learnerId='local-owner'}){
-  const progression={catalog_version:catalog.version,...planProgressionV2({date,ledger,catalog,preferences,priorPlans,config,learnerId})};
+export function journalPlanV2({date,now,ledger,catalog,preferences,priorPlans=[],config=defaultConfig,implementationHash,learnerId='local-owner',scope=null}){
+  const progression={catalog_version:catalog.version,...planProgressionV2({date,ledger,catalog,preferences,priorPlans,config,learnerId,scope})};
   const budget=preferences.weekday_minutes,slots=[];let used=0;
   for(const row of v2ReviewQueue(ledger,catalog,date,config).filter(r=>r.due)){
     if(used+row.estimated_minutes>budget)continue;
