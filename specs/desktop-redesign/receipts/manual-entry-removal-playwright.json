@@ -1,0 +1,16 @@
+{
+  "synthetic": true,
+  "tool": "Playwright",
+  "before": false,
+  "checks": [
+    "calendar and day panel have no manual entry actions",
+    "three sizes, nonmodal inspector, collapsed evidence",
+    "saved explanation, provider error, long note, evidence, HTTPS source and focus return",
+    "modal focus entry/trap, safe Escape, dirty close, discard, logical return",
+    "validated editor handoff opens repository setup",
+    "nonmodal contextual help and shell unsaved problem input",
+    "no generated explanation, not configured, accessible basic fallback"
+  ],
+  "errors": [],
+  "output": "/Users/jeonghun/Algorithm-RAG-Engine/specs/inspector-ux/screenshots"
+}

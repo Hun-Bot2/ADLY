@@ -1,0 +1,8 @@
+{
+  "synthetic": true,
+  "tool": "Playwright",
+  "before": true,
+  "checks": [],
+  "errors": [],
+  "output": "/Users/jeonghun/Algorithm-RAG-Engine/specs/inspector-ux/screenshots"
+}

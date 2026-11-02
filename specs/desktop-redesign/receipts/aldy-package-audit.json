@@ -1,0 +1,7 @@
+{
+  "verified": true,
+  "resource_files": 117,
+  "resource_bytes": 419948481,
+  "forbidden_data_present": false,
+  "scope": "candidate resource directories; native framework binaries are outside this content audit"
+}

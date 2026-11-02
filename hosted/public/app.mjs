@@ -1,4 +1,9 @@
-import {syncDiagnostic} from './workspace-data.mjs';
+import {installAppearance} from './appearance.mjs';
+installAppearance();
+import {closeInspector} from './overlays.mjs';
+import {createNavigation,normalizeRoute,pageHeader,button as uiButton,icon} from './ui.mjs';
+import {renderCompany,renderContestSchedule} from './company.mjs';
+import {syncDiagnostic,editorProblem} from './workspace-data.mjs';
 import {createWorkspace} from './workspace.mjs';
 const PENDING_KEY = "adaptive-learning.pending-events.v1";
 const PENDING_JOURNAL_KEY = "adaptive-learning.pending-journal-attempts.v1";
@@ -9,8 +14,26 @@ const app = $("#app");
 const notice = $("#notice");
 let state = null;
 let journalState = null;
-let currentView = "calendar";
-if (["#similarity", "#library"].includes(window.location?.hash)) currentView = window.location.hash.slice(1);
+let currentView = "dashboard";
+let researchView='research',settingsTab='goals';
+if(window.location?.hash){currentView=normalizeRoute(window.location.hash);if(['#similarity','#library'].includes(window.location.hash))researchView=window.location.hash.slice(1);}
+const embedded=Boolean(window.parent&&window.parent!==window);
+if(embedded)document.body?.classList?.add('embedded');
+const navigationHost=$('#primary-nav');
+if(navigationHost)navigationHost.append(createNavigation({onNavigate:navigate,active:currentView}));
+$('#open-learning-settings')?.addEventListener('click',()=>navigate('settings'));
+const settingsIcon=$('.settings-icon');if(settingsIcon)settingsIcon.append(icon('settings'));
+function navigate(view,{notify=true}={}){
+ closeInspector({returnFocus:false});
+ if(['similarity','library'].includes(view))researchView=view;
+ currentView=normalizeRoute(view);if(currentView==='research'&&!['similarity','library'].includes(view))researchView='research';
+ if(window.history?.replaceState)window.history.replaceState(null,'','#'+currentView);
+ if(state)render();
+ if(notify&&embedded)window.parent.postMessage({type:'algorithm-route-changed',view:currentView},window.location.origin);
+ window.scrollTo?.({top:0,behavior:'instant'});
+}
+window.addEventListener('message',event=>{if(!embedded||event.source!==window.parent||event.origin!==window.location.origin)return;if(event.data?.type==='algorithm-navigate')navigate(event.data.view,{notify:false});});
+window.addEventListener('hashchange',()=>navigate(window.location.hash));
 let pendingWrites = [];
 let pendingJournalWrites = [];
 let pendingParticipation = null;
@@ -116,7 +139,9 @@ function savePendingParticipation() {
 }
 
 async function request(path, options = {}) {
-  const response = await fetch(`${API}${path}`, { credentials: "same-origin", ...options });
+  const desktop=globalThis.algorithmDesktop?.connection?await globalThis.algorithmDesktop.connection():null;
+  const headers={...options.headers,...(desktop?{'X-App-Token':desktop.token}:{})};
+  const response = await fetch(`${desktop?.url??''}${API}${path}`, { credentials: "same-origin", ...options,headers });
   const contentType = response.headers.get("content-type") || "";
   const body = contentType.includes("application/json") ? await response.json() : await response.text();
   if (!response.ok) { const error = new Error(body?.error || `요청에 실패했어요 (${response.status}).`); error.status = response.status; throw error; }
@@ -236,14 +261,16 @@ function problemLink(key) {
 
 function render() {
   for (const tab of document.querySelectorAll("[data-view]")) {
-    tab.setAttribute("aria-current", tab.dataset.view === currentView ? "page" : "false");
+    tab.setAttribute("aria-current", tab.dataset.view === normalizeRoute(currentView) ? "page" : "false");
   }
   app.replaceChildren();
-  if (["calendar", "history", "analytics", "contests", "similarity", "library"].includes(currentView)) workspace.render(currentView);
+  if (["dashboard","calendar","explorer","analytics","contests","research"].includes(currentView)) workspace.render(currentView==='research'?researchView:currentView);
+  else if (currentView === "company") void renderCompany({root:app,request,preferences:state.preferences,onSaved:refresh,onError:error=>showNotice(error.message,true)});
   else if (currentView === "journal") renderJournal();
   else if (currentView === "progress") renderProgress();
   else if (currentView === "contests") renderContests();
-  else renderToday();
+  else if(currentView==='workspace')renderCodeEntry();
+  else renderSettings();
   renderPending();
 }
 
@@ -322,6 +349,8 @@ function renderJournal() {
     app.append(empty, todayShortcut());
     return;
   }
+  const companyFocus=journalState.plan?.progression?.next;
+  if(companyFocus?.scope)app.append(node('p','company-badge',`${companyFocus.scope.company_name} · ${companyFocus.scope.window} · ${companyFocus.scope.layer_version} · ${companyFocus.scope.upstream_commit_date} · 목록 #${companyFocus.company_rank??'해당 없음'}${companyFocus.scope_match===false?' · 일반 보충':''}`));
   app.append(todayPlanCard(), explanationUsageCard(), focusCard(), journalFilters(), reviewsCard(), patternHistoryCard(), weeklyCard(), upcomingCard());
   const limitations = Array.isArray(journalState.limitations) ? journalState.limitations.filter(Boolean) : [];
   if (limitations.length) {
@@ -428,42 +457,13 @@ function todayPlanCard() {
       item.append(rationale);
     } else item.append(node("p", "reason", "제안 이유가 제공되지 않았어요."));
     if (slot.estimated_minutes !== null && slot.estimated_minutes !== undefined) item.append(node("p", "meta", `예상 ${slot.estimated_minutes}분${slot.review_priority ? ` · ${slot.review_priority === "priority" ? "우선 복습" : "일반 복습"}` : ""}`));
-    if (slot.problem_key) item.append(journalAttemptForm(slot));
+    const editor=editorProblem(slot);if(editor&&canOpenEditor())item.append(button('편집기에서 열기',()=>openEditor(editor)));
     list.append(item);
   }
   card.append(list);
   return card;
 }
 
-function journalAttemptForm(slot) {
-  const details = document.createElement("details");
-  details.className = "journal-attempt-details";
-  details.dataset.problemKey = slot.problem_key;
-  details.dataset.slotKind = slot.kind || "";
-  const summary = node("summary", "button secondary", "풀이 결과 기록");
-  details.append(summary);
-  const form = document.createElement("form");
-  form.className = "form-grid";
-  const outcome = select(`journal-outcome-${slot.problem_key}`, [["independent", "O · 해결"], ["failed", "X · 아직 해결하지 못함"]]);
-  const minutes = input(`journal-minutes-${slot.problem_key}`, "number"); minutes.min = "0"; minutes.step = "1"; minutes.placeholder = "선택";
-  form.append(field("결과", outcome), field("직접 사용한 시간 (분)", minutes));
-  const actions = node("div", "actions full"); const submit = node("button", "button", "풀이 기록 저장"); submit.type = "submit"; actions.append(submit); form.append(actions);
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const selectedOutcome = outcome.value;
-    const selfMinutes = minutes.value === "" ? null : Number(minutes.value);
-    if (selfMinutes !== null && (!Number.isInteger(selfMinutes) || selfMinutes < 0 || selfMinutes > 1440)) return showNotice("직접 사용한 시간은 0분에서 1440분 사이로 입력해 주세요.", true);
-    const activityType = slot.transfer_from ? "transfer" : slot.kind === "review" ? "review" : "practice";
-    const payload = { event_id: crypto.randomUUID(), learner_id: state?.learner_id, problem_key: slot.problem_key, outcome: selectedOutcome, hints: selectedOutcome === "independent" ? false : null, activity_type: activityType, self_minutes: selfMinutes };
-    if (slot.transfer_from) payload.transfer_from = slot.transfer_from;
-    if (!payload.learner_id) return showNotice("학습자 정보를 확인할 수 없어 저장하지 못했어요.", true);
-    pendingJournalWrites.push(payload);
-    savePendingJournal();
-    await retryJournalAttempt(payload.event_id);
-  });
-  details.append(form);
-  return details;
-}
 
 function focusCard() {
   const focus = journalState?.focus;
@@ -640,6 +640,18 @@ function progressionStatusLabel(value) {
   return ({ in_progress: "진행 중", blocked_prerequisite: "선행 조건 대기", retention_evidenced: "복습 근거 확인", remediation: "보완 필요", current: "현재 단계", complete: "완료", locked: "대기", superseded: "수정된 기록" })[value] || value || "상태 미확인";
 }
 
+function renderSettings(){
+ app.append(pageHeader('설정 · 학습 도구','학습 목표, 기록, 시간과 데이터 관리'));
+ const tabs=node('div','segmented settings-tabs'),content=node('div','settings-content');
+ for(const[value,label]of [['goals','학습 목표'],['timers','타이머'],['backup','백업 · 복원'],['sync','동기화'],['evidence','주간 보고 · 근거']]){const b=button(label,()=>{settingsTab=value;render();},'segment');b.setAttribute('aria-pressed',String(settingsTab===value));tabs.append(b);}app.append(tabs,content);
+ if(settingsTab==='goals')content.append(preferencesCard());
+ else if(settingsTab==='timers')content.append(timerCard());
+ else if(settingsTab==='backup')content.append(dataCard());
+ else if(settingsTab==='sync'){content.append(providerSyncCard(),deliveryCard());void renderContestSchedule(content,request,error=>showNotice(error.message,true));}
+ else{content.append(weeklyCard(),focusCard(),patternHistoryCard(),explanationUsageCard());content.append(button('전체 학습 일지',()=>{currentView='journal';render();},'button secondary'));}
+}
+function renderCodeEntry(){app.append(pageHeader('코드 워크스페이스','저장소 연결 · 편집 · 실행'));app.append(node('p','empty','코드 도구는 데스크톱 앱에서 사용할 수 있습니다. 풀이 기록은 VS Code 저장소에서 작성하고 동기화하세요.'));}
+
 function renderToday() {
   app.append(...section("오늘의 학습", "제안된 활동과 직접 남긴 기록을 확인해요."));
   const mission = state?.mission;
@@ -682,13 +694,13 @@ function renderToday() {
     }
     missionCard.append(list);
   } else {
-    missionCard.append(node("p", "empty", mission ? "오늘 제안된 활동이 없어요." : "오늘의 학습 제안이 아직 준비되지 않았어요. 직접 문제를 선택해 기록할 수 있어요."));
+    missionCard.append(node("p", "empty", mission ? "오늘 제안된 활동이 없어요." : "오늘의 학습 제안이 아직 준비되지 않았어요. VS Code 풀이 기록을 동기화해 주세요."));
   }
   app.append(missionCard);
   app.append(deliveryCard());
-  app.append(attemptForm());
   app.append(timerCard());
   app.append(preferencesCard());
+  void renderContestSchedule(app,request,error=>showNotice(error.message,true));
   app.append(dataCard());
 }
 
@@ -708,46 +720,6 @@ function deliveryCard() {
     }
     card.append(list);
   }
-  return card;
-}
-
-function attemptForm() {
-  const card = node("section", "card");
-  card.append(node("h2", "", "풀이 기록"), node("p", "meta", "결과를 직접 선택해 주세요. 문제 제출이나 방문만으로는 기록되지 않아요."));
-  const form = document.createElement("form");
-  form.id = "attempt-form";
-  const grid = node("div", "form-grid");
-  const problems = [...problemMap().values()];
-  const keys = [...new Set([...problems.map((problem) => problem.problem_key), ...(state?.mission?.activities || []).map((item) => item.problem_key)].filter(Boolean))];
-  const problem = select("attempt-problem", keys.map((key) => [key, problemTitle(key)]));
-  if (!keys.length) problem.append(new Option("문제 목록을 불러오지 못했어요", ""));
-  grid.append(field("문제", problem, true));
-  grid.append(field("결과", select("attempt-outcome", [["independent", "해결"], ["failed", "아직 해결하지 못함"]])));
-  const transferSources = (state?.mission?.activities || []).filter((item) => item.type === "transfer" && item.transfer_from).map((item) => item.transfer_from);
-  const activityOptions = [["", "선택 안 함"], ["practice", "연습"], ["review", "복습"]];
-  if (transferSources.length) activityOptions.push(["transfer", "응용"]);
-  grid.append(field("활동 종류", select("attempt-type", activityOptions)));
-  form.append(grid);
-  const actions = node("div", "actions");
-  const submit = node("button", "button", "풀이 결과 저장");
-  submit.type = "submit";
-  actions.append(submit);
-  form.append(actions);
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (!problem.value) return showNotice("먼저 기록할 문제를 선택해 주세요.", true);
-    const outcome = $("#attempt-outcome", form).value;
-    const payload = { problem_key: problem.value, outcome, hints: outcome === "independent" ? false : null };
-    const activityType = $("#attempt-type", form).value;
-    if (activityType) payload.activity_type = activityType;
-    if (activityType === "transfer") {
-      const source = (state?.mission?.activities || []).find((item) => item.type === "transfer" && item.transfer_from && item.problem_key === problem.value);
-      if (!source) return showNotice("응용 문제와 연결된 기존 문제 근거가 없어 기록할 수 없어요.", true);
-      payload.transfer_from = source.transfer_from;
-    }
-    await queueEvent("attempt", payload);
-  });
-  card.append(form);
   return card;
 }
 
@@ -918,7 +890,7 @@ function preferencesCard() {
     const targetKeys = [...targets.selectedOptions].map(option=>option.value);
     const weeklyRhythm=Array.from({length:7},(_,index)=>$("#rhythm-"+index,form).value);
     try {
-      await request("/preferences", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ weekday_minutes: value, target_keys: targetKeys,weekly_rhythm:weeklyRhythm }) });
+      await request("/preferences", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...preferences,weekday_minutes: value, target_keys: targetKeys,weekly_rhythm:weeklyRhythm }) });
       if (await refresh()) showNotice("학습 목표를 저장했어요.");
     } catch (error) { showNotice(`목표를 저장하지 못했어요. ${error.message}`, true); }
   });
@@ -954,13 +926,8 @@ function dataCard() {
 
 async function exportData() {
   try {
-    const response = await fetch(`${API}/backup/export`, { credentials: "same-origin" });
-    if (!response.ok) {
-      let detail = `요청에 실패했어요 (${response.status}).`;
-      try { detail = (await response.json()).error || detail; } catch { /* keep HTTP detail */ }
-      throw new Error(detail);
-    }
-    const blob = await response.blob();
+    const document = await request('/backup/export');
+    const blob = new Blob([JSON.stringify(document,null,2)+'\n'],{type:'application/json'});
     const url = URL.createObjectURL(blob);
     const anchor = node("a", "", "");
     anchor.href = url;
@@ -1264,13 +1231,11 @@ function manualContestForm() {
   return card;
 }
 
-for (const tab of document.querySelectorAll("[data-view]")) {
-  tab.addEventListener("click", () => { currentView = tab.dataset.view; if(["similarity","library"].includes(currentView))window.history.replaceState(null,"","#"+currentView);else if(["#similarity","#library"].includes(window.location.hash))window.history.replaceState(null,"",window.location.pathname+window.location.search);render(); window.scrollTo({ top: 0, behavior: "smooth" }); });
-}
-
+const canOpenEditor=()=>window.parent!==window||Boolean(globalThis.algorithmDesktop?.openProblem);
+function openEditor(problem){if(globalThis.algorithmDesktop?.openProblem)return globalThis.algorithmDesktop.openProblem(problem);window.parent.postMessage({type:'algorithm-open-problem',problem},window.location.origin);}
 const workspace = createWorkspace({root:app,getState:()=>state,getJournal:()=>journalState,adapters:{
-  problemTitle,explanationUsageCard,providerSyncCard,manualContestForm,participationCard,participationHistory,
-  tools:()=>{currentView="today";render();},
+  problemTitle,explanationUsageCard,providerSyncCard,manualContestForm,participationCard,participationHistory,canOpenEditor,openEditor,request,navigate,
+  tools:()=>navigate("settings"),
   async syncContests(){
     try{await request('/contests/sync',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({})});await refresh();showNotice('대회 일정 확인을 마쳤어요. 플랫폼별 출처 상태와 마지막 성공 시각을 확인해 주세요.');}
     catch(error){showNotice(error.message,true);}
@@ -1287,7 +1252,7 @@ window.addEventListener('online',()=>showNotice("연결이 복구됐어요. 전�
 // Local-only evidence polling; no refresh while the learner is entering an outcome.
 let localRevision=null, localPollBusy=false, localSyncWarning=null;
 async function pollLocalEvidence(){
-  if(localPollBusy || document.hidden || !["journal","calendar","history","analytics","contests"].includes(currentView) || app.getAttribute("aria-busy")==="true" || document.querySelector(".journal-attempt-details[open],dialog[open]") || document.activeElement?.matches("input,select,textarea"))return;
+  if(localPollBusy || document.hidden || !["dashboard","journal","calendar","explorer","analytics","contests"].includes(currentView) || app.getAttribute("aria-busy")==="true" || document.querySelector(".journal-attempt-details[open],dialog[open]") || document.activeElement?.matches("input,select,textarea"))return;
   localPollBusy=true;
   try{
     const result=await request("/local/sync");

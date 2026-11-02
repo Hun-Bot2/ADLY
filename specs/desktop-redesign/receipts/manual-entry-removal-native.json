@@ -1,0 +1,40 @@
+{
+  "candidate": "tauri",
+  "platform": "darwin",
+  "arch": "arm64",
+  "recorded_at": "2026-10-30T14:44:00.329Z",
+  "node_version": "26.8.1",
+  "workload": "synthetic learner; supplied immutable catalog/company sources",
+  "first_ui_load_ms": 3750,
+  "first_journal_response_ms": 4528,
+  "journal_request_ms": 756,
+  "journal_http_status": 200,
+  "journal_available": true,
+  "idle_after_seconds": 2,
+  "processes": [
+    {
+      "pid": 68721,
+      "ppid": 68720,
+      "rss_bytes": 102334464
+    },
+    {
+      "pid": 68726,
+      "ppid": 68721,
+      "rss_bytes": 345456640
+    },
+    {
+      "pid": 68727,
+      "ppid": 68726,
+      "rss_bytes": 794886144
+    }
+  ],
+  "rss_bytes_sum": 1242677248,
+  "memory_note": "Owned process-tree RSS/working-set only; shared pages counted multiple times. macOS system-managed WebKit processes may be outside this tree; not a full candidate memory comparison. No process command lines captured",
+  "installed_bytes": 438011281,
+  "exit": {
+    "code": 0,
+    "signal": null
+  },
+  "survivors": [],
+  "release_gate": "incomplete DA-0 workload"
+}

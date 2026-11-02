@@ -1,0 +1,14 @@
+{
+  "synthetic": true,
+  "tool": "Playwright",
+  "checks": [
+    "ALDY branding in native frontend shell and learning document",
+    "fresh preference defaults to light even with dark OS",
+    "overdue uses one icon before label without a duplicate status line",
+    "manual light/dark updates shell and learning calendar at both sizes",
+    "explicit selection overrides system and survives reload",
+    "system appearance follows live OS media changes",
+    "new server port and app restart restore preference from shell state"
+  ],
+  "errors": []
+}

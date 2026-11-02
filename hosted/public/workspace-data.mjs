@@ -195,3 +195,10 @@ export function recommendationBasis(event){
   if(event.stage||event.kind==='review')return '학습 단계·복습 정책에 따른 선정이에요. 벡터 유사도 점수를 기준으로 선택한 추천은 아니에요.';
   return '기록된 정책 근거를 표시해요. 이 추천에는 벡터 유사도 수치가 제공되지 않았어요.';
 }
+
+/** Exact native identity for the desktop editor; never derive IDs from titles. */
+export function editorProblem(event){
+  const match=/^(leetcode|codeforces|atcoder):([a-z0-9_-]+)$/i.exec(event?.problem_key??'');
+  if(!match||typeof event.url!=='string')return null;
+  try{const u=new URL(event.url),host={leetcode:'leetcode.com',codeforces:'codeforces.com',atcoder:'atcoder.jp'}[match[1]];if(u.protocol!=='https:'||u.hostname!==host||u.username||u.password||u.port)return null;return {platform:match[1],id:match[2],url:u.href};}catch{return null;}
+}

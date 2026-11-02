@@ -1,0 +1,148 @@
+{
+  "synthetic": true,
+  "screen_count": 16,
+  "screens": [
+    {
+      "route": "dashboard",
+      "width": 1440,
+      "height": 900,
+      "file": "dashboard-1440x900.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "route": "calendar",
+      "width": 1440,
+      "height": 900,
+      "file": "calendar-1440x900.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "route": "explorer",
+      "width": 1440,
+      "height": 900,
+      "file": "explorer-1440x900.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "route": "analytics",
+      "width": 1440,
+      "height": 900,
+      "file": "analytics-1440x900.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "route": "contests",
+      "width": 1440,
+      "height": 900,
+      "file": "contests-1440x900.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "route": "company",
+      "width": 1440,
+      "height": 900,
+      "file": "company-1440x900.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "route": "research",
+      "width": 1440,
+      "height": 900,
+      "file": "research-1440x900.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "route": "workspace",
+      "width": 1440,
+      "height": 900,
+      "file": "workspace-1440x900.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "route": "dashboard",
+      "width": 1280,
+      "height": 800,
+      "file": "dashboard-1280x800.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "route": "calendar",
+      "width": 1280,
+      "height": 800,
+      "file": "calendar-1280x800.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "route": "explorer",
+      "width": 1280,
+      "height": 800,
+      "file": "explorer-1280x800.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "route": "analytics",
+      "width": 1280,
+      "height": 800,
+      "file": "analytics-1280x800.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "route": "contests",
+      "width": 1280,
+      "height": 800,
+      "file": "contests-1280x800.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "route": "company",
+      "width": 1280,
+      "height": 800,
+      "file": "company-1280x800.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "route": "research",
+      "width": 1280,
+      "height": 800,
+      "file": "research-1280x800.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "route": "workspace",
+      "width": 1280,
+      "height": 800,
+      "file": "workspace-1280x800.png",
+      "horizontal_overflow": false,
+      "font": "Pretendard, \"Apple SD Gothic Neo\", \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    }
+  ],
+  "research_interactions": [
+    "stored ranking selection",
+    "source comparison",
+    "stored map points",
+    "unavailable retry state"
+  ],
+  "runtime_errors": [],
+  "missing_assets": [
+    "http://127.0.0.1:49822/favicon.ico"
+  ],
+  "notes": [
+    "Authored fixture counts are not learner outcomes",
+    "Research backend unavailability is an honest empty state; live private research is not bundled"
+  ]
+}

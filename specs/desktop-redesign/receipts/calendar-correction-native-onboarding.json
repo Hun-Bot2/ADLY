@@ -1,0 +1,35 @@
+{
+  "synthetic": true,
+  "platform": "darwin",
+  "arch": "arm64",
+  "cases": [
+    {
+      "mode": "close",
+      "owned_startup_window": true,
+      "main_opened": false,
+      "exit_code": 0,
+      "observed_owned_survivors": 0,
+      "learner_created": false
+    },
+    {
+      "mode": "cancel",
+      "owned_startup_window": true,
+      "main_opened": false,
+      "exit_code": 0,
+      "observed_owned_survivors": 0,
+      "learner_created": false
+    },
+    {
+      "mode": "new",
+      "owned_startup_window": true,
+      "main_opened": true,
+      "exit_code": 0,
+      "observed_owned_survivors": 0,
+      "learner_created": true
+    }
+  ],
+  "limitations": [
+    "macOS only; picker interaction is not automated",
+    "Observed descendant PIDs only; system-managed WebKit processes are outside this count"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "synthetic": true,
+  "cases": [
+    {
+      "mode": "light",
+      "exit_code": 0,
+      "native_applied": true,
+      "dark": false
+    },
+    {
+      "mode": "dark",
+      "exit_code": 0,
+      "native_applied": true,
+      "dark": true
+    },
+    {
+      "mode": "system",
+      "exit_code": 0,
+      "native_applied": true,
+      "dark": true
+    }
+  ],
+  "limitations": [
+    "Native API round-trip, not screenshot or contrast verification",
+    "macOS only"
+  ]
+}

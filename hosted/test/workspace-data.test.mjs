@@ -193,3 +193,10 @@ test('unsolved plans carry over to today for a bounded window; attempts settle t
  assert.equal(conversion(rows).rows.some(r=>r.carry),false,'carried copies never count as extra plans');
  assert.equal(workspaceEvents(j,{},{today:null}).some(e=>e.carry),false);
 });
+test('desktop editor handoff uses exact native IDs and canonical platform hosts',async()=>{
+ const {editorProblem}=await import('../public/workspace-data.mjs');
+ assert.deepEqual(editorProblem({problem_key:'codeforces:4A',url:'https://codeforces.com/problemset/problem/4/A'}),{platform:'codeforces',id:'4A',url:'https://codeforces.com/problemset/problem/4/A'});
+ assert.equal(editorProblem({problem_key:'leetcode:authored',url:'javascript:alert(1)'}),null);
+ assert.equal(editorProblem({problem_key:'leetcode:authored',url:'https://evil.invalid/problems/authored/'}),null);
+ assert.equal(editorProblem({title:'Authored',url:'https://leetcode.com/problems/authored/'}),null);
+});

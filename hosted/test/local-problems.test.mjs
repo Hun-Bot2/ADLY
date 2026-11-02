@@ -1,0 +1,9 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {searchProblems} from '../local-problems.mjs';
+const catalog={version:'fixture',problems:new Map([
+ ['leetcode:alpha',{key:'leetcode:alpha',title:'Alpha',platform:'leetcode',url:'https://leetcode.com/problems/alpha/',difficulty_value:1,tags:['array'],concepts:[{id:'arrays-hashing',status:'ai_reviewed'}],content:'must not escape',hidden_tests:'secret'}],
+ ['codeforces:1A',{key:'codeforces:1A',title:'Beta',platform:'codeforces',difficulty_value:800,tags:['math']}],
+ ['leetcode:gamma',{key:'leetcode:gamma',title:'Gamma',platform:'leetcode',difficulty_value:2,tags:[]}]
+])};
+test('catalog exploration is paged, reproducible and returns metadata only',()=>{const result=searchProblems(catalog,new URLSearchParams('limit=1&offset=1'));assert.equal(result.total,3);assert.equal(result.items[0].key,'codeforces:1A');const all=searchProblems(catalog);assert.ok(!JSON.stringify(all).includes('must not escape'));assert.ok(!JSON.stringify(all).includes('hidden_tests'));assert.equal(catalog.problems.get('leetcode:alpha').content,'must not escape');});
+test('query facets preserve platform-specific difficulty and missing tags',()=>{assert.equal(searchProblems(catalog,new URLSearchParams('query=arrays-hashing')).items[0].key,'leetcode:alpha');assert.equal(searchProblems(catalog,new URLSearchParams('difficulty=1')).items[0].platform,'leetcode');assert.equal(searchProblems(catalog,new URLSearchParams('platform=codeforces&difficulty=1')).total,0);assert.deepEqual(searchProblems(catalog,new URLSearchParams('query=gamma')).items[0].tags,[]);});
+test('invalid filters and unbounded pages fail closed',()=>{for(const params of ['limit=1000','offset=-1','platform=bad','difficulty=800','limit=0','query='+'x'.repeat(201)])assert.throws(()=>searchProblems(catalog,new URLSearchParams(params)));});

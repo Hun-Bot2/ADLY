@@ -14,8 +14,10 @@ function fakeElement() {
   };
 }
 
+globalThis.matchMedia = () => ({matches:false,addEventListener(){}});
 globalThis.window = { addEventListener() {} };
 globalThis.document = {
+  documentElement: {dataset:{},style:{}},
   addEventListener() {},
   querySelector(selector) { return selector === "#app" || selector === "#notice" || selector === "#learner-label" ? fakeElement() : null; },
   querySelectorAll() { return []; },
@@ -95,9 +97,12 @@ test("journal filters preserve date groups and match requested facets", () => {
   assert.deepEqual(ui.filterJournalDays(days, { to: "2026-10-16", platform: "leetcode" }), []);
 });
 
-test("static shell exposes the four primary views and accessible live status", async () => {
+test("shared shell exposes eight workflow views without standalone history navigation", async () => {
   const html = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
-  for (const view of ["calendar", "history", "analytics", "contests"]) assert.ok(html.includes(`data-view="${view}"`));
+  const {NAVIGATION,normalizeRoute}=await import("../public/ui.mjs");
+  assert.deepEqual(NAVIGATION.map(n=>n.id),["dashboard","calendar","explorer","analytics","contests","company","research","workspace"]);
+  assert.equal(normalizeRoute("history"),"explorer");
+  assert.ok(html.includes('id="primary-nav"'));
   assert.match(html, /aria-live="polite"/);
   assert.match(html, /<main id="main"/);
 });
@@ -109,11 +114,11 @@ test("UI source uses provider sync, full backup, and contest participation route
   assert.match(source, /수정된 기록/);
 });
 
-test("calendar is the default view and retains dedicated journal read and attempt routes", async () => {
+test("dashboard is the default while dedicated journal read and attempt routes remain", async () => {
   const html = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
   const source = await readFile(new URL("../public/app.mjs", import.meta.url), "utf8");
-  assert.match(html, /data-view="calendar"/);
-  assert.match(source, /currentView = "calendar"/);
+  assert.match(html, /href="#dashboard"/);
+  assert.match(source, /currentView = "dashboard"/);
   assert.match(source, /request\("\/journal"\)/);
   assert.match(source, /request\("\/journal\/attempt"/);
   assert.match(source, /adaptive-learning\.pending-journal-attempts\.v1/);
@@ -140,7 +145,7 @@ test("calendar shows mock contests as a toggleable layer that links LeetCode and
   assert.doesNotMatch(detail, /start_at|placement_note|시작 \(KST\)/, "mock contests show a solving time, not a clock time");
   assert.match(detail, /if\(e\.archived\)/, "restored mock contests are labelled as archived history");
   assert.doesNotMatch(detail, /saveAttempt/, "opening a mock contest never saves an attempt");
-  assert.match(detail, /edit\(null,localDate\(new Date\(\)\),p\.problem_key\)/, "recording goes through the normal attempt editor");
+  assert.doesNotMatch(detail, /edit\(null/, "new results are authored in the external repository");
   for (const rule of [".calendar-event.mock", ".layer-toggle.mock", ".workspace-row.mock", ".mock-problem", ".activity-dot.mock"]) assert.ok(styles.includes(rule), rule);
 });
 
