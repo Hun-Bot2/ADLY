@@ -20,12 +20,25 @@ fn main() {
     }
 
     println!("cargo:rerun-if-env-changed=ALDY_GITHUB_CLIENT_ID");
+    // A device-flow client ID is public (no secret exists); the committed file is the default for builds.
+    let client_file = manifest.join("github-client-id.txt");
+    println!("cargo:rerun-if-changed={}", client_file.display());
+    if std::env::var_os("ALDY_GITHUB_CLIENT_ID").is_none() {
+        if let Ok(value) = std::fs::read_to_string(&client_file) {
+            let value = value.trim();
+            if !value.is_empty() && value.len() <= 120 && value.chars().all(|c| c.is_ascii_alphanumeric() || "_.-".contains(c)) {
+                println!("cargo:rustc-env=ALDY_GITHUB_CLIENT_ID={value}");
+            }
+        }
+    }
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
             "auth_begin",
             "auth_complete",
             "auth_status",
             "auth_sign_out",
+            "github_repositories",
+            "github_create_repository",
             "da0_probe",
             "set_appearance",
             "pick_folder",

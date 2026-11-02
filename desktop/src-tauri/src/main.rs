@@ -441,13 +441,15 @@ fn launch(app: &tauri::AppHandle) -> Result<(), Box<dyn std::error::Error>> {
             .permission("allow-auth-sign-out")
             .permission("allow-da0-probe")
             .permission("allow-set-appearance")
-            .permission("allow-pick-folder"),
+            .permission("allow-pick-folder")
+            .permission("allow-github-repositories")
+            .permission("allow-github-create-repository"),
     )?;
     native_window_chrome(WebviewWindowBuilder::new(app,"main",WebviewUrl::External(url))).title("ALDY — Algorithm Daily")
             .inner_size(1440.0,1000.0).on_new_window(|url,_| {
                 let _=open_external(&url);
                 tauri::webview::NewWindowResponse::Deny
-            }).initialization_script(String::from("if(window===window.top){const invoke=window.__TAURI_INTERNALS__.invoke;document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>invoke('da0_probe',{input:{title:document.title,bridge:typeof window.algorithmNativeAuth==='object',signin_disabled:document.querySelector('#github-sign-in')?.disabled??true,auth_status:document.querySelector('#github-status')?.textContent??''}}).catch(()=>{}),300));Object.defineProperty(window,'algorithmNativeAuth',{value:Object.freeze({begin:input=>invoke('auth_begin',{input}),complete:input=>invoke('auth_complete',{input}),status:()=>invoke('auth_status'),signOut:()=>invoke('auth_sign_out'),appearance:appearance=>invoke('set_appearance',{appearance}),pickFolder:()=>invoke('pick_folder'),githubClientId:")+&serde_json::to_string(&option_env!("ALDY_GITHUB_CLIENT_ID")).unwrap()+"})});}").on_page_load(move |_,payload| {
+            }).initialization_script(String::from("if(window===window.top){const invoke=window.__TAURI_INTERNALS__.invoke;document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>invoke('da0_probe',{input:{title:document.title,bridge:typeof window.algorithmNativeAuth==='object',signin_disabled:document.querySelector('#github-sign-in')?.disabled??true,auth_status:document.querySelector('#github-status')?.textContent??''}}).catch(()=>{}),300));Object.defineProperty(window,'algorithmNativeAuth',{value:Object.freeze({begin:input=>invoke('auth_begin',{input}),complete:input=>invoke('auth_complete',{input}),status:()=>invoke('auth_status'),signOut:()=>invoke('auth_sign_out'),appearance:appearance=>invoke('set_appearance',{appearance}),pickFolder:()=>invoke('pick_folder'),githubRepositories:()=>invoke('github_repositories'),githubCreateRepository:input=>invoke('github_create_repository',{input}),githubClientId:")+&serde_json::to_string(&option_env!("ALDY_GITHUB_CLIENT_ID")).unwrap()+"})});}").on_page_load(move |_,payload| {
                 if matches!(payload.event(),tauri::webview::PageLoadEvent::Finished) {
                     println!("{}",serde_json::json!({"type":"shell-ready","candidate":"tauri","shell_pid":std::process::id(),"adapter_pid":adapter_pid,"url":ready_address}));
                     if std::env::var("DESKTOP_SPIKE_SMOKE").ok().as_deref()==Some("1") || std::env::var("DESKTOP_ONBOARDING_SMOKE").ok().as_deref()==Some("new") {
@@ -490,6 +492,8 @@ fn main() {
             auth::auth_complete,
             auth::auth_status,
             auth::auth_sign_out,
+            auth::github_repositories,
+            auth::github_create_repository,
             auth::da0_probe,
             set_appearance,
             pick_folder,

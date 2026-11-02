@@ -42,6 +42,6 @@ make GitHub sign-in work, and make the Code Workspace edit the daily Markdown lo
 
 - [x] T1 Backend daily-log helpers and Markdown block extraction, with unit tests.
 - [x] T2 Adapter commands and UI: today's log, add problem, run block; update IDE smoke.
-- [ ] T3 Native GitHub commands, scope, built-in client ID; cargo tests for name validation.
-- [ ] T4 Start panel step flow (sign in, repository list, create on GitHub); browser check with a mocked native bridge.
+- [x] T3 Native GitHub commands, scope, built-in client ID; cargo tests for name validation.
+- [x] T4 Start panel step flow (sign in, repository list, create on GitHub); browser check with a mocked native bridge.
 - [ ] T5 Rebuild ALDY.app; record what was and was not verified natively (live GitHub sign-in needs the registered client ID).

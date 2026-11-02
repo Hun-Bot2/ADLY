@@ -40,3 +40,6 @@ test('markdown runs execute the fenced block at or above the cursor',async t=>{
  if(!detectToolchains().python){t.skip('python unavailable');return;}
  const {repo}=fixture(t);writeFileSync(join(repo,'leetcode/26-11-02.md'),'# x\n\n```python\nprint(input()[::-1])\n```\n');
  const result=await runFile(repo,'leetcode/26-11-02.md',{input:'abc\n',line:4});assert.equal(result.verdict,'completed');assert.equal(result.stdout,'cba\n');});
+test('a new repository can point origin at a GitHub repository without pushing',t=>{const root=mkdtempSync(join(tmpdir(),'desktop-remote-'));t.after(()=>rmSync(root,{recursive:true,force:true}));
+ createRepository(join(root,'a'),{remote:'https://github.com/me/algorithm-solution.git'});assert.equal(git(join(root,'a'),['remote','get-url','origin']),'https://github.com/me/algorithm-solution.git');
+ assert.throws(()=>createRepository(join(root,'b'),{remote:'https://evil.invalid/x.git'}));});

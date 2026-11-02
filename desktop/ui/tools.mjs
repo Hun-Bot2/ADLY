@@ -115,7 +115,7 @@ function renderFiles(){
  for(const file of visible){const directory=file.includes('/')?file.slice(0,file.lastIndexOf('/')):'루트';if(directory!==previous){const item=document.createElement('li');item.className='file-directory';item.textContent=directory;item.setAttribute('role','presentation');nodes.push(item);previous=directory;}
   const li=document.createElement('li'),button=document.createElement('button');li.setAttribute('role','none');button.type='button';button.setAttribute('role','treeitem');button.dataset.path=file;button.textContent=file.split('/').at(-1);button.title=file;button.setAttribute('aria-label',file);button.addEventListener('click',()=>loadFile(file).catch(report));button.addEventListener('keydown',event=>{const buttons=[...$('files').querySelectorAll('button')],index=buttons.indexOf(button);const target=event.key==='ArrowDown'?Math.min(buttons.length-1,index+1):event.key==='ArrowUp'?Math.max(0,index-1):event.key==='Home'?0:event.key==='End'?buttons.length-1:null;if(target!==null){event.preventDefault();buttons[target].focus();}});li.append(button);nodes.push(li);
  }
- $('files').replaceChildren(...nodes);$('explorer-empty').hidden=Boolean(repo);$('workspace-start').hidden=Boolean(repo);$('code-layout').classList.toggle('no-repository',!repo);if(repo&&!files.length){const text=document.createElement('li');text.className='compact-empty';text.textContent='아직 파일이 없습니다. 문제 열기로 첫 파일을 만드세요.';$('files').append(text);}highlightFile();
+ $('files').replaceChildren(...nodes);$('explorer-empty').hidden=Boolean(repo);$('workspace-start').hidden=Boolean(repo);$('code-layout').classList.toggle('no-repository',!repo);$('tools').classList.toggle('no-repository',!repo);if(repo&&!files.length){const text=document.createElement('li');text.className='compact-empty';text.textContent='아직 파일이 없습니다. 문제 열기로 첫 파일을 만드세요.';$('files').append(text);}highlightFile();
 }
 async function refreshFiles(){if(!repo){files=[];renderFiles();return;}files=(await command('files',{repoId:repo.id})).files.sort((a,b)=>a.localeCompare(b));renderFiles();}
 $('file-search').addEventListener('input',renderFiles);
@@ -188,18 +188,44 @@ action('push',async()=>{notify('Push: '+(await command('push',{repoId:selected()
 action('use-catalog',async()=>{if(!$('catalogs').value)throw Error('사용 가능한 카탈로그가 없습니다.');await command('catalog',{version:$('catalogs').value});frame.contentWindow.location.reload();notify('카탈로그를 선택했습니다.');});
 
 const nativeAuth=globalThis.algorithmNativeAuth;
+// GitHub sign-in (NW-2..NW-6): device flow in the native shell; the renderer only sees codes, the login and repository metadata.
+const builtInClient=nativeAuth?.githubClientId??null;let githubAccount=null;
 $('github-sign-in').disabled=!nativeAuth;$('github-sign-out').disabled=!nativeAuth;$('github-status').textContent=nativeAuth?'로그인 상태 확인 중…':'브라우저 미리보기에서는 시스템 Git 인증을 사용합니다.';
-async function refreshAuth(){if(!nativeAuth)return;const signedIn=(await nativeAuth.status()).signedIn;$('github-status').textContent=signedIn?'GitHub 로그인됨':'로그아웃 상태';if(signedIn){$('start-github-status').textContent='GitHub에 로그인되어 있습니다.';$('start-github-sign-in').hidden=true;}}
-const builtInClient=nativeAuth?.githubClientId??null;$('github-client-advanced').open=Boolean(nativeAuth&&!builtInClient);$('start-github-sign-in').hidden=!(nativeAuth&&builtInClient);
-action('start-github-sign-in',()=>{$('settings-drawer').showModal();$('github-sign-in').click();});
-action('github-sign-in',async()=>{const clientId=$('github-client-id').value.trim()||builtInClient;if(!clientId)throw Error('이 빌드에는 GitHub 로그인 앱이 설정되지 않았습니다. 시스템 Git 인증을 쓰거나 고급에서 Client ID를 입력하세요.');const flow=await nativeAuth.begin({clientId});$('github-device').replaceChildren();const code=document.createElement('strong');code.textContent=flow.user_code;const link=document.createElement('a'),url=new URL(flow.verification_uri);if(url.protocol!=='https:'||url.hostname!=='github.com')throw Error('잘못된 인증 주소');link.href=url.href;link.target='_blank';link.rel='noopener noreferrer';link.textContent='GitHub에서 코드 입력';$('github-device').append(code,document.createTextNode(' '),link);$('github-status').textContent='GitHub에서 승인을 기다리는 중…';await nativeAuth.complete({flowId:flow.flowId});$('github-device').replaceChildren();await refreshAuth();notify('GitHub 로그인이 완료됐습니다.');});
+$('github-client-advanced').open=Boolean(nativeAuth&&!builtInClient);
+function renderAccount(){
+ const signedIn=Boolean(githubAccount),canSignIn=Boolean(nativeAuth&&builtInClient);
+ $('start-github-sign-in').hidden=signedIn||!canSignIn;$('start-github-sign-out').hidden=!signedIn;
+ $('start-github-status').textContent=signedIn?`@${githubAccount.login} 계정으로 로그인됨 · 저장소 ${githubAccount.repositories.length}개`:canSignIn?'로그인하면 내 저장소 목록에서 고르거나 GitHub에 새 비공개 저장소를 만들 수 있어요. 컴퓨터에 이미 Git 인증(GitHub Desktop, gh, 키체인)이 있으면 로그인 없이도 가져오기와 Push가 됩니다.':'이 빌드에는 GitHub 로그인이 설정되어 있지 않습니다. 컴퓨터의 Git 인증(GitHub Desktop, gh, 키체인)으로 가져오기와 Push가 됩니다.';
+ const clone=document.querySelector('[data-start=clone]'),select=clone.elements.repository;select.closest('label').hidden=!signedIn;
+ if(signedIn){select.replaceChildren(new Option('저장소 선택…',''),...githubAccount.repositories.map(r=>new Option(`${r.fullName}${r.private?' · 비공개':''}`,r.cloneUrl)));}
+ document.querySelector('[data-start=create] .start-check').hidden=!signedIn;
+}
+async function refreshAuth(){if(!nativeAuth)return renderAccount();const signedIn=(await nativeAuth.status()).signedIn;$('github-status').textContent=signedIn?'GitHub 로그인됨':'로그아웃 상태';githubAccount=null;if(signedIn&&nativeAuth.githubRepositories){try{githubAccount=await nativeAuth.githubRepositories();}catch(error){$('start-github-status').textContent=error.message||String(error);}}renderAccount();}
+async function signIn(device,status){
+ const clientId=$('github-client-id').value.trim()||builtInClient;if(!clientId)throw Error('이 빌드에는 GitHub 로그인 앱이 설정되지 않았습니다. 시스템 Git 인증을 쓰거나 고급에서 Client ID를 입력하세요.');
+ const flow=await nativeAuth.begin({clientId}),url=new URL(flow.verification_uri);if(url.protocol!=='https:'||url.hostname!=='github.com')throw Error('잘못된 인증 주소');
+ const code=document.createElement('strong'),link=document.createElement('a'),hint=document.createElement('span');code.textContent=flow.user_code;link.href=url.href;link.target='_blank';link.rel='noopener noreferrer';link.textContent='GitHub에서 코드 입력 ↗';hint.className='panel-note';hint.textContent='브라우저에서 이 코드를 입력하고 승인하세요.';
+ device.replaceChildren(code,link,hint);status.textContent='GitHub에서 승인을 기다리는 중…';
+ for(const id of ['start-github-sign-in','github-sign-in'])$(id).disabled=true;
+ try{await nativeAuth.complete({flowId:flow.flowId});}finally{device.replaceChildren();for(const id of ['start-github-sign-in','github-sign-in'])$(id).disabled=false;}
+ await refreshAuth();notify('GitHub 로그인이 완료됐습니다.');
+}
+action('start-github-sign-in',()=>signIn($('start-github-device'),$('start-github-status')));
+action('github-sign-in',()=>signIn($('github-device'),$('github-status')));
+action('start-github-sign-out',()=>$('github-sign-out').click());
 // Start panel: the same register/create/clone commands as settings, with native folder pickers when the shell has them.
-const picker=globalThis.algorithmNativeAuth?.pickFolder;
+const picker=nativeAuth?.pickFolder;
 const cloneTarget=form=>{const parent=form.elements.parent.value.trim().replace(/[\\/]+$/,''),name=form.elements.url.value.trim().match(/github\.com\/[^/]+\/([^/?#]+?)(?:\.git)?\/?$/)?.[1];return parent&&name?parent+(parent.includes('\\')?'\\':'/')+name:'';};
+const folderName=value=>value.trim().replace(/[\\/]+$/,'').split(/[\\/]/).at(-1)??'';
 for(const form of document.querySelectorAll('[data-start]')){
  for(const button of form.querySelectorAll('[data-pick]')){button.hidden=!picker;button.addEventListener('click',async()=>{try{const folder=await picker();if(folder){form.elements[button.dataset.pick].value=folder;form.dispatchEvent(new Event('input'));}}catch(error){report(error);}});}
- if(form.dataset.start==='clone')form.addEventListener('input',()=>{const target=cloneTarget(form);form.querySelector('[data-target]').textContent=target?'저장 위치: '+target:'';});
- form.addEventListener('submit',async event=>{event.preventDefault();const button=form.querySelector('[type=submit]');button.disabled=true;try{const operation=form.dataset.start,target=operation==='clone'?cloneTarget(form):form.elements.path.value.trim();if(!target)throw Error('GitHub 주소와 저장할 위치를 확인하세요.');const result=await command(operation,{path:target,url:form.elements.url?.value.trim()});await refreshState({selectRepoId:result.id});notify(operation==='clone'?'저장소를 복제해 연결했습니다.':'저장소를 연결했습니다.');}catch(error){report(error);}finally{button.disabled=false;}});
+ if(form.dataset.start==='clone'){form.elements.repository.addEventListener('change',()=>{if(form.elements.repository.value){form.elements.url.value=form.elements.repository.value;form.dispatchEvent(new Event('input'));}});form.addEventListener('input',()=>{const target=cloneTarget(form);form.querySelector('[data-target]').textContent=target?'저장 위치: '+target:'';});}
+ form.addEventListener('submit',async event=>{event.preventDefault();const button=form.querySelector('[type=submit]');button.disabled=true;try{
+  const operation=form.dataset.start,target=operation==='clone'?cloneTarget(form):form.elements.path.value.trim();if(!target)throw Error('GitHub 주소와 저장할 위치를 확인하세요.');
+  let remote=null;if(operation==='create'&&githubAccount&&form.elements.github.checked){const created=await nativeAuth.githubCreateRepository({name:folderName(target),private:true});remote=created.cloneUrl;notify(`GitHub에 ${created.fullName} 저장소를 만들었습니다.`);}
+  const result=await command(operation,{path:target,url:form.elements.url?.value.trim(),...(remote?{remote}:{})});await refreshState({selectRepoId:result.id});
+  notify(operation==='clone'?'저장소를 복제해 연결했습니다.':remote?'새 저장소를 만들고 GitHub 원격을 연결했습니다. 첫 커밋 후 Git 패널에서 Push하세요.':'저장소를 연결했습니다.');
+ }catch(error){report(error);}finally{button.disabled=false;}});
 }
 action('github-sign-out',async()=>{await nativeAuth.signOut();$('github-device').replaceChildren();await refreshAuth();notify('저장된 GitHub 인증을 삭제했습니다.');});
 action('update-check',async()=>{const result=await command('update-check');$('update-status').textContent=result.status+' · '+result.version;$('update-stage').disabled=result.status!=='update_available';});

@@ -31,7 +31,7 @@ export async function startDesktop({port=0,appData=appDataRoot(),catalogRoot=pro
   const {command}=input;
   if(['register','create','clone'].includes(command)){
    if(typeof input.path!=='string'||!input.path.trim())throw Error('repository path required');
-   const info=command==='create'?repositories.createRepository(resolve(input.path)):command==='clone'?repositories.cloneRepository(input.url,resolve(input.path)):repositories.registerRepository(resolve(input.path));
+   const info=command==='create'?repositories.createRepository(resolve(input.path),{remote:typeof input.remote==='string'&&input.remote?input.remote:null}):command==='clone'?repositories.cloneRepository(input.url,resolve(input.path)):repositories.registerRepository(resolve(input.path));
    const id='repo-'+createHash('sha256').update(info.path).digest('hex').slice(0,16);let repo=state.repositories.find(r=>r.id===id);
    if(!repo){repo={id,path:info.path,sync:false};state.repositories.push(repo);persist();}
    return {...repo,ingestion:await registerEngine(repo)};
