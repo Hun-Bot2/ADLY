@@ -158,3 +158,11 @@ test("policy v3 UI records solved / unsolved only and never asks about help (ADR
   assert.match(workspace, /\[\['independent','해결'\],\['failed','미해결'\]\]/);
   assert.match(workspace, /hints:outcome\.value==='independent'\?false:null/);
 });
+
+test('company big-tech order puts listed companies first, then by matched count', async () => {
+  const {compareCompanies}=await import('../public/company.mjs');
+  const row=(company_id,name,matched)=>({company_id,name,windows:{all:{matched}}});
+  const rows=[row('tcs','tcs',263),row('google','Google',2094),row('nvidia','NVIDIA',123),row('zoho','Zoho',142)];
+  assert.deepEqual(rows.slice().sort(compareCompanies('bigtech','all')).map(r=>r.company_id),['nvidia','google','tcs','zoho']);
+  assert.deepEqual(rows.slice().sort(compareCompanies('matched','all')).map(r=>r.company_id),['google','tcs','zoho','nvidia']);
+});

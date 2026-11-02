@@ -31,3 +31,4 @@ Implementation is divided into independently owned page modules, IDE and root sh
 - [x] ALDY app icon: an "A" whose crossbar is a check mark. Source `desktop/src-tauri/icons/source/aldy.svg`; sizes generated with `tauri icon`; the same mark replaces the sidebar monogram.
 - [x] Code Workspace start panel: with no repository, the explorer and editor are replaced by three inline options (connect a local folder, clone from GitHub, create new) using the existing register/clone/create commands; the native shell adds a folder picker.
 - [ ] GitHub one-click sign-in needs an OAuth/GitHub App client ID with device flow enabled, built in through `ALDY_GITHUB_CLIENT_ID` at compile time. Until then the Client ID field stays under 고급 and system Git credentials work for clone/push.
+- [x] Company sort adds 대기업 순: an authored, dated IT market-cap/recognition order (`BIG_TECH_ORDER` in company.mjs), labelled as not live data; unlisted companies follow by matched count.
