@@ -43,6 +43,9 @@ async function request(url,options={}){const r=await fetch(url,{...options,heade
 function command(command,input={}){return request('/desktop/api/command',{method:'POST',body:JSON.stringify({command,...input})});}
 function selected(){if(!repo)throw Error('저장소를 먼저 연결하세요.');return repo.id;}
 function current(){selected();if(!path)throw Error('파일을 먼저 선택하세요.');return {repoId:repo.id,path};}
+// Daily logs are dated in the policy time zone (Asia/Seoul), like the learning engine.
+const todayKst=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+let dailyFolder='leetcode';try{dailyFolder=['leetcode','codeforces','atcoder'].includes(localStorage.getItem('aldy.daily-folder'))?localStorage.getItem('aldy.daily-folder'):'leetcode';}catch{}
 const action=(id,fn)=>$(id).addEventListener('click',async event=>{event.preventDefault();try{await fn();}catch(error){report(error);}});
 const bufferKey=(repoId,file)=>repoId+'\0'+file;
 function persistLayout(){localStorage.setItem(LAYOUT_KEY,JSON.stringify(layout));if(layoutSupported)void command('layout-setting',{layout:{...layout}}).catch(report);}
@@ -90,7 +93,7 @@ function navigate(value,{notifyFrame=true,legacy=false}={}){
 frame.addEventListener('load',()=>{if(route!=='workspace')frame.contentWindow.postMessage({type:'algorithm-navigate',view:route},location.origin);});
 action('tools-tab',()=>navigate('workspace'));action('workspace-tab',()=>navigate('calendar'));
 action('open-settings',()=>$('settings-drawer').showModal());action('connect-repository',()=>{$('settings-drawer').close();navigate('workspace');$('workspace-start').querySelector('input')?.focus();});action('repository-settings',()=>$('settings-drawer').showModal());
-action('close-settings',()=>requestDialogClose($('settings-drawer')));action('open-problem',()=>$('problem-dialog').showModal());action('close-problem',()=>requestDialogClose($('problem-dialog')));
+action('close-settings',()=>requestDialogClose($('settings-drawer')));action('open-problem',()=>{$('problem-form').reset();$('platform').value=dailyFolder;$('problem-dialog').showModal();});action('close-problem',()=>requestDialogClose($('problem-dialog')));
 action('keyboard-help',()=>{if(!document.querySelector('dialog[open]'))$('shortcut-dialog').togglePopover();});action('close-shortcuts',()=>$('shortcut-dialog').hidePopover());
 action('learning-settings',()=>{if(!requestDialogClose($('settings-drawer')))return;navigate('today',{legacy:true});});
 for(const dialog of document.querySelectorAll('dialog'))dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();});
@@ -127,7 +130,10 @@ async function refreshState({selectRepoId}={}){
 }
 $('repositories').addEventListener('change',async()=>{try{await flushDraft();repo=repos.find(r=>r.id===$('repositories').value);path=null;setText('','왼쪽에서 파일을 고르거나 문제 열기(⌘P)로 새 풀이를 시작하세요');$('sync-enabled').checked=Boolean(repo.sync);$('repo-branch').textContent=repo.path.split(/[\\/]/).at(-1);await refreshFiles();}catch(error){report(error);}});
 $('repository-form').addEventListener('submit',async event=>{event.preventDefault();try{const result=await command($('repo-operation').value,{path:$('repo-path').value,url:$('clone-url').value});await refreshState({selectRepoId:result.id});$('settings-drawer').close();navigate('workspace');notify('저장소를 연결했습니다.');}catch(error){report(error);}});
-$('problem-form').addEventListener('submit',async event=>{event.preventDefault();try{await flushDraft();const problem={platform:$('platform').value,id:$('problem-id').value,url:$('problem-url').value};const result=await command('open',{repoId:selected(),...problem,language:$('language').value});path=result.relative;buffers.set(bufferKey(repo.id,path),{repoId:repo.id,path,content:result.content});setText(result.content,path);$('commit-paths').value=path;$('problem-dialog').close();navigate('workspace');await refreshFiles();}catch(error){report(error);}});
+function showDaily(result,line){path=result.relative;buffers.set(bufferKey(repo.id,path),{repoId:repo.id,path,content:result.content});setText(result.content,path);$('commit-paths').value=path;if(line){const target=editor.state.doc.line(Math.min(line,editor.state.doc.lines));editor.dispatch({selection:{anchor:target.from},scrollIntoView:true});editor.focus();}}
+async function openToday(folder=dailyFolder){await flushDraft();const result=await command('daily-open',{repoId:selected(),date:todayKst(),folder});showDaily(result,result.content.split(/\r?\n/).length);navigate('workspace');await refreshFiles();if(result.created)notify(result.relative+' 파일을 만들었습니다.');}
+action('open-today',()=>openToday());
+$('problem-form').addEventListener('submit',async event=>{event.preventDefault();try{await flushDraft();const folder=$('platform').value;dailyFolder=folder;try{localStorage.setItem('aldy.daily-folder',folder);}catch{}const result=await command('daily-add',{repoId:selected(),date:todayKst(),folder,url:$('problem-url').value.trim(),title:$('problem-title').value.trim()||$('problem-id').value.trim(),language:$('language').value});showDaily(result,result.line);$('problem-dialog').close();navigate('workspace');await refreshFiles();notify(result.added?'오늘 기록에 문제를 추가했습니다.':'이미 오늘 기록에 있는 문제입니다.');}catch(error){report(error);}});
 action('refresh-files',refreshFiles);
 async function saveCurrent(){const target=current();await flushDraft();await command('save',{...target,content:editor.state.doc.toString()});$('draft-state').textContent='파일 저장됨';notify('파일을 저장했습니다.');}
 action('save',saveCurrent);
@@ -136,7 +142,7 @@ async function run(tests){
  if(running)throw Error('실행 중입니다. 먼저 중지하거나 결과를 기다리세요.');current();
  let cases;if(tests){cases=JSON.parse($('tests').value||'[]');if(!Array.isArray(cases)||!cases.length)throw Error('테스트를 먼저 추가하세요.');}
  await flushDraft();running=true;$('run').disabled=true;$('run-tests').disabled=true;$('cancel-run').disabled=false;setPanel('output');executionState('running',tests?'테스트 실행 중':'실행 중');$('run-result').textContent='실행 중…';
- try{const result=await command('run',{...current(),input:$('stdin').value,...(tests?{tests:cases}:{})});renderRun(result);const rows=result.tests??[result],passed=rows.every(row=>['pass','completed'].includes(row.verdict));executionState(passed?'complete':'failed',passed?'실행 완료':'결과 확인');}
+ try{const result=await command('run',{...current(),line:editor.state.doc.lineAt(editor.state.selection.main.head).number,input:$('stdin').value,...(tests?{tests:cases}:{})});renderRun(result);const rows=result.tests??[result],passed=rows.every(row=>['pass','completed'].includes(row.verdict));executionState(passed?'complete':'failed',passed?'실행 완료':'결과 확인');}
  catch(error){executionState('failed','실행 오류');$('run-result').textContent=error.message;throw error;}
  finally{running=false;$('run').disabled=false;$('run-tests').disabled=false;$('cancel-run').disabled=true;}
 }
@@ -212,7 +218,7 @@ window.addEventListener('message',event=>{
  if(event.data?.type==='algorithm-route-changed'){const value=normalizeRoute(event.data.view);if(value==='settings'&&route!=='workspace')navigate('today',{notifyFrame:false,legacy:true});else if(value!=='workspace'&&route!=='workspace')navigate(value,{notifyFrame:false});return;}
  if(event.data?.type==='algorithm-open-settings'){$('settings-drawer').showModal();return;}
  if(event.data?.type!=='algorithm-open-problem')return;const problem=validatedProblem(event.data.problem);if(!problem)return;
- navigate('workspace');$('platform').value=problem.platform;$('problem-id').value=problem.id;$('problem-url').value=problem.url;if(repo)$('problem-form').requestSubmit();else{$('settings-drawer').showModal();notify('풀이 저장소를 먼저 연결한 뒤 파일을 열어주세요.');}
+ navigate('workspace');$('platform').value=problem.platform;$('problem-id').value=problem.id;$('problem-url').value=problem.url;$('problem-title').value=problem.title??'';if(repo)$('problem-form').requestSubmit();else notify('풀이 저장소를 먼저 연결한 뒤 문제를 열어주세요.');
 });
 window.addEventListener('keydown',event=>{
  const modifier=event.metaKey||event.ctrlKey;if(document.querySelector('dialog[open]'))return;

@@ -19,3 +19,43 @@ export function prepareDailyLog(repo,{date,folder='leetcode',url,solved,minutes=
 }
 
 export function appendDailyLog(repo,input){const result=prepareDailyLog(repo,input);atomicWrite(safePath(repo,result.relative),result.content);return result;}
+
+// Code Workspace helpers for the user's own daily logs (specs/desktop-app/new-user-workspace.md NW-7..NW-8).
+// They only edit text the user would type; an empty result cell creates no attempt.
+const FOLDERS=['leetcode','codeforces','atcoder','daily'];
+function dailyTarget(repo,{date,folder}){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date)throw new Error('invalid date');
+ if(!FOLDERS.includes(folder))throw new Error('invalid folder');
+ const relative=`${folder}/${date.slice(2)}.md`;return {relative,path:safePath(repo,relative)};
+}
+function dailyTemplate(repo,date){
+ const fallback=`# ${date}\n\n| 문제 | 결과 | 시간 | 복습 | 메모 |\n| --- | --- | --- | --- | --- |\n`;
+ try{const template=readFileSync(safePath(repo,'templates/daily.md',{allowMissing:false}),'utf8');if(/^\|\s*문제\s*\|/m.test(template))return template.replaceAll('YYYY-MM-DD',date);}catch{}
+ return fallback;
+}
+export function openDailyLog(repo,input){
+ const {relative,path}=dailyTarget(repo,input);
+ if(existsSync(path))return {relative,content:readFileSync(path,'utf8'),created:false};
+ const content=dailyTemplate(repo,input.date);mkdirSync(dirname(path),{recursive:true});
+ try{writeFileSync(path,content,{flag:'wx'});}catch(error){if(error.code!=='EEXIST')throw error;return {relative,content:readFileSync(path,'utf8'),created:false};}
+ return {relative,content,created:true};
+}
+const cells=line=>line.trim().replace(/^\||\|$/g,'').split('|').map(cell=>cell.trim());
+export function addProblemToDaily(repo,{date,folder,url,title,language='python'}){
+ const link=new URL(url);if(link.protocol!=='https:'||!['leetcode.com','codeforces.com','atcoder.jp'].includes(link.hostname)||link.username||link.password||/[|\r\n\s]/.test(url))throw new Error('invalid problem URL');
+ if(!['python','cpp'].includes(language))throw new Error('invalid language');
+ const heading=String(title??'').replace(/[\r\n|]/g,' ').trim().slice(0,200)||link.pathname.split('/').filter(Boolean).at(-1)||url;
+ const opened=openDailyLog(repo,{date,folder}),{path}=dailyTarget(repo,{date,folder});
+ const newline=opened.content.includes('\r\n')?'\r\n':'\n';let lines=opened.content.split(/\r?\n/);
+ const header=lines.findIndex(line=>/^\|\s*문제\s*\|/.test(line));
+ if(header<0||!/^\|\s*:?-/.test(lines[header+1]??''))throw new Error('daily table not found');
+ let end=header+2;while(end<lines.length&&/^\|/.test(lines[end]))end++;
+ const inTable=lines.slice(header+2,end).some(line=>cells(line)[0]?.includes(url));
+ if(!inTable){const names=cells(lines[header]),row='| '+names.map(name=>name==='문제'?url:name==='복습'?'0':'').join(' | ')+' |';lines.splice(end,0,row.replace(/ {2,}\|/g,' |'));}
+ const fence=language==='python'?'python':'cpp';
+ let start=lines.findIndex((line,i)=>/^##\s+/.test(line)&&lines.slice(i,i+4).some(next=>next.includes(url)));
+ if(start<0){while(lines.length&&lines.at(-1)==='')lines.pop();lines.push('',`## ${heading}`,'',url,'','```'+fence,'','```','');start=lines.length-8;}
+ const block=lines.findIndex((line,i)=>i>start&&/^```\w/.test(line));
+ const content=lines.join(newline);atomicWrite(path,content);
+ return {relative:opened.relative,content,line:block>=0?block+2:start+1,added:!inTable};
+}

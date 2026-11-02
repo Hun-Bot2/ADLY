@@ -9,7 +9,7 @@ import {createSupervisor} from './backend/supervisor.mjs';
 import {appDataRoot,readJson,atomicWrite,safePath} from './backend/paths.mjs';
 import * as repositories from './backend/repositories.mjs';
 import {saveDraft,loadDraft} from './backend/drafts.mjs';
-import {prepareDailyLog} from './backend/dailylog.mjs';
+import {prepareDailyLog,openDailyLog,addProblemToDaily} from './backend/dailylog.mjs';
 import {createUpdater} from './backend/updates.mjs';
 import {availableCatalogs,installDatasets} from './backend/datasets.mjs';
 import {detectToolchains,runFile} from './backend/runner.mjs';
@@ -61,11 +61,13 @@ export async function startDesktop({port=0,appData=appDataRoot(),catalogRoot=pro
     case 'read':return {content:repositories.readFile(repo.path,input.path),draft:loadDraft(appData,repo.path,input.path)};
     case 'sync-setting':if(typeof input.enabled!=='boolean')throw Error('enabled must be boolean');repo.sync=input.enabled;persist();return {enabled:repo.sync};
     case 'open':return repositories.withRepositoryLock(repo.path,()=>repositories.openProblem(repo.path,input));
+    case 'daily-open':return repositories.withRepositoryLock(repo.path,()=>openDailyLog(repo.path,{date:input.date,folder:input.folder}));
+    case 'daily-add':return repositories.withRepositoryLock(repo.path,()=>addProblemToDaily(repo.path,{date:input.date,folder:input.folder,url:input.url,title:input.title,language:input.language}));
     case 'save':return repositories.withRepositoryLock(repo.path,()=>{repositories.saveFile(repo.path,input.path,input.content);saveDraft(appData,repo.path,input.path,input.content);return {saved:true};});
     case 'record':return await repositories.withRepositoryLock(repo.path,async()=>{const prepared=prepareDailyLog(repo.path,input);const validated=await engine('/api/local/daily-log/validate',{method:'POST',body:{path:prepared.relative,source:prepared.content}});if(!Array.isArray(validated.flags)||validated.flags.length)throw Error('Daily log validation failed: '+(validated.flags??['invalid validation response']).join(', '));repositories.saveFile(repo.path,prepared.relative,prepared.content);return prepared;});
     case 'preview':return repositories.previewCommit(repo.path,input.paths);
     case 'commit':{const committed=await repositories.withRepositoryLock(repo.path,()=>repositories.commitFiles(repo.path,input.paths,input.message));try{const registration=await registerEngine(repo);return {...committed,registration,ingestion:await engine('/api/local/ingest',{method:'POST',body:{}})};}catch(error){return {...committed,ingestion:{status:'error',error:error.message},notice:'Commit saved locally; retry ingestion, not commit.'};}}
-    case 'run':{const controller=new AbortController();const pending=runFile(repo.path,input.path,{signal:controller.signal,input:input.input??'',...(input.tests?{tests:input.tests}:{})});runs.set(controller,pending);activeRuns.set(repo.id,controller);try{return await pending;}finally{runs.delete(controller);activeRuns.delete(repo.id);}}
+    case 'run':{const controller=new AbortController();const pending=runFile(repo.path,input.path,{signal:controller.signal,input:input.input??'',line:Number.isInteger(input.line)&&input.line>0?input.line:1,...(input.tests?{tests:input.tests}:{})});runs.set(controller,pending);activeRuns.set(repo.id,controller);try{return await pending;}finally{runs.delete(controller);activeRuns.delete(repo.id);}}
     case 'sync':{const result=await repositories.withRepositoryLock(repo.path,()=>syncRepository(repo.path,{enabled:repo.sync}));if(result.state==='fast_forwarded')await engine('/api/local/ingest',{method:'POST',body:{}});return result;}
     case 'push':return repositories.withRepositoryLock(repo.path,()=>pushRepository(repo.path));
     default:throw Error('unknown desktop command');
