@@ -21,9 +21,13 @@ Implementation is divided into independently owned page modules, IDE and root sh
 - [x] Dashboard metric and section cards.
 - [x] Inspector alignment and spacing for mock contests and contests.
 - [x] Native shell: allowlisted external links open in the OS browser (on_navigation also receives target=_blank).
-- [ ] Decide: dark sidebar as in the reference board, or keep the light sidebar.
-- [ ] Decide: icon metric cards, plan progress ring and recent-problem cards on the dashboard (DOM changes).
-- [ ] Decide: calendar right-panel stats and 8-week heatmap (analytics already has an activity map).
-- [ ] Decide: company logos (trademark use) or text-only company rows.
+- [x] Decided 2026-11-02: keep the light sidebar.
+- [x] Dashboard metric cards carry a status icon and a one-line plain explanation (user decision 2026-11-02).
+- [ ] Plan progress ring and recent-problem cards (not requested yet).
+- [x] Calendar side summary: today, the visible month and an 8-week attempt heatmap. Counts recorded attempts only, ignores calendar filters, hides while the inspector is open.
+- [x] Company rows use initials badges, never logos (user decision 2026-11-02), with matched/solved counts and a 매칭 많은 순 / 이름순 sort (default: most matches).
 - [ ] Apply card surfaces to analytics, contests and company pages after the dashboard is accepted.
 - [ ] Verify links and the new palette in the packaged ALDY.app (browser smokes do not exercise the native shell).
+- [x] ALDY app icon: an "A" whose crossbar is a check mark. Source `desktop/src-tauri/icons/source/aldy.svg`; sizes generated with `tauri icon`; the same mark replaces the sidebar monogram.
+- [x] Code Workspace start panel: with no repository, the explorer and editor are replaced by three inline options (connect a local folder, clone from GitHub, create new) using the existing register/clone/create commands; the native shell adds a folder picker.
+- [ ] GitHub one-click sign-in needs an OAuth/GitHub App client ID with device flow enabled, built in through `ALDY_GITHUB_CLIENT_ID` at compile time. Until then the Client ID field stays under 고급 and system Git credentials work for clone/push.

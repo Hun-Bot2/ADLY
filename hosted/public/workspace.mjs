@@ -194,7 +194,7 @@ export function createWorkspace({root,getState,getJournal,adapters}) {
     const todayPlan=(getJournal()?.plan?.slots??[]).filter(slot=>slot.problem_key&&!attemptedToday.has(slot.problem_key)).map((slot,index)=>({...slot,id:'today-plan:'+index,layer:'plan',type:'recommendation',date:model.today,recommended:true,snapshot_id:getJournal().plan.snapshot_id,priority:model.plan.find(p=>p.problem_key===slot.problem_key)?.priority??(slot.kind==='review'?'review':'practice')}));
     const next=todayPlan[0]??model.plan[0];actions.append(btn(next?'학습 이어가기':'문제 탐색',()=>{if(next){const editor=editorProblem(next);if(editor&&adapters.canOpenEditor?.())adapters.openEditor(editor);else details(next);}else{if(adapters.navigate)adapters.navigate('explorer');else render('explorer');}},'button primary'));
     head.append(actions);root.append(head);
-    const metrics=el('div','dashboard-metrics');for(const [name,value]of [['오늘 해결',model.counts.solved],['오늘 시도',model.counts.attempts],['기한 지난 항목',model.counts.overdue],['복습 대상',model.counts.reviews]]){metrics.append(compactMetric(name,value));}root.append(metrics);
+    const metrics=el('div','dashboard-metrics');for(const [name,value,glyph,note]of [['오늘 해결',model.counts.solved,'solved','오늘 푼 서로 다른 문제 수'],['오늘 시도',model.counts.attempts,'attempted','푼 것과 못 푼 것을 합친 오늘 기록'],['기한 지난 항목',model.counts.overdue,'overdue','복습 기한을 넘겼거나 지난 계획에서 넘어온 문제'],['복습 대상',model.counts.reviews,'review','오늘까지 다시 풀 차례가 된 문제']]){const card=compactMetric(name,value,note),badge=el('span','metric-icon');badge.dataset.tone=glyph;badge.append(icon(glyph));card.prepend(badge);metrics.append(card);}root.append(metrics);
     const layout=el('div','dashboard-layout'),primary=el('div','dashboard-primary'),aside=el('aside','dashboard-secondary');
     function planRows(items){const table=el('div','plan-table');for(const item of items){const b=row(item);b.dataset.priority=item.priority;const priority=el('span','priority-label');priority.append(b.querySelector('.event-symbol'),el('span','',({overdue:'기한 지남',review:'복습',practice:'연습'})[item.priority]??'연습'));b.prepend(priority);if(item.policy_due)b.title='복습 정책이 계산한 기한 · 직접 지정한 일정과 구분됩니다';table.append(b);}return table;}
     const plan=el('section','dashboard-plan'),planHead=el('div','section-heading');planHead.append(el('h2','','오늘의 계획'),el('span','meta',`${todayPlan.length}개 남음`));plan.append(planHead);
@@ -314,7 +314,23 @@ export function createWorkspace({root,getState,getJournal,adapters}) {
       const head=el('div','cell-head');head.append(dateButton);if(total){const count=el('span','day-count',total);count.title=`활동 ${total}개`;count.setAttribute('aria-hidden','true');head.append(count);}
       const strip=el('div','activity-dots');strip.setAttribute('aria-hidden','true');strip.append(...dots);cell.append(head,strip);grid.append(cell);
     }
-    calendar.append(grid);layout.append(calendar);root.append(layout);
+    calendar.append(grid);layout.append(calendar,calendarSummary(today));root.append(layout);
+  }
+  // Side summary: recorded attempts only (plans, reviews and contests excluded), independent of calendar filters.
+  function calendarSummary(today){
+    const attempts=activeAttempts(data()),byDate=new Map();for(const e of attempts){if(!byDate.has(e.date))byDate.set(e.date,[]);byDate.get(e.date).push(e);}
+    const aside=el('aside','calendar-summary');aside.setAttribute('aria-label','학습 요약');
+    const month=cursor.slice(0,7),monthRows=attempts.filter(e=>e.date.startsWith(month));
+    let streak=0;for(let d=byDate.has(today)?today:shiftDate(today,-1);byDate.has(d);d=shiftDate(d,-1))streak++;
+    const todayRows=byDate.get(today)??[];
+    const stats=(title,note,rows)=>{const box=el('section','summary-block');box.append(el('h3','',title));const list=el('dl','summary-stats');for(const [k,v]of rows){list.append(el('dt','',k),el('dd','',v));}box.append(list);if(note)box.append(el('p','summary-note',note));return box;};
+    aside.append(stats('오늘',null,[['해결',new Set(todayRows.filter(completion).map(e=>e.problem_key)).size+'문제'],['시도',todayRows.length+'회'],['연속 기록',streak+'일']]));
+    aside.append(stats(`${Number(month.slice(5))}월`,'풀이 기록만 셉니다. 계획·복습·대회는 제외돼요.',[['해결',new Set(monthRows.filter(completion).map(e=>e.problem_key)).size+'문제'],['시도',monthRows.length+'회'],['기록한 날',new Set(monthRows.map(e=>e.date)).size+'일']]));
+    const heat=el('section','summary-block'),head=el('div','summary-heading');head.append(el('h3','','최근 8주'),el('span','meta','하루 시도 횟수'));heat.append(head);
+    const offset=(new Date(today+'T12:00:00Z').getUTCDay()+6)%7,start=shiftDate(today,-(7*7+offset)),grid=el('div','summary-heatmap');grid.setAttribute('role','group');grid.setAttribute('aria-label','최근 8주 활동');
+    for(let d=start;d<=shiftDate(start,55);d=shiftDate(d,1)){const rows=byDate.get(d)??[],count=rows.length,future=d>today;const cell=btn('',()=>{if(future)return;cursor=d;selectDay(d,{open:true});},'summary-cell');cell.dataset.level=String(future?-1:count===0?0:count===1?1:count<=3?2:count<=6?3:4);if(d===today)cell.classList.add('is-today');cell.disabled=future;cell.title=`${d} · 시도 ${count}회 · 해결 ${rows.filter(completion).length}회`;cell.setAttribute('aria-label',cell.title);grid.append(cell);}
+    const legend=el('div','summary-legend');legend.append(el('span','','적음'));for(const level of [0,1,2,3,4]){const mark=el('i','summary-cell');mark.dataset.level=String(level);legend.append(mark);}legend.append(el('span','','많음'));
+    heat.append(grid,legend);aside.append(heat);return aside;
   }
   function renderContestList() {
     root.append(heading('프로그래밍 대회','일정과 참가 링크를 시간순으로 확인하세요.'));

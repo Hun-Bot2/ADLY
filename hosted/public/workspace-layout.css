@@ -102,3 +102,23 @@
 .dashboard-secondary{border-left:0;padding-left:0}
 .dashboard-primary>section,.dashboard-secondary>section{padding:var(--space-4) 20px;border:1px solid var(--border);border-radius:var(--radius);background:var(--background);box-shadow:var(--card-shadow)}
 .dashboard-primary>section+section,.dashboard-secondary>section+section{margin-top:0;padding-top:var(--space-4);border-top:1px solid var(--border)}
+/* Dashboard metric cards: status icon, number, and a one-line plain explanation. */
+.dashboard-metrics .compact-metric{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:var(--space-3);align-items:start}.dashboard-metrics .compact-metric>:not(.metric-icon){grid-column:2}
+.metric-icon{grid-row:1/span 3;display:grid;place-items:center;width:36px;height:36px;border-radius:var(--radius-sm);--tone:var(--status-solved);color:var(--tone);background:color-mix(in srgb,var(--tone) 12%,var(--background))}.metric-icon .ui-icon{width:18px;height:18px}
+.metric-icon[data-tone=attempted]{--tone:var(--status-attempted)}.metric-icon[data-tone=overdue]{--tone:var(--status-overdue)}.metric-icon[data-tone=review]{--tone:var(--status-review)}
+.dashboard-metrics .metric-meta{font-size:var(--text-micro);color:var(--text-secondary);line-height:1.45;margin-top:2px}
+@media(max-width:680px){.metric-icon{width:28px;height:28px}.dashboard-metrics .metric-meta{display:none}}
+/* Calendar side summary: today, the visible month and an 8-week attempt heatmap. */
+@media(min-width:1100px){.calendar-workspace{display:grid;grid-template-columns:minmax(0,1fr) 248px;gap:var(--space-6);align-items:start}}
+.inspector-open .calendar-summary{display:none}
+.calendar-summary{display:flex;flex-direction:column;gap:var(--space-4);margin-top:var(--space-4)}
+@media(min-width:1100px){.calendar-summary{margin-top:0;position:sticky;top:var(--space-4)}}
+.summary-block{padding:var(--space-4);border:1px solid var(--border);border-radius:var(--radius);background:var(--background);box-shadow:var(--card-shadow);line-height:1.6}
+.summary-block h3{margin:0 0 var(--space-3);font-size:var(--text-card)}.summary-heading{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-2)}.summary-heading h3{margin-bottom:var(--space-3)}
+.summary-stats{display:grid;grid-template-columns:1fr auto;gap:var(--space-2) var(--space-3);margin:0}.summary-stats dt{color:var(--text-secondary)}.summary-stats dd{margin:0;font-weight:var(--weight-semibold);text-align:right}
+.summary-note{margin:var(--space-3) 0 0;font-size:var(--text-micro);color:var(--text-secondary);line-height:1.5}
+.summary-heatmap{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:1fr;gap:4px}
+.summary-cell{aspect-ratio:1;min-height:0!important;width:100%;padding:0!important;border:0!important;border-radius:3px!important;background:var(--surface-subtle)!important;cursor:pointer}
+.summary-cell[data-level="1"]{background:color-mix(in srgb,var(--primary) 30%,var(--background))!important}.summary-cell[data-level="2"]{background:color-mix(in srgb,var(--primary) 55%,var(--background))!important}.summary-cell[data-level="3"]{background:color-mix(in srgb,var(--primary) 80%,var(--background))!important}.summary-cell[data-level="4"]{background:var(--primary)!important}
+.summary-cell[data-level="-1"]{background:transparent!important;outline:1px dashed var(--border);outline-offset:-1px;cursor:default}.summary-cell.is-today{box-shadow:inset 0 0 0 1.5px var(--text-primary)}
+.summary-legend{display:flex;align-items:center;gap:4px;margin-top:var(--space-3);font-size:var(--text-micro);color:var(--text-secondary)}.summary-legend .summary-cell{width:11px;height:11px;cursor:default}.summary-legend span:last-child{margin-left:2px}.summary-legend span:first-child{margin-right:2px}

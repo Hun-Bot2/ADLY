@@ -19,6 +19,7 @@ fn main() {
         }
     }
 
+    println!("cargo:rerun-if-env-changed=ALDY_GITHUB_CLIENT_ID");
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
             "auth_begin",
@@ -27,6 +28,7 @@ fn main() {
             "auth_sign_out",
             "da0_probe",
             "set_appearance",
+            "pick_folder",
             "first_run_choose",
         ]),
     ))

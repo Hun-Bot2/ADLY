@@ -16,6 +16,8 @@ function stackedBar({matched,solved,attemptedUnsolved,unattempted},label='목록
 }
 function sourceLink(text,value){try{const url=new URL(value);if(url.protocol!=='https:'||url.username||url.password)return null;const a=el('a',text,'external-link');a.href=url.href;a.target='_blank';a.rel='noopener noreferrer';return a;}catch{return null;}}
 function openInEditor(problem){const native=editorProblem(problem);if(!native)return;if(globalThis.algorithmDesktop?.openProblem)return globalThis.algorithmDesktop.openProblem(native);window.parent.postMessage({type:'algorithm-open-problem',problem:native},window.location.origin);}
+export function companyInitials(name){const words=String(name).replace(/[^\p{L}\p{N}\s]/gu,' ').trim().split(/\s+/).filter(Boolean);if(!words.length)return '?';return (words.length>1?words[0][0]+words[1][0]:words[0].slice(0,2)).toLocaleUpperCase();}
+function companyMonogram(name){const badge=el('span',companyInitials(name),'company-monogram');badge.setAttribute('aria-hidden','true');return badge;}
 function table(headers){const host=el('table',null,'data-table company-table'),head=el('thead'),row=el('tr'),body=el('tbody');for(const text of headers){const th=el('th',text);th.scope='col';row.append(th);}head.append(row);host.append(head,body);return {host,body};}
 export async function renderCompany({root,request,preferences={},onSaved,onError}){
  const header=el('header',null,'page-header'),titles=el('div');titles.append(el('div','SOURCE LISTS / LEARNER HISTORY','page-kicker'),el('h1','기업별 준비','page-heading'));header.append(titles);root.append(header);
@@ -23,13 +25,14 @@ export async function renderCompany({root,request,preferences={},onSaved,onError
  try{
   const data=await request('/company');if(!loading.isConnected)return;loading.remove();
   if(!data.available){const empty=el('section',null,'empty-state');empty.append(el('h2','이 카탈로그에는 기업 목록이 없습니다.'),el('p',data.reason??'company data not available for this catalog version','meta'));root.append(empty);return;}
-  let selected=preferences.mastery?.company_focus?.company_id??data.companies[0]?.company_id??'',windowValue=preferences.mastery?.company_focus?.window??'all',serial=0,page=0;
+  let selected=preferences.mastery?.company_focus?.company_id??[...data.companies].sort((a,b)=>(b.windows[preferences.mastery?.company_focus?.window??'all']?.matched??0)-(a.windows[preferences.mastery?.company_focus?.window??'all']?.matched??0))[0]?.company_id??'',windowValue=preferences.mastery?.company_focus?.window??'all',serial=0,page=0;
   const layout=el('div',null,'company-workspace'),aside=el('aside',null,'company-directory'),detail=el('section',null,'company-detail');detail.setAttribute('aria-live','polite');
   const search=el('input');search.type='search';search.placeholder='회사 검색';search.setAttribute('aria-label','회사 검색');const directoryHeading=el('div',null,'company-directory-heading');directoryHeading.append(el('h2','회사 목록'),el('span',`${data.companies.length}`,'meta'));const list=el('div',null,'company-list');list.setAttribute('aria-label','준비할 회사');
-  aside.append(directoryHeading,search,list);layout.append(aside,detail);root.append(layout);
+  const order=el('select');order.setAttribute('aria-label','회사 정렬');for(const[value,label]of [['matched','매칭 많은 순'],['name','이름순']]){const o=el('option',label);o.value=value;order.append(o);}const directoryTools=el('div',null,'company-directory-tools');directoryTools.append(search,order);
+  aside.append(directoryHeading,directoryTools,list);layout.append(aside,detail);root.append(layout);
   const period=el('select');period.setAttribute('aria-label','목록 기간');for(const[value,label]of Object.entries(COMPANY_WINDOW_LABELS)){const o=el('option',label);o.value=value;period.append(o);}period.value=windowValue;header.append(period);
-  function listOptions(){const query=search.value.trim().toLocaleLowerCase(),filtered=data.companies.filter(company=>company.name.toLocaleLowerCase().includes(query));if(!filtered.some(company=>company.company_id===selected))selected=filtered[0]?.company_id??'';list.replaceChildren();
-   for(const company of filtered){const coverage=company.windows[windowValue],b=button('',()=>{selected=company.company_id;listOptions();void loadDetail();},'company-list-row');b.dataset.companyId=company.company_id;b.setAttribute('aria-pressed',String(selected===company.company_id));b.append(el('strong',company.name),el('span',`${coverage.matched}개 매칭${coverage.small_list?' · 소규모':''}`,'meta'));list.append(b);}if(!filtered.length)list.append(el('p','검색 결과가 없습니다.','empty-state compact'));
+  function listOptions(){const query=search.value.trim().toLocaleLowerCase(),filtered=data.companies.filter(company=>company.name.toLocaleLowerCase().includes(query)).sort((a,b)=>order.value==='matched'?(b.windows[windowValue].matched-a.windows[windowValue].matched)||a.name.localeCompare(b.name):a.name.localeCompare(b.name));if(!filtered.some(company=>company.company_id===selected))selected=filtered[0]?.company_id??'';list.replaceChildren();
+   for(const company of filtered){const coverage=company.windows[windowValue],b=button('',()=>{selected=company.company_id;listOptions();void loadDetail();},'company-list-row');b.dataset.companyId=company.company_id;b.setAttribute('aria-pressed',String(selected===company.company_id));const solved=Object.values(company.levels??{}).reduce((sum,row)=>sum+row.solved,0),text=el('span',null,'company-row-text');text.append(el('strong',company.name),el('span',`${coverage.matched}문제 매칭${solved?` · ${solved} 해결`:''}${coverage.small_list?' · 소규모':''}`,'meta'));b.append(companyMonogram(company.name),text);list.append(b);}if(!filtered.length)list.append(el('p','검색 결과가 없습니다.','empty-state compact'));
   }
   const focus=fill=>({company_id:selected,window:windowValue,fill_from_general:fill});
   async function save(company_focus){try{await request('/preferences',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({...preferences,mastery:{...preferences.mastery,company_focus}})});await onSaved();}catch(error){onError(error);}}
@@ -56,6 +59,7 @@ export async function renderCompany({root,request,preferences={},onSaved,onError
     detail.setAttribute('aria-busy','false');
    }catch(error){if(id===serial&&detail.isConnected){detail.setAttribute('aria-busy','false');detail.replaceChildren(el('p','회사 기록을 불러오지 못했습니다.','empty-state compact'),button('다시 시도',loadDetail));onError(error);}}
   }
+  order.addEventListener('change',listOptions);
   search.addEventListener('input',()=>{listOptions();void loadDetail();});period.addEventListener('change',()=>{windowValue=period.value;listOptions();void loadDetail();});listOptions();await loadDetail();
  }catch(error){loading.remove();root.append(el('p','기업 목록을 불러오지 못했습니다.','empty-state compact'));onError(error);}
 }

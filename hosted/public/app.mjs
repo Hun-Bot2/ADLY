@@ -261,7 +261,9 @@ function problemLink(key) {
 
 function render() {
   for (const tab of document.querySelectorAll("[data-view]")) {
-    tab.setAttribute("aria-current", tab.dataset.view === normalizeRoute(currentView) ? "page" : "false");
+    const selected = tab.dataset.view === normalizeRoute(currentView);
+    tab.setAttribute("aria-current", selected ? "page" : "false");
+    tab.classList.toggle("active", selected);
   }
   app.replaceChildren();
   if (["dashboard","calendar","explorer","analytics","contests","research"].includes(currentView)) workspace.render(currentView==='research'?researchView:currentView);
