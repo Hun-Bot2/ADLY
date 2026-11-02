@@ -6,7 +6,7 @@ import {tmpdir} from 'node:os';
 import {join,dirname} from 'node:path';
 import {createDatabase} from './helpers/d1.mjs';
 import {classify,frontMatterKey,keyFromPath,parseTrailers} from '../mastery/git-convention.mjs';
-import {ingestRepository,registerRepository} from '../mastery/git-ingest.mjs';
+import {ingestRepository,registerRepository,isGitAncestor} from '../mastery/git-ingest.mjs';
 import {readLedger} from '../mastery/ledger.mjs';
 
 test('path convention maps common layouts and ignores everything else', () => {
@@ -128,4 +128,10 @@ test('registration is immutable and verifies the branch', async context => {
   await registerRepository(db,'owner',{repoId:'x',path:r.dir});
   await assert.rejects(registerRepository(db,'owner',{repoId:'x',path:r.dir+'/other'}),/different path/);
   assert.throws(()=>db.sqlite.prepare("UPDATE git_repositories SET branch='dev'").run(),/append-only/);
+});
+
+test('ancestry failure codes distinguish a divergent history from unavailable Git',()=>{
+ assert.equal(isGitAncestor('/fixture','old','main',{run:()=>''}),true);
+ assert.equal(isGitAncestor('/fixture','old','main',{run:()=>{throw Object.assign(new Error('not ancestor'),{status:1});}}),false);
+ for(const error of [Object.assign(new Error('cannot inspect'),{status:128}),Object.assign(new Error('missing executable'),{code:'ENOENT'}),Object.assign(new Error('not permitted'),{code:'EACCES'})])assert.throws(()=>isGitAncestor('/fixture','old','main',{run:()=>{throw error;}}),/ancestry check unavailable; existing progress preserved/);
 });

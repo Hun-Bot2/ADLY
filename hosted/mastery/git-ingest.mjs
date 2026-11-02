@@ -16,6 +16,12 @@ const git = (cwd,args,{allowFail=false}={}) => {
   try { return execFileSync('git',['-C',cwd,...args],{encoding:'utf8',maxBuffer:256*1024*1024,stdio:['ignore','pipe','pipe']}); }
   catch (error) { if (allowFail) return null; throw new Error(`git ${args[0]} failed: ${String(error.stderr ?? error.message).trim().split('\n')[0]}`); }
 };
+// merge-base exit 1 means non-ancestor; other failures are unavailable checks,
+// never evidence of rewritten history and never grounds for advancing a watermark.
+export function isGitAncestor(cwd,from,head,{run=execFileSync}={}) {
+  try { run('git',['-C',cwd,'merge-base','--is-ancestor',from,head],{encoding:'utf8',stdio:['ignore','pipe','pipe']});return true; }
+  catch(error) { if(error.status===1)return false;throw new Error('Git ancestry check unavailable; existing progress preserved ('+(Number.isInteger(error.status)?'exit '+error.status:error.code??'execution error')+')'); }
+}
 const utc = iso => timestamp(new Date(iso).toISOString().replace(/\.\d{3}Z$/,'Z'));
 const hash = (...parts) => createHash('sha256').update(parts.join('\0')).digest('hex');
 
@@ -59,8 +65,8 @@ export async function ingestRepository(db,learnerId,repoId,{now=new Date(),ancho
   let from=anchorSha ?? mark?.payload.last_processed_sha ?? null;
   if (from) {
     if (!/^[0-9a-f]{40}$/.test(from)) from=git(repo.path_hint,['rev-parse',`${from}^{commit}`]).trim();
-    const ancestor=git(repo.path_hint,['merge-base','--is-ancestor',from,head],{allowFail:true});
-    if (ancestor===null) {
+    const ancestor=isGitAncestor(repo.path_hint,from,head);
+    if (!ancestor) {
       await appendLedger(db,learnerId,{git_watermarks:[watermarkEntry(mark?.payload.last_processed_sha ?? null,'history_rewritten',0,`watermark ${from} is not an ancestor of ${repo.branch}`)]});
       return {repo_id:repoId,status:'history_rewritten',observed:0};
     }
