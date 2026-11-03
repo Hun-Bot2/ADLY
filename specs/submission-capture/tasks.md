@@ -14,5 +14,5 @@ Step 0 (this spec) → step 1 (Codeforces sync). Steps 2–5 get their own task 
       sync marks, explicit network only. Tests with a mocked fetcher (no live calls in tests).
 - [ ] S6 App: settings field for Codeforces handle, "동기화" button, last-sync status; calendar/explorer label for platform-verified
       attempts. Browser check with mocked provider.
-- [ ] S7 Append synced problem-days to their date's Markdown log (SC-12; backfill after count confirmation) to the Markdown log through the desktop backend; dedupe verified end to end.
+- [ ] S7 Append synced problem-days to their date's Markdown log (SC-12; backfill after count confirmation) through the desktop backend; dedupe verified end to end.
 - [ ] S8 Docs: runbook commands, AGENTS.md notes, user guide line on pasting code (SC-17); one live Codeforces sync of the user's own handle only after explicit approval.
