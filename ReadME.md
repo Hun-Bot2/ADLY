@@ -1,64 +1,123 @@
 # ALDY — Algorithm Daily
 
-## 현재 상태 (2026-10-30)
+LeetCode · Codeforces · AtCoder 풀이 기록을 읽어 매일 무엇을 풀고 복습할지 계획해 주는 **로컬 우선 학습 앱**입니다.
+학습 기록은 내 컴퓨터의 SQLite와 내 Git 풀이 저장소에만 저장됩니다. 서버나 유료 API 없이 동작합니다.
+macOS(Apple Silicon) 앱을 먼저 만들고 있으며, Windows 지원은 검증 중입니다.
 
-백준이 서비스를 종료해서 아래 "초기 파이프라인"은 입력(백준 풀이 노트)을 잃었고, 그 GitHub Actions 워크플로우 2개
-(`daily_algorithm_pipeline.yml`, `publish_docker.yml`)는 삭제했습니다(git 이력에서 복구 가능). 현재 방향은 다음과 같습니다.
+> 아래 스크린샷은 모두 테스트용으로 만든 가짜 데이터입니다. 문제·회사·대회 이름은 예시이며 실제 학습 기록이 아닙니다.
 
-- **로컬 우선 학습 시스템** (`hosted/`, `specs/mastery-system/`): LeetCode, Codeforces, AtCoder 풀이 기록을 읽고 개인 맞춤 연습을 계획합니다.
-  서버 없이 로컬에서 동작하며 유료 API가 필요하지 않습니다(추천 설명용 Gemini/NVIDIA 호출은 `explain` 명령에서만 선택적으로 실행). 날짜별 학습 일지, O/X 기록, 우선 복습과 Easy → Medium → 전이 → 지연 복습을 지원합니다.
-  사용법은 [학습 일지 시작 안내](specs/mastery-journal/runbook.md)를 보세요.
-- **풀이 기록 저장소**: 별도 private repo `algorithm-solution`. 이 저장소의 커밋을 `node hosted/cli.mjs repo ingest`가 읽습니다.
-  push 없이 로컬 Git을 읽으며, 현재 커리큘럼 추천은 `node hosted/cli.mjs journal` 또는 로컬 학습 일지에서 확인합니다. 기존 `plan`의 일별 동결 계약도 보존합니다.
-- **연구** (`research/`): 세 플랫폼 24,297문제의 제목 기반 유사도 지도, 언어 편향 보정, AtCoder 개념 분류. 결과는 `research/*/REPORT.md`와 `specs/`에 있습니다.
-- **데스크톱 앱 (Mac 후보 구현·검증, 2026-10-30)**: 기존 엔진과 데이터를 유지하고 편집기, 로컬 실행·테스트, Git 커밋과 수동 push,
-  GitHub 로그인, 회사별 문제 준비를 더한 macOS·Windows 앱입니다. [요구사항](specs/desktop-app/requirements.md),
-  [작업 순서](specs/desktop-app/tasks.md), [ADR 007](specs/adaptive-learning/adrs/007-desktop-architecture.md), [ADR 008](specs/adaptive-learning/adrs/008-company-prep-data.md).
-- 초기 파이프라인 코드(`src/main/`, `Dockerfile`, `docker-compose.yml` 등)는 2026-10-18에 삭제했고 git 태그 `legacy-pipeline-final`에서 복구할 수 있습니다.
+## 화면 둘러보기
 
+### 대시보드
 
-### 데스크톱 구현 현황
+![대시보드](screenshots/dashboard.png)
 
-기업별 준비 화면과 추천 범위, CodeMirror 편집·실행·일지·커밋 도구가 추가됐습니다.
-Tauri를 데스크톱 셸로 선택했고 Electron 후보·의존성은 제거했습니다. Mac 앱은 unsigned 빌드이며 Windows·서명·업데이트 설치는 검증 중입니다.
-[실행 안내](desktop/README.md) · [구현과 검증 범위](specs/desktop-readiness/iteration-5.md).
+- 오늘 해결·오늘 시도·기한 지난 항목·복습 대상 숫자를 한 줄로 보여 주고, 숫자마다 한 줄 설명을 붙였습니다.
+- **오늘의 계획**과 **복습 대기**는 추천 엔진이 내 기록으로 고른 문제입니다. 지난 계획에서 풀지 못한 문제는 "기한 지남"으로 넘어옵니다.
+- 오른쪽에는 최근 14일 시도/해결, 다음 대회, 최근 활동이 있습니다. **학습 이어가기**는 다음 문제를 코드 워크스페이스에서 엽니다.
 
-### 데스크톱 UI 재설계 (2026-10-30)
+### 학습 캘린더
 
-8개 워크플로 내비게이션, 날짜 중심 기록 탐색, 실제 기록 기반 분석, 기업별 준비 표, 크기 조절 가능한 코드 작업 공간을 구현했습니다.
-Pretendard·JetBrains Mono는 라이선스와 함께 오프라인 포함합니다. 별도 풀이 이력 메뉴의 기능은 문제 탐색·달력·상세에 통합했습니다.
-[설계](specs/desktop-redesign/design.md) · [실제 화면과 최종 검증](specs/desktop-redesign/validation.md).
+![학습 캘린더](screenshots/calendar.png)
 
-### 학습 일지 실행
+- 날짜 칸마다 해결·시도·예정·복습·대회를 색 점으로 표시합니다. 날짜를 누르면 그날의 기록이 오른쪽 패널에 열립니다.
+- 오른쪽 요약은 오늘과 이번 달의 해결 문제·시도·기록한 날, 연속 기록, 최근 8주 시도 히트맵입니다. 계획·복습·대회는 세지 않고 풀이 기록만 셉니다.
+
+### 문제 탐색
+
+![문제 탐색](screenshots/explorer.png)
+
+- 전체 카탈로그(세 플랫폼)와 내 풀이 기록을 한곳에서 검색합니다. 난이도는 플랫폼 고유 척도(LeetCode Easy/Medium/Hard, Codeforces·AtCoder 레이팅) 그대로 둡니다.
+
+### 학습 분석
+
+![학습 분석](screenshots/analytics.png)
+
+- 해결 문제·전체 시도·활동일·직접 기록한 시간·해결 비율, 1년 활동 지도, 날짜별 시도와 해결, 난이도·주제별 분포를 보여 줍니다.
+- 모든 숫자는 실제 기록에서 계산하고, 원본 시도로 내려가 볼 수 있습니다. 해결 비율은 결과를 적은 시도만 분모에 넣습니다.
+
+### 프로그래밍 대회
+
+![프로그래밍 대회](screenshots/contests.png)
+
+- 대회를 날짜별로 묶고, 플랫폼을 색 띠와 이름표(Codeforces 파랑, AtCoder 갈색, LeetCode 주황)로, 상태를 예정·진행 중·종료·참여함 이름표로 구분합니다.
+- 진행 시간은 240분까지는 분, 그보다 길면 시간, 24시간 이상은 `10日`처럼 일(日)로 씁니다.
+- 공식 일정을 동기화하거나 직접 추가할 수 있습니다. 대회마다 "나에게 맞는지" 판정은 하지 않습니다.
+
+### 기업별 준비
+
+![기업별 준비](screenshots/company.png)
+
+- 회사별 LeetCode 문제 목록과 내 기록을 비교합니다. 회사는 로고 대신 이니셜로 표시하고, **매칭 많은 순 · 대기업 순 · 이름순**으로 정렬합니다.
+  대기업 순은 IT 기업의 대략적인 시가총액·인지도로 직접 정한 목록이며 실시간 데이터가 아닙니다.
+- 회사 목록에 있다고 실제 면접에 나온다는 뜻은 아닙니다. 수치는 "우리 카탈로그 중 회사 목록에서 찾은 비율"입니다.
+- **이 회사에 집중**을 누르면 추천이 그 회사 목록 안에서 이루어지고, **기업 모의 면접**을 만들 수 있습니다.
+
+### 코드 워크스페이스
+
+처음 열면 풀이 저장소를 연결하는 시작 화면이 나옵니다.
+
+![코드 워크스페이스 시작 화면](screenshots/workspace-start.png)
+
+1. **GitHub 계정 (선택)**: GitHub 기기 인증(device flow)으로 로그인합니다. 화면에 나온 코드를 브라우저에서 입력하면 됩니다.
+   로그인 정보는 OS 키체인에만 저장됩니다. 로그인하지 않아도 컴퓨터의 Git 인증으로 가져오기와 Push가 됩니다.
+2. **풀이 저장소 연결**: 이미 있는 폴더 연결, GitHub에서 복제(로그인하면 내 저장소 목록에서 선택), 새로 시작(원하면 GitHub 비공개 저장소도 함께 생성) 중 하나를 고릅니다.
+
+연결한 뒤에는 매일 쓰는 Markdown 학습 일지를 그대로 편집합니다.
+
+![코드 워크스페이스 일지 편집](screenshots/workspace-daily-log.png)
+
+- **오늘 기록**: `leetcode/YY-MM-DD.md`처럼 오늘 날짜의 일지를 엽니다. 없으면 저장소의 `templates/daily.md`로 만듭니다.
+- **문제 열기 (⌘P)**: 일지 표에 문제 한 줄과 `## 문제 제목`, 빈 코드 블록을 추가합니다. 결과 칸은 비워 두며, 풀고 나서 직접 `1`(해결) 또는 `0`(미해결)을 적습니다.
+- **실행 / 테스트**: 커서가 있는 Python·C++ 코드 블록을 실행합니다. 실행은 시간·출력 제한이 있지만 샌드박스는 아닙니다.
+- **Git** 패널에서 고른 파일만 커밋하고, Push는 직접 누를 때만 합니다. 커밋된 일지가 학습 기록으로 들어갑니다.
+
+## 시작하기
+
+**데스크톱 앱 (macOS, 서명 없는 빌드)**: 빌드와 실행 방법은 [desktop/README.md](desktop/README.md)에 있습니다.
+GitHub 로그인을 쓰려면 한 번만 GitHub OAuth App을 등록해 Client ID를 넣어야 합니다(같은 문서의 "GitHub sign-in").
+
+**브라우저에서 로컬 실행**:
 
 ```sh
-# 아직 카탈로그를 선택하지 않았다면 최초 1회 (기존 선택은 유지 가능)
+# 아직 카탈로그를 선택하지 않았다면 최초 1회
 node hosted/cli.mjs catalog use --version catalog-v4
 node hosted/local.mjs
 # http://127.0.0.1:8787
 ```
 
-기존 SQLite를 사용하며 실행 위치와 관계없이 CLI와 같은 기본 DB 경로를 씁니다.
-미해결 풀이도 다음 날 우선 복습에 들어갑니다. 도움 사용 여부는 기록하지 않으며 완료한 풀이는 모두 해결로 셉니다([ADR 005](specs/adaptive-learning/adrs/005-solved-only-outcomes.md)). 성공한 복습과 새로운 전이 문제의
-독립 해결은 구분합니다. 테스트는 합성 학습 이력으로 수행했으며 실제 교육 효과를
-입증한 것은 아닙니다. [설계·검증 기록](specs/mastery-journal/validation.md).
+**풀이 기록 가져오기와 계획 (CLI)**:
 
-### 캘린더 워크스페이스 (2026-10-20)
+```sh
+node hosted/cli.mjs repo add --id solutions --path ~/algorithm-solution
+node hosted/cli.mjs repo ingest
+node hosted/cli.mjs journal
+```
 
-현재 첫 화면은 오늘 계획·복습 대기·최근 활동을 모은 대시보드입니다. 전체 달력은 학습 캘린더에서 실제 풀이 시각을 기준으로 탐색합니다. 주간 보기, 날짜별 상세,
-검색 가능한 풀이 이력, 원본 기록으로 내려가는 학습 분석과 시간순 대회 목록을 제공합니다.
-조회된 대회는 메인 캘린더의 실제 날짜에도 표시됩니다. 날짜 선택은 오른쪽 패널을 갱신하고,
-더보기는 하루 상세 모달을 엽니다. 월간 활동과 해결·미해결 분포도 기록에 맞춰 확인할 수 있습니다.
-추천은 점선 예정 항목이며 완료로 집계하지 않습니다. 수동 기록 수정은 기존 시도를
-보존하는 후속 기록입니다. 가져온 Git 기록은 원본 저장소에서 수정합니다.
+풀이 저장소의 날짜별 일지 형식은 표 `| 문제 | 결과 | 시간 | 복습 | 메모 |` 한 줄에 문제 하나입니다. 자세한 규칙은
+[학습 일지 안내](specs/mastery-journal/runbook.md)에 있습니다.
 
-Gemini/NVIDIA의 저장된 설명·오류·기본 설명·추천 근거는 추천 상세의 비교 모달에서
-확인합니다. 화면 조회는 모델 호출을 실행하지 않습니다. 목표·타이머·백업은 학습 도구에 있습니다.
-시간대는 현재 정책과 같은 Asia/Seoul 고정입니다. CF/AtCoder는 기존 캐시·동기화 설정을
-사용합니다. 로컬 대회 조회 기능이 제공되는 경우 세 플랫폼 일정을 명시적으로 동기화할 수 있습니다.
-LeetCode 커뮤니티 미러와 공식 일정은 출처를 구분하며, 수동 일정도 보존합니다.
+## 추천은 이렇게 동작합니다
 
-[감사와 디자인 근거](specs/calendar-workspace/design.md) · [최신 개선·검증 및 제한](specs/calendar-workspace/refinement-2.md)
+- 내 풀이 기록만으로 계획합니다. 못 푼 문제는 다음 날 우선 복습에 들어가고, Easy → Medium → 다른 문제로 옮겨 풀기 → 간격을 둔 복습 순서로 진행합니다.
+- 도움을 받았는지는 기록하지 않으며, 푼 문제는 모두 해결로 셉니다([ADR 005](specs/adaptive-learning/adrs/005-solved-only-outcomes.md)).
+- 추천 이유는 점수 구성 요소까지 확인할 수 있습니다. 선택 기능인 Gemini/NVIDIA 설명은 `explain` 명령을 직접 실행할 때만 호출합니다.
+- 검증은 합성 학습 이력과 자동 테스트로 했습니다. 실제 학습 효과를 측정한 것은 아닙니다.
+
+## 현재 상태와 문서
+
+| 영역 | 상태 | 문서 |
+|---|---|---|
+| 학습 엔진·일지·캘린더 | 로컬 구현, 자동 테스트 통과 | [mastery-system](specs/mastery-system/), [calendar-workspace](specs/calendar-workspace/design.md) |
+| 데스크톱 앱 (Tauri) | Mac 서명 없는 빌드 실행 확인. Windows·서명·업데이트 설치는 미검증 | [desktop-app](specs/desktop-app/requirements.md), [새 사용자 설정](specs/desktop-app/new-user-workspace.md) |
+| UI 재설계 | Tableau 색 체계, 8개 메뉴 | [desktop-redesign](specs/desktop-redesign/design.md) |
+| 기업별 준비 | 회사 목록 레이어(company-v2) | [company-prep](specs/company-prep/) |
+| 연구 | 24,297문제 제목 유사도 지도, 언어 편향, AtCoder 개념 분류 (탐색용, 추천에 쓰지 않음) | `research/*/REPORT.md` |
+
+- 초기 Baekjoon → LeetCode 추천 파이프라인은 백준 종료로 입력을 잃어 2026-10-18에 삭제했고, git 태그 `legacy-pipeline-final`에서 복구할 수 있습니다.
+- 에이전트용 저장소 규칙은 [AGENTS.md](AGENTS.md)에 있습니다.
+
+## 초기 파이프라인 기록 (2026-01, 삭제됨)
 
 아래 내용은 2026-01 시점의 초기 파이프라인 기록입니다.
 

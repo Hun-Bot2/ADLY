@@ -904,3 +904,9 @@ Keep these distinctions clear in summaries and docs:
 - `desktop/stage` refuses to be overwritten by package-stage.mjs: move the old stage aside first. The portable Node runtime last used
   is recorded in specs/desktop-readiness/receipts/node-runtime-darwin-arm64.v1.json.
 - In Runtime.evaluate (CDP smokes) top-level `const` persists between calls: wrap repeated snippets in `{}`.
+
+## README screenshots (2026-11-03)
+
+- `screenshots/*.png` (1440x900) come only from authored fixtures: desktop/redesign-browser-smoke.mjs, desktop/start-panel-smoke.mjs,
+  desktop/ide-browser-smoke.mjs, and a fresh empty learner DB with authored contests for contests.png. Never capture the real learner
+  DB or a copy of it. Refresh them after visible UI changes and keep ReadME.md's descriptions in step.

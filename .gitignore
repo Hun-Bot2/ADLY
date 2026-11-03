@@ -64,3 +64,6 @@ desktop/src-tauri/gen/
 # Shared design assets copied into the native startup webview by build.rs
 desktop/src-tauri/placeholder/fonts/
 desktop/src-tauri/placeholder/design-system.css
+
+# Local Claude Code preview configs (machine-specific scratch paths)
+.claude/launch.json
