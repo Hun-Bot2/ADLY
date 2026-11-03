@@ -11,7 +11,7 @@ phase content  POST https://leetcode.com/graphql  question(titleSlug)           
 ```
 
 - Resume: `content` reads `statements.jsonl`, skips stored slugs (an error row is retried on the next run; the latest row wins in
-  readers). `list` refuses to overwrite an existing `problems.jsonl` unless `--refresh-list` writes a new file name.
+  readers). `list` refuses to overwrite an existing `problems.jsonl`; a later refresh uses a new `--output` version.
 - Pacing: `--gap 2.0` seconds minimum (lower values are refused), 15 s timeout, stop after 5 consecutive errors (HTTP 429/403
   included) and print how to resume.
 - No cookies, no login, fixed User-Agent naming the project. Paid-only rows are written with `reason: "paid_only"` without a request.
