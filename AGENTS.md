@@ -959,3 +959,11 @@ Keep these distinctions clear in summaries and docs:
   empty-result rows too), never edits rows, skips files with a differing unsaved draft, asks above 10 rows, and never commits.
   Journal entries carry `platform_submissions {count, failed_before_accept, accepted_at}`; the UI shows "제출 확인" / "플랫폼 채점".
 - A desktop preview needs the engine started without `apiOnly` (apiOnly 404s design-system.css and the learning frame).
+
+## Windows test portability (2026-11-03)
+
+- Never use `new URL(..., import.meta.url).pathname` as a filesystem path (Windows gives `/D:/...`); use `fileURLToPath`.
+- Catalog/manifest paths that are POSIX strings must be checked with `path.posix`; win32 `normalize` rewrites `/` to `\`.
+- Windows cannot remove a directory while a SQLite handle in it is open, and node:test runs `t.after` hooks in registration
+  order. Use `tempRoot(t,prefix)` from hosted/test/helpers/temp.mjs and pass handles to `own()` so they close before removal.
+- POSIX mode bits (0o600) are not observable on Windows; guard such assertions with `process.platform!=='win32'`.

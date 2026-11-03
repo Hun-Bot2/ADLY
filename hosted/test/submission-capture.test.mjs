@@ -6,6 +6,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
 import {createDatabase} from './helpers/d1.mjs';
+import {tempRoot} from './helpers/temp.mjs';
 import {appendEvents,getPreferences,putPreferences} from '../core/store.mjs';
 import {appendLedger,listEntries,normalizeEntry} from '../mastery/side-ledger.mjs';
 import {readLedger,attemptStream} from '../mastery/ledger.mjs';
@@ -35,14 +36,14 @@ test('migration 009 on fresh and upgraded databases; append-only triggers; sourc
   assert.throws(()=>fresh.sqlite.prepare('UPDATE platform_submissions SET payload=1').run(),/append-only/);
   assert.throws(()=>fresh.sqlite.prepare('DELETE FROM submission_sync_marks').run(),/append-only/);
   // Upgrade from a store that stops at migration 008: snapshot is taken, data survives, 009 applies.
-  const root=mkdtempSync(join(tmpdir(),'sub-upgrade-'));t.after(()=>rmSync(root,{recursive:true,force:true}));
+  const {root,own}=tempRoot(t,'sub-upgrade-');
   const path=join(root,'l.sqlite3'),old=new DatabaseSync(path);
   for (let v=1;v<=8;v++) {
     const name=['001_core','002_delivery','003_providers','004_contest_history','005_operations','006_immutable_missions','007_git_evidence','008_mastery_ledger'][v-1];
     old.exec(readFileSync(new URL(`../migrations/${name}.sql`,import.meta.url),'utf8'));
   }
   old.exec("INSERT INTO learners(learner_id) VALUES('kept')");old.close();
-  const upgraded=createDatabase(path);t.after(()=>upgraded.close());
+  const upgraded=own(createDatabase(path));
   assert.ok(upgraded.migrationBackup);
   assert.equal(upgraded.sqlite.prepare('SELECT MAX(version) AS v FROM schema_migrations').get().v,9);
   assert.equal(upgraded.sqlite.prepare('SELECT learner_id FROM learners').get().learner_id,'kept');

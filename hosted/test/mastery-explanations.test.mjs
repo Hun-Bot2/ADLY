@@ -55,7 +55,8 @@ test('both providers start concurrently with byte-identical frozen evidence and 
  assert.ok(service.records('owner').every(r=>!r.input.input_json.includes('mutated-after-dispatch')));
  const counts=service.usage('owner');await second.decorate('owner',done,{generate:false});assert.deepEqual(service.usage('owner'),counts);
  const restored=await second.explain('owner',plan,slot);assert.ok(restored.results.every(r=>r.cache_hit));
- assert.equal((await stat(join(root,'research.sqlite3'))).mode&0o777,0o600);
+// Windows has no POSIX mode bits (stat reports 0o666); the ledger relies on the profile ACL there.
+ if(process.platform!=='win32')assert.equal((await stat(join(root,'research.sqlite3'))).mode&0o777,0o600);
 });
 
 test('partial failure retains Gemini; explicit retry records a new NVIDIA attempt only; cache identity is per model/input/learner',async t=>{

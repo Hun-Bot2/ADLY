@@ -1,6 +1,7 @@
 /** Cloudflare workerd+D1 local smoke. No real Cloudflare account or Slack calls. */
 import {Miniflare,convertV4MiniflareOptions} from 'miniflare';
 import assert from 'node:assert/strict';
+import {fileURLToPath} from 'node:url';
 import {readFile,readdir,mkdir,writeFile} from 'node:fs/promises';
 const issuer='https://runtime-smoke.cloudflareaccess.com',audience='runtime-smoke';
 const pair=await crypto.subtle.generateKey({name:'RSASSA-PKCS1-v1_5',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['sign','verify']);
@@ -11,7 +12,7 @@ const header=b64({alg:'RS256',kid:'runtime-key'}),claims=b64({iss:issuer,aud:[au
 const signature=await crypto.subtle.sign('RSASSA-PKCS1-v1_5',pair.privateKey,new TextEncoder().encode(header+'.'+claims));
 const token=header+'.'+claims+'.'+Buffer.from(signature).toString('base64url');
 const external=[];
-const mf=new Miniflare(convertV4MiniflareOptions({name:'runtime-smoke',modules:true,scriptPath:new URL('./dist/worker.js',import.meta.url).pathname,compatibilityDate:'2026-10-16',
+const mf=new Miniflare(convertV4MiniflareOptions({name:'runtime-smoke',modules:true,scriptPath:fileURLToPath(new URL('./dist/worker.js',import.meta.url)),compatibilityDate:'2026-10-16',
   d1Databases:{DB:'runtime-test'},bindings:{ACCESS_ISSUER:issuer,ACCESS_AUDIENCE:audience,ACCESS_EMAIL_ALLOWLIST:'smoke@example.test',DELIVERY_ENABLED:'false',INSTRUMENTATION_ENABLED:'true'},
   serviceBindings:{ASSETS:async()=>new Response('<!doctype html><title>asset fixture</title>',{headers:{'content-type':'text/html'}})},
   outboundService:async request=>{external.push(request.url);if(request.url===issuer+'/cdn-cgi/access/certs')return new Response(JSON.stringify({keys:[jwk]}));throw Error('Unexpected remote call: '+request.url);}}));

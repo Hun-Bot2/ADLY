@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import {mkdtemp,mkdir,rm,symlink,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {libraryResponse,loadLibrary,validateLibrary} from '../local-library.mjs';
 
-const ROOT=new URL('../..',import.meta.url).pathname;
+const ROOT=fileURLToPath(new URL('../..',import.meta.url));
 const request=(path,init={})=>new Request('http://127.0.0.1:8787'+path,init);
 async function fixture(t,items){
  const root=await mkdtemp(join(tmpdir(),'library-'));t.after(()=>rm(root,{recursive:true,force:true}));
