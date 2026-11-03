@@ -916,3 +916,9 @@ Keep these distinctions clear in summaries and docs:
 - `dailyHeader` in hosted/mastery/daily-log.mjs is the only header matcher: Korean or English names (Problem/Result/Time/Review/Memo,
   Notes), fixed order, mapped to the Korean canonical names. desktop/backend/dailylog.mjs reuses it; do not add another regex.
 - New repositories and the built-in fallback use the English template; existing Korean templates and logs keep working.
+
+## Settings modal (2026-11-03)
+
+- Desktop settings (`#settings-drawer`, class `settings-modal`) is a centered native dialog, not a side drawer; the id stays for scripts/tests.
+- Appearance is the icon radio group `#appearance [data-mode=light|system|dark]` in the modal header (no select). There is no language
+  setting yet; do not add an inert language control.

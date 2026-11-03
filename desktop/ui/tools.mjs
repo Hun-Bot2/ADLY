@@ -15,10 +15,11 @@ const token=document.querySelector('meta[name=desktop-token]').content;
 const frame=$('learning-frame');
 let appearanceHydrated=false;
 const appearance=installAppearance({onChange:(mode,effective)=>{
- $('appearance').value=mode;$('appearance-status').textContent=effective==='dark'?'다크 모드 적용됨':'라이트 모드 적용됨';
+ for(const b of $('appearance').querySelectorAll('[data-mode]'))b.setAttribute('aria-checked',String(b.dataset.mode===mode));$('appearance-status').textContent=effective==='dark'?'다크 모드 적용됨':'라이트 모드 적용됨';
  window.algorithmNativeAuth?.appearance?.(mode).catch(report);
 }});
-$('appearance').addEventListener('change',async()=>{const previous=appearance.get();const mode=appearance.set($('appearance').value);try{await command('appearance-setting',{appearance:mode});}catch(error){appearance.set(previous);report(error);}});
+// Icon radio group: light / system / dark. Saved immediately, like the former autosaved select.
+$('appearance').addEventListener('click',async event=>{const choice=event.target.closest('[data-mode]')?.dataset.mode;if(!choice)return;const previous=appearance.get();const mode=appearance.set(choice);try{await command('appearance-setting',{appearance:mode});}catch(error){appearance.set(previous);report(error);}});
 const LAYOUT_KEY='algorithm-mastery.desktop-layout.v2';
 let layout;
 try{layout=normalizeLayout(JSON.parse(localStorage.getItem(LAYOUT_KEY)||'{}'));}catch{layout=normalizeLayout();}
