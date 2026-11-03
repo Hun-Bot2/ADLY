@@ -3,10 +3,11 @@ import assert from 'node:assert/strict';
 import {spawnSync,execFileSync} from 'node:child_process';
 import {mkdtempSync,writeFileSync,readFileSync,rmSync,existsSync,mkdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
-import {join,resolve} from 'node:path';
+import {join} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {run} from '../cli.mjs';
 
-const ROOT=resolve(new URL('../..',import.meta.url).pathname);
+const ROOT=fileURLToPath(new URL('../..',import.meta.url));
 function fixtureCatalog(dir) {
   const rows=[];
   for (let i=0;i<10;i++) rows.push({problem_key:`leetcode:p${i}`,platform:'leetcode',title:`P${i}`,url:`https://leetcode.com/problems/p${i}/`,native_difficulty:['Easy','Medium','Hard'][i%3],tags:['Hash Table'],contest:null,eligibility:'eligible',exclusion_reasons:[]});

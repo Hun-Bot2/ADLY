@@ -1,6 +1,6 @@
 /** Local-only, read-only research library. Files are served by catalog id, never by a requested path. Never import into the Worker/core bundle. */
 import {readFile,realpath,stat} from 'node:fs/promises';
-import {extname,isAbsolute,join,normalize,sep} from 'node:path';
+import {extname,join,posix,sep} from 'node:path';
 
 const TYPES={'.png':'image/png','.svg':'image/svg+xml','.html':'text/html; charset=utf-8'};
 const KINDS={'.png':'image','.svg':'image','.html':'page'};
@@ -18,7 +18,8 @@ export function validateLibrary(catalog){
     for(const item of folder.items){
       const path=item.path ?? '';
       if(!/^[a-z0-9-]+$/.test(item.id ?? '')||ids.has(item.id))throw Error('library: invalid or duplicate id '+item.id);
-      if(isAbsolute(path)||normalize(path)!==path||path.split('/').includes('..')||!ROOTS.some(r=>path.startsWith(r))||!TYPES[extname(path)])throw Error('library: invalid path '+path);
+      // Catalog paths are POSIX on every OS; win32 normalize would turn '/' into '\\'.
+      if(typeof path!=='string'||posix.isAbsolute(path)||/[\\:]/.test(path)||posix.normalize(path)!==path||path.split('/').includes('..')||!ROOTS.some(r=>path.startsWith(r))||!TYPES[extname(path)])throw Error('library: invalid path '+path);
       ids.add(item.id);
     }
   }
