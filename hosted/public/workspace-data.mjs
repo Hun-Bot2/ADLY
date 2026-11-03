@@ -202,3 +202,12 @@ export function editorProblem(event){
   if(!match||typeof event.url!=='string')return null;
   try{const u=new URL(event.url),host={leetcode:'leetcode.com',codeforces:'codeforces.com',atcoder:'atcoder.jp'}[match[1]];if(u.protocol!=='https:'||u.hostname!==host||u.username||u.password||u.port)return null;const title=typeof event.title==='string'?event.title.replace(/[\u0000-\u001f|]/g,' ').trim().slice(0,200):'';return {platform:match[1],id:match[2],url:u.href,...(title?{title}:{})};}catch{return null;}
 }
+
+// Contest lengths: minutes up to 240, then hours, then days written with 日 (user preference, 2026-11-02).
+export function contestDuration(minutes){
+  if(minutes==null||!Number.isFinite(Number(minutes))||Number(minutes)<0)return '시간 미확인';
+  const m=Math.round(Number(minutes));if(m<=240)return `${m}분`;
+  const days=Math.floor(m/1440),hours=Math.floor(m%1440/60),rest=m%60;
+  return [days?`${days}日`:null,hours?`${hours}시간`:null,rest?`${rest}분`:null].filter(Boolean).join(' ');
+}
+export const PLATFORM_NAMES={codeforces:'Codeforces',atcoder:'AtCoder',leetcode:'LeetCode'};

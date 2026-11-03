@@ -32,3 +32,10 @@ Implementation is divided into independently owned page modules, IDE and root sh
 - [x] Code Workspace start panel: with no repository, the explorer and editor are replaced by three inline options (connect a local folder, clone from GitHub, create new) using the existing register/clone/create commands; the native shell adds a folder picker.
 - [ ] GitHub one-click sign-in needs an OAuth/GitHub App client ID with device flow enabled, built in through `ALDY_GITHUB_CLIENT_ID` at compile time. Until then the Client ID field stays under 고급 and system Git credentials work for clone/push.
 - [x] Company sort adds 대기업 순: an authored, dated IT market-cap/recognition order (`BIG_TECH_ORDER` in company.mjs), labelled as not live data; unlisted companies follow by matched count.
+
+## Tableau palette and flatter dashboard (2026-11-03)
+
+- [x] Primary and status colours switched to Tableau 10 (light and dark); app icon recoloured to match.
+- [x] Dashboard numbers: one flat strip with hairline dividers and small coloured marks (replaces boxed cards with icon tiles).
+- [x] Contest list: date group headers, platform edge and chip, phase chip; durations as 분 / 시간 / 日.
+- [x] Analytics trend empty state spans the chart (was squeezed into the 24px axis column).

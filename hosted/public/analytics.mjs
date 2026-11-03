@@ -9,7 +9,7 @@ function select(label,choices,value,onChange){const wrap=el('label','filter-cont
 function chartLegend(){const legend=el('div','chart-legend');for(const [name,cls]of [['전체 시도','attempts'],['해결 시도','solved']]){const item=el('span','legend-item'),mark=el('i',cls);item.append(mark,document.createTextNode(name));legend.append(item);}return legend;}
 function trendChart(groups,onDrill){
  const host=el('div','analytic-trend');host.setAttribute('role','group');host.setAttribute('aria-label','날짜별 시도와 해결');
- if(!groups.length){host.append(el('p','empty-state compact','선택 범위에 기록된 시도가 없습니다.'));return host;}
+ if(!groups.length){host.classList.add('is-empty');host.append(el('p','empty-state compact','선택 범위에 기록된 시도가 없습니다.'));return host;}
  const max=Math.max(1,...groups.map(row=>row.count)),axis=el('div','chart-y-labels');for(const n of [max,Math.ceil(max/2),0])axis.append(el('span','',n));
  const plot=el('div','analytic-trend-plot');plot.style.setProperty('--trend-count',groups.length);
  groups.forEach((group,index)=>{const b=button('',()=>onDrill?.(group.key+' · 풀이 기록',group.rows),'trend-column');b.dataset.date=group.key;b.title=`${group.key} · 시도 ${group.count}회 · 해결 ${group.solved}회`;b.setAttribute('aria-label',b.title);const bars=el('span','trend-column-bars');for(const[cls,count]of [['attempts',group.count],['solved',group.solved]]){const bar=el('i',cls);bar.style.height=`${count/max*100}%`;bars.append(bar);}const count=el('span','trend-value',group.count);b.append(count,bars,el('time','trend-date',index===0||index===groups.length-1||index%Math.max(1,Math.ceil(groups.length/6))===0?group.key.slice(5):' '));plot.append(b);});

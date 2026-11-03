@@ -869,8 +869,10 @@ Keep these distinctions clear in summaries and docs:
 - WebKit (wry) calls the navigation handler before createWebView for target=_blank links. A main-window on_navigation that
   only allows the app origin silently cancels them, so on_new_window never runs. desktop/src-tauri/src/main.rs routes
   allowlisted https hosts (external_link_allowed) to the OS browser from both handlers; add new link hosts there.
-- The UI follows the green-primary card direction (specs/desktop-redesign/design.md, reference/check-direction.png). Use
-  --primary/--primary-soft for primary actions and selection; status colours stay Tableau. Pretendard leads --font-ui.
+- Palette (user decision 2026-11-03, supersedes the green primary): Tableau 10. --primary is Tableau blue #4e79a7; status tokens are
+  Tableau green/blue/purple/orange/red/brown. Use --primary/--primary-soft for actions and selection. The app icon is Tableau blue with a
+  Tableau-yellow check. Dashboard numbers are one flat strip, not icon-tile cards (user called those "AI slop"). Pretendard leads --font-ui.
+- Contest lengths use contestDuration (workspace-data.mjs): minutes up to 240, then hours, then 日 for days.
 - In the inspector, build content with section()/facts() from workspace.mjs. Do not give inspector state elements the
   generic `.empty` class: it draws a boxed empty state.
 

@@ -200,3 +200,10 @@ test('desktop editor handoff uses exact native IDs and canonical platform hosts'
  assert.equal(editorProblem({problem_key:'leetcode:authored',url:'https://evil.invalid/problems/authored/'}),null);
  assert.equal(editorProblem({title:'Authored',url:'https://leetcode.com/problems/authored/'}),null);
 });
+
+test('contest durations switch to hours after 240 minutes and to 日 after 24 hours', async () => {
+  const {contestDuration}=await import('../public/workspace-data.mjs');
+  assert.equal(contestDuration(120),'120분');assert.equal(contestDuration(240),'240분');assert.equal(contestDuration(300),'5시간');
+  assert.equal(contestDuration(330),'5시간 30분');assert.equal(contestDuration(1440),'1日');assert.equal(contestDuration(1440*3+90),'3日 1시간 30분');
+  assert.equal(contestDuration(null),'시간 미확인');
+});

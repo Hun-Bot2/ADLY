@@ -95,19 +95,22 @@
 .calendar-weekdays,.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
 .calendar-cell{position:relative;min-width:0}
 /* Card surfaces (check.png direction, 2026-11-02): bordered, rounded blocks replace hairline-separated columns on the dashboard. */
-.dashboard-metrics{border-block:0;padding:0;gap:var(--space-4)}
-.dashboard-metrics .compact-metric{padding:var(--space-4);border:1px solid var(--border);border-radius:var(--radius);background:var(--background);box-shadow:var(--card-shadow)}
 .dashboard-layout{gap:var(--space-4);align-items:start}
 .dashboard-primary,.dashboard-secondary{display:grid;gap:var(--space-4);align-content:start}
 .dashboard-secondary{border-left:0;padding-left:0}
-.dashboard-primary>section,.dashboard-secondary>section{padding:var(--space-4) 20px;border:1px solid var(--border);border-radius:var(--radius);background:var(--background);box-shadow:var(--card-shadow)}
+.dashboard-primary>section,.dashboard-secondary>section{padding:var(--space-4) 20px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--background)}
 .dashboard-primary>section+section,.dashboard-secondary>section+section{margin-top:0;padding-top:var(--space-4);border-top:1px solid var(--border)}
-/* Dashboard metric cards: status icon, number, and a one-line plain explanation. */
-.dashboard-metrics .compact-metric{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:var(--space-3);align-items:start}.dashboard-metrics .compact-metric>:not(.metric-icon){grid-column:2}
-.metric-icon{grid-row:1/span 3;display:grid;place-items:center;width:36px;height:36px;border-radius:var(--radius-sm);--tone:var(--status-solved);color:var(--tone);background:color-mix(in srgb,var(--tone) 12%,var(--background))}.metric-icon .ui-icon{width:18px;height:18px}
+/* Dashboard numbers (2026-11-03): one flat strip split by hairlines, a small Tableau-coloured mark per number, no icon tiles. */
+.dashboard-metrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:0;padding:0;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--background)}
+.dashboard-metrics .compact-metric{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:6px;align-items:center;padding:10px 14px;border:0;border-radius:0;box-shadow:none}
+.dashboard-metrics .compact-metric+.compact-metric{border-left:1px solid var(--border)}
+.dashboard-metrics .compact-metric>:not(.metric-icon){grid-column:2}
+.metric-icon{grid-row:1;grid-column:1;display:inline-grid;place-items:center;width:auto;height:auto;background:none;--tone:var(--status-solved);color:var(--tone)}.metric-icon .ui-icon{width:13px;height:13px}
 .metric-icon[data-tone=attempted]{--tone:var(--status-attempted)}.metric-icon[data-tone=overdue]{--tone:var(--status-overdue)}.metric-icon[data-tone=review]{--tone:var(--status-review)}
-.dashboard-metrics .metric-meta{font-size:var(--text-micro);color:var(--text-secondary);line-height:1.45;margin-top:2px}
-@media(max-width:680px){.metric-icon{width:28px;height:28px}.dashboard-metrics .metric-meta{display:none}}
+.dashboard-metrics .metric-label{font-size:var(--text-meta);color:var(--text-secondary)}
+.dashboard-metrics .metric-value{grid-column:1/-1!important;font-size:22px;line-height:1.25;font-weight:var(--weight-semibold);margin-top:2px}
+.dashboard-metrics .metric-meta{grid-column:1/-1!important;font-size:var(--text-micro);color:var(--text-secondary);line-height:1.45}
+@media(max-width:680px){.dashboard-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-metrics .compact-metric:nth-child(3){border-left:0}.dashboard-metrics .compact-metric:nth-child(n+3){border-top:1px solid var(--border)}.dashboard-metrics .metric-meta{display:none}}
 /* Calendar side summary: today, the visible month and an 8-week attempt heatmap. */
 @media(min-width:1100px){.calendar-workspace{display:grid;grid-template-columns:minmax(0,1fr) 248px;gap:var(--space-6);align-items:start}}
 .inspector-open .calendar-summary{display:none}
@@ -122,3 +125,13 @@
 .summary-cell[data-level="1"]{background:color-mix(in srgb,var(--primary) 30%,var(--background))!important}.summary-cell[data-level="2"]{background:color-mix(in srgb,var(--primary) 55%,var(--background))!important}.summary-cell[data-level="3"]{background:color-mix(in srgb,var(--primary) 80%,var(--background))!important}.summary-cell[data-level="4"]{background:var(--primary)!important}
 .summary-cell[data-level="-1"]{background:transparent!important;outline:1px dashed var(--border);outline-offset:-1px;cursor:default}.summary-cell.is-today{box-shadow:inset 0 0 0 1.5px var(--text-primary)}
 .summary-legend{display:flex;align-items:center;gap:4px;margin-top:var(--space-3);font-size:var(--text-micro);color:var(--text-secondary)}.summary-legend .summary-cell{width:11px;height:11px;cursor:default}.summary-legend span:last-child{margin-left:2px}.summary-legend span:first-child{margin-right:2px}
+/* Contest list: date groups, platform chips (Tableau hues) and phase chips make rows distinguishable at a glance. */
+.contest-day{margin:var(--space-6) 0 var(--space-2);font-size:var(--text-meta);font-weight:var(--weight-semibold);color:var(--text-secondary)}.contest-day:first-child{margin-top:var(--space-2)}
+.contest-list-item{--platform:var(--tableau-gray);border-left:3px solid var(--platform)!important;padding-left:var(--space-3)!important}
+.contest-list-item[data-platform=codeforces]{--platform:var(--tableau-blue)}.contest-list-item[data-platform=atcoder]{--platform:var(--tableau-brown)}.contest-list-item[data-platform=leetcode]{--platform:var(--tableau-orange)}
+.contest-platform{justify-self:start;padding:2px 8px;border-radius:999px;font-size:var(--text-micro);font-weight:var(--weight-semibold);color:color-mix(in srgb,var(--platform) 70%,var(--text-primary));background:color-mix(in srgb,var(--platform) 14%,var(--background));white-space:nowrap}
+.contest-status{justify-self:start;padding:2px 8px;border-radius:999px;--tone:var(--tableau-gray);color:color-mix(in srgb,var(--tone) 65%,var(--text-primary));background:color-mix(in srgb,var(--tone) 16%,var(--background))}
+.contest-status[data-phase=upcoming]{--tone:var(--tableau-blue)}.contest-status[data-phase=ongoing]{--tone:var(--tableau-red);font-weight:var(--weight-semibold)}.contest-status[data-phase=joined]{--tone:var(--tableau-green)}
+.contest-list-item[data-phase=past]{opacity:.72}.contest-list-item[data-phase=ongoing]{background:color-mix(in srgb,var(--tableau-red) 5%,var(--background))}
+.contest-duration{color:var(--text-primary)!important;font-variant-numeric:tabular-nums}
+.contest-duration{white-space:nowrap}@media(min-width:1100px){.contest-list-item{grid-template-columns:80px 96px minmax(0,1fr) 128px 76px 12px}}

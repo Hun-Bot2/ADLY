@@ -3,7 +3,7 @@ installAppearance();
 import {closeInspector} from './overlays.mjs';
 import {createNavigation,normalizeRoute,pageHeader,button as uiButton,icon} from './ui.mjs';
 import {renderCompany,renderContestSchedule} from './company.mjs';
-import {syncDiagnostic,editorProblem} from './workspace-data.mjs';
+import {syncDiagnostic,editorProblem,contestDuration} from './workspace-data.mjs';
 import {createWorkspace} from './workspace.mjs';
 const PENDING_KEY = "adaptive-learning.pending-events.v1";
 const PENDING_JOURNAL_KEY = "adaptive-learning.pending-journal-attempts.v1";
@@ -1078,7 +1078,7 @@ function renderContests() {
       const item = node("li", "contest-row");
       const heading = node("div", "split"); heading.append(node("strong", "", contest.title || "이름 없는 대회"), node("span", `tag${contest.stale ? " warning" : ""}`, contest.stale ? "정보가 오래됨" : contest.source === "manual" ? "직접 입력" : "제공처 정보"));
       item.append(heading);
-      item.append(node("p", "meta", `${contest.platform || "플랫폼 미상"} · ${contest.start_at || "시각 정보 없음"} · ${contest.duration_minutes ?? "시간 미상"}분`));
+      item.append(node("p", "meta", `${contest.platform || "플랫폼 미상"} · ${contest.start_at || "시각 정보 없음"} · ${contestDuration(contest.duration_minutes)}`));
       if (contest.source && contest.source !== "manual") item.append(node("p", "meta", `출처 ${contest.source}${contest.fetched_at ? ` · 확인 ${contest.fetched_at}` : ""}`));
       if (contest.url && safeExternalUrl(contest.url)) {
         const link = node("a", "", "대회 페이지 열기"); link.href = contest.url; link.target = "_blank"; link.rel = "noopener noreferrer"; item.append(link);
