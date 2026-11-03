@@ -23,7 +23,7 @@ $('appearance').addEventListener('click',async event=>{const choice=event.target
 const LAYOUT_KEY='algorithm-mastery.desktop-layout.v2';
 let layout;
 try{layout=normalizeLayout(JSON.parse(localStorage.getItem(LAYOUT_KEY)||'{}'));}catch{layout=normalizeLayout();}
-let repo=null,path=null,repos=[],files=[],loading=false,draftTimer=null,saveQueue=Promise.resolve(),running=false,route='dashboard',layoutSupported=false,layoutHydrated=false,historyRequest=0;
+let repo=null,path=null,repos=[],files=[],loading=false,draftTimer=null,saveQueue=Promise.resolve(),route='dashboard',layoutSupported=false,layoutHydrated=false,historyRequest=0;
 const buffers=new Map();
 const language=new Compartment();
 const editor=new EditorView({state:EditorState.create({doc:'',extensions:[
@@ -56,7 +56,7 @@ function applyLayout(){
  $('toggle-explorer').setAttribute('aria-pressed',String(layout.explorerCollapsed));$('toggle-panel').setAttribute('aria-expanded',String(!layout.panelCollapsed));$('toggle-panel').textContent=layout.panelCollapsed?'펼치기':'접기';
  $('explorer-resizer').setAttribute('aria-valuenow',String(layout.explorerWidth));$('panel-resizer').setAttribute('aria-valuenow',String(layout.panelHeight));
  for(const button of document.querySelectorAll('[data-panel]')){const selected=button.dataset.panel===layout.panel;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;}
- for(const id of ['output','input','tests','record','git'])$('panel-'+id).hidden=id!==layout.panel;
+ for(const id of ['record','git'])$('panel-'+id).hidden=id!==layout.panel;
  editor.requestMeasure();
 }
 function setPanel(panel){layout=normalizeLayout({...layout,panel,panelCollapsed:false});applyLayout();persistLayout();}
@@ -138,34 +138,6 @@ $('problem-form').addEventListener('submit',async event=>{event.preventDefault()
 action('refresh-files',refreshFiles);
 async function saveCurrent(){const target=current();await flushDraft();await command('save',{...target,content:editor.state.doc.toString()});$('draft-state').textContent='파일 저장됨';notify('파일을 저장했습니다.');}
 action('save',saveCurrent);
-function executionState(value,label){$('execution-state').dataset.state=value;$('execution-state').textContent=label;}
-async function run(tests){
- if(running)throw Error('실행 중입니다. 먼저 중지하거나 결과를 기다리세요.');current();
- let cases;if(tests){cases=JSON.parse($('tests').value||'[]');if(!Array.isArray(cases)||!cases.length)throw Error('테스트를 먼저 추가하세요.');}
- await flushDraft();running=true;$('run').disabled=true;$('run-tests').disabled=true;$('cancel-run').disabled=false;setPanel('output');executionState('running',tests?'테스트 실행 중':'실행 중');$('run-result').textContent='실행 중…';
- try{const result=await command('run',{...current(),line:editor.state.doc.lineAt(editor.state.selection.main.head).number,input:$('stdin').value,...(tests?{tests:cases}:{})});renderRun(result);const rows=result.tests??[result],passed=rows.every(row=>['pass','completed'].includes(row.verdict));executionState(passed?'complete':'failed',passed?'실행 완료':'결과 확인');}
- catch(error){executionState('failed','실행 오류');$('run-result').textContent=error.message;throw error;}
- finally{running=false;$('run').disabled=false;$('run-tests').disabled=false;$('cancel-run').disabled=true;}
-}
-action('run',()=>run(false));action('run-tests',()=>run(true));
-action('cancel-run',async()=>{await command('cancel-run',{repoId:selected()});notify('실행 취소를 요청했습니다.');});
-const testPath=()=>{current();return path.slice(0,path.lastIndexOf('/')+1)+'tests.json';};
-function renderTests(){
- let tests;try{tests=JSON.parse($('tests').value||'[]');if(!Array.isArray(tests))throw Error();}catch{$('test-count').textContent='?';return;}
- $('test-count').textContent=tests.length;$('test-cases').replaceChildren();
- if(!tests.length){const empty=document.createElement('p');empty.className='compact-empty';empty.textContent='입력과 예상 출력을 직접 추가하세요.';$('test-cases').append(empty);}
- tests.forEach((test,index)=>{const row=document.createElement('div');row.className='test-case';const number=document.createElement('span');number.textContent=String(index+1).padStart(2,'0');row.append(number);
-  const change=()=>{$('tests').value=JSON.stringify(tests,null,2);};
-  for(const [key,label]of [['input','입력'],['expected','예상 출력']]){const text=document.createElement('textarea');text.value=test[key]??'';text.placeholder=label;text.setAttribute('aria-label',`테스트 ${index+1} ${label}`);text.spellcheck=false;text.addEventListener('input',()=>{test[key]=text.value;change();});row.append(text);}
-  const comparison=document.createElement('label');comparison.textContent='비교';const select=document.createElement('select');for(const [value,label]of [['exact','정확히 일치'],['whitespace','공백 무시'],['float','실수 허용 오차']]){const option=document.createElement('option');option.value=value;option.textContent=label;select.append(option);}select.value=test.comparison??'exact';select.setAttribute('aria-label',`테스트 ${index+1} 비교 방식`);select.addEventListener('change',()=>{test.comparison=select.value;change();renderTests();});comparison.append(select);
-  if(select.value==='float'){const tolerance=document.createElement('input');tolerance.type='number';tolerance.min='0';tolerance.step='any';tolerance.value=test.tolerance??1e-6;tolerance.setAttribute('aria-label',`테스트 ${index+1} 허용 오차`);tolerance.addEventListener('input',()=>{test.tolerance=Number(tolerance.value);change();});comparison.append(tolerance);}row.append(comparison);
-  const remove=document.createElement('button');remove.type='button';remove.textContent='×';remove.setAttribute('aria-label',`테스트 ${index+1} 삭제`);remove.addEventListener('click',()=>{tests.splice(index,1);change();renderTests();});row.append(remove);$('test-cases').append(row);
- });
-}
-action('add-test',()=>{const tests=JSON.parse($('tests').value||'[]');if(!Array.isArray(tests))throw Error('테스트는 배열이어야 합니다.');tests.push({input:'',expected:'',comparison:'exact'});$('tests').value=JSON.stringify(tests,null,2);renderTests();});
-action('apply-test-json',()=>{const tests=JSON.parse($('tests').value||'[]');if(!Array.isArray(tests))throw Error('테스트는 배열이어야 합니다.');renderTests();});
-action('load-tests',async()=>{$('tests').value=(await command('read',{repoId:selected(),path:testPath()})).content;renderTests();setPanel('tests');});
-action('save-tests',async()=>{const tests=JSON.parse($('tests').value||'[]');if(!Array.isArray(tests))throw Error('테스트는 배열이어야 합니다.');await command('save',{repoId:selected(),path:testPath(),content:JSON.stringify(tests,null,2)+'\n'});notify('tests.json을 저장했습니다.');renderTests();});
 async function loadProblemHistory(){
  const requestId=++historyRequest,key=$('platform').value+':'+$('problem-id').value;
  if(!$('problem-id').value){$('code-history-content').textContent='먼저 문제를 열어주세요.';return;}
@@ -232,13 +204,6 @@ action('github-sign-out',async()=>{await nativeAuth.signOut();$('github-device')
 action('update-check',async()=>{const result=await command('update-check');$('update-status').textContent=result.status+' · '+result.version;$('update-stage').disabled=result.status!=='update_available';});
 action('update-stage',async()=>{const result=await command('update-stage',{confirmed:true});$('update-status').textContent='다운로드 검증 완료 · '+result.version+' · 설치 전';$('update-stage').disabled=true;notify('서명과 해시를 검증한 업데이트 파일을 저장했습니다. 설치는 실행하지 않았습니다.');});
 
-function renderRun(result){
- const labels={pass:'통과',wrong_answer:'출력이 다릅니다',completed:'실행 완료',runtime_error:'실행 오류',timeout:'시간 초과',output_limit:'출력 제한 초과',compile_error:'컴파일 오류',cancelled:'실행 취소'};
- $('run-result').replaceChildren(...(result.tests??[result]).map((row,index)=>{const card=document.createElement('article');card.className='run-card';card.dataset.verdict=row.verdict;const title=document.createElement('strong');title.textContent=(result.tests?'테스트 '+(index+1)+' · ':'')+(labels[row.verdict]??row.verdict)+(Number.isFinite(row.elapsed_ms)?' · '+row.elapsed_ms+' ms':'');card.append(title);
-  for(const [label,text]of [['출력',row.stdout],['오류',row.stderr]])if(text){const heading=document.createElement('p'),output=document.createElement('pre');heading.textContent=label;output.textContent=text;card.append(heading,output);}
-  const details=document.createElement('details'),summary=document.createElement('summary'),debug=document.createElement('pre');summary.textContent='실행 세부정보';debug.textContent=JSON.stringify(row,null,2);details.append(summary,debug);card.append(details);return card;
- }));
-}
 
 window.addEventListener('message',event=>{
  if(event.origin!==location.origin||event.source!==frame.contentWindow)return;
@@ -252,7 +217,6 @@ window.addEventListener('keydown',event=>{
  if(modifier&&event.key.toLowerCase()==='p'){event.preventDefault();navigate('workspace');$('problem-dialog').showModal();return;}
  if(route!=='workspace')return;
  if(modifier&&event.key.toLowerCase()==='s'){event.preventDefault();void saveCurrent().catch(report);}
- else if(modifier&&event.key==='Enter'){event.preventDefault();void run(event.shiftKey).catch(report);}
  else if(modifier&&event.key.toLowerCase()==='b'){event.preventDefault();$('toggle-explorer').click();}
  else if(modifier&&event.key.toLowerCase()==='j'){event.preventDefault();$('toggle-panel').click();}
 });
@@ -260,4 +224,4 @@ window.addEventListener('resize',applyLayout);
 window.addEventListener('pagehide',()=>{if(repo&&path)fetch('/desktop/api/command',{method:'POST',headers:{'Content-Type':'application/json','X-Desktop-Token':token},body:JSON.stringify({command:'draft',repoId:repo.id,path,content:editor.state.doc.toString()}),keepalive:true}).catch(()=>{});});
 setInterval(()=>request('/desktop/api/state').then(connectionText).catch(()=>{$('connection').textContent='연결 끊김';}),3000);
 if(!/Mac/.test(navigator.platform))for(const key of document.querySelectorAll('kbd'))key.textContent=key.textContent.replaceAll('⌘','Ctrl');
-renderTests();applyLayout();navigate(location.hash.slice(1)||'dashboard');refreshState().catch(report);refreshAuth().catch(report);
+applyLayout();navigate(location.hash.slice(1)||'dashboard');refreshState().catch(report);refreshAuth().catch(report);

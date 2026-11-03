@@ -922,3 +922,10 @@ Keep these distinctions clear in summaries and docs:
 - Desktop settings (`#settings-drawer`, class `settings-modal`) is a centered native dialog, not a side drawer; the id stays for scripts/tests.
 - Appearance is the icon radio group `#appearance [data-mode=light|system|dark]` in the modal header (no select). There is no language
   setting yet; do not add an inert language control.
+
+
+## Record-centric Code Workspace (2026-11-03)
+
+- User decision: problems are solved on the platforms; ALDY only records. Do not reintroduce run/test/stop/stdin/test-case controls or
+  CPU/memory run displays in the Code Workspace (specs/desktop-app/new-user-workspace.md NW-11). Bottom panel = Git (default) + history.
+- Backend `run`, `extractCodeBlock` and desktop/native-runner remain for compatibility; a judge stays out of scope.

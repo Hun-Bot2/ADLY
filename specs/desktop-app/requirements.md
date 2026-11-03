@@ -57,7 +57,7 @@ Repository and editor
 Execution and tests
 - DR-F4 THE SYSTEM SHALL run the current file with stdin, and with user-authored tests in `<problem dir>/tests.json`
   (input, expected output, comparison: exact, whitespace, float tolerance).
-- DR-F5 Every run SHALL have a wall-clock timeout (5 s (P)), a CPU limit, a 1 MiB output cap and kill of the whole process
+- DR-F5 (UI removed 2026-11-03, see new-user-workspace.md NW-11; backend only) Every run SHALL have a wall-clock timeout (5 s (P)), a CPU limit, a 1 MiB output cap and kill of the whole process
   tree: a process group on macOS, a Job Object on Windows. Memory limits: a Job Object limit on Windows; on macOS only
   where enforced, otherwise the UI says "memory limit not enforced". Runs use the user's permissions and are not a sandbox.
 - DR-F6 Toolchains SHALL be detected, not bundled: Python 3 (`python3`, or `py -3` on Windows) and C++17 (`clang++`, `g++`, or

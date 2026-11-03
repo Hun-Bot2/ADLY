@@ -45,7 +45,7 @@ export async function startDesktop({port=0,appData=appDataRoot(),catalogRoot=pro
    const layout={...(state.layout??{})};
    for(const [key,value]of Object.entries(inputLayout)){
     if(['explorerCollapsed','panelCollapsed'].includes(key)){if(typeof value!=='boolean')throw Error('invalid layout flag');layout[key]=value;}
-    else if(key==='panel'){if(!['output','input','tests','record','git'].includes(value))throw Error('invalid workspace panel');layout[key]=value;}
+    else if(key==='panel'){if(!['record','git'].includes(value))throw Error('invalid workspace panel');layout[key]=value;}
     else{if(typeof value!=='number'||!Number.isFinite(value))throw Error('invalid layout dimension');const [min,max]=key==='explorerWidth'?[160,440]:[160,520];layout[key]=Math.max(min,Math.min(max,Math.round(value)));}
    }
    state.layout=layout;persist();return {layout};
