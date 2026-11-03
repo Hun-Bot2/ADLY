@@ -144,7 +144,7 @@ their actual KST date. Hosted/Worker discovery remains unavailable unless explic
 Fit labels are conditional opening-problem practice goals based on existing platform calibration and
 historical native difficulty, with at least six distinct independent practice solves; insufficient data
 stays **판단 근거 부족**. This does not estimate an official rating or assert registration eligibility.
-See `specs/contest-discovery/` and `RECOMMENDATION_ENGINE/` for exact thresholds and evidence.
+See `specs/contest-discovery/` and `specs/recommendation-engine-audit/` for exact thresholds and evidence.
 
 A `markdown_attempt_conflict` after adding a duration to an already-imported daily row preserves the
 original attempt. It is not evidence that Markdown parsing lost the solve. Do not invent a new attempt
@@ -188,3 +188,21 @@ Preferred format: `문제 | 결과 | 시간 | 복습 | 메모`. Set `복습` to 
 Current daily format uses result `1` (solved), `0` (not solved), blank (in progress/unrecorded); review `1` (target), `0` (not a target). A numeric success imports as `reported_completion` (stored as written); since policy v3 (ADR 005) every completion counts as solved and help is not tracked. Legacy `O` retains its explicit independent meaning. An already-ingested legacy O attempt survives its presentation-only migration to 1 without duplicate attempts or false conflict; changed duration or failure still raises a conflict. Legacy per-problem schema metadata is unchanged. Review imports remain additive: setting a previously imported target to 0 does not cancel it; use `review remove`.
 
 Daily durations are shown as `m`/`s` in workspace history, details and the editable record modal. Confirmed timers remain separate. Weekly `self_reported_minutes` retains minute-unit subtotals for compatibility; `self_reported_seconds_total` sums both self-reported units exactly. Optional seconds survive full learning backups. Restart an already running local server to load the extended JSON validation contracts.
+
+## Platform submission sync (specs/submission-capture, 2026-11-03)
+
+NETWORK only when the command runs; never at first launch. Rows are append-only verdicts (all verdicts, not only Accepted); the engine
+still sees one attempt per problem per KST date (a daily-log row for the same problem-day merges, the platform verdict wins).
+
+```bash
+node hosted/cli.mjs submissions sync --platform codeforces --handle <handle> [--pages 10]   # handle is remembered in preferences.platform_accounts
+node hosted/cli.mjs submissions sync --platform atcoder                                      # AtCoder Problems (unofficial), >= 1 s between requests
+node hosted/cli.mjs submissions list [--platform codeforces] [--limit 10]                    # counts, recent rows and sync marks; no network
+# In the app: Settings > 플랫폼 제출 가져오기 > 동기화. New problem-days are appended to <platform>/YY-MM-DD.md (asks first above 10 rows); commit them in the Git panel.
+```
+
+- Backfill is page limited (`--pages`, default 10, max 50; Codeforces 100 rows per page, AtCoder 500). A `partial` mark stores the resume point;
+  run the same command again. Incremental runs stop at the first page containing an already stored id. Re-running never duplicates rows.
+- Every run appends one sync mark (`ok|partial|error`). Exit code 4 means the run ended in `error`; stored rows are untouched and the
+  next run resumes. TESTING/in-progress verdicts are not stored; run again later to pick up the final verdict.
+- Tests use injected fetchers only: `node --test hosted/test/submission-capture.test.mjs`.

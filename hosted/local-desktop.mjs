@@ -5,7 +5,8 @@ import {randomUUID,createHash} from 'node:crypto';
 import {join} from 'node:path';
 import {attachCatalog} from './mastery/catalog.mjs';
 import {appendLedger} from './mastery/side-ledger.mjs';
-import {parseDailyLog} from './mastery/daily-log.mjs';
+import {parseDailyLog,dailyLogKeys} from './mastery/daily-log.mjs';
+import {syncSubmissions,lastMark} from './mastery/submission-sync.mjs';
 import {getPreferences,putPreferences} from './core/store.mjs';
 import {companySummary,validateCompanyFocus,companyScope} from './mastery/company.mjs';
 import {companyMockContest,snapshotExposures} from './mastery/mock-contest.mjs';
@@ -15,7 +16,9 @@ import {saveSnapshot} from './mastery/ledger.mjs';
 import {normalizeMastery} from './core/preferences.mjs';
 import {seoulDate} from './core/policy.mjs';
 const json=(v,status=200)=>new Response(JSON.stringify(v),{status,headers:{'content-type':'application/json','cache-control':'no-store'}});
-export async function desktopResponse(request,{db,learnerId,catalogRoot,loadCatalog,loadCompany,gitSync,contestSchedule}) {
+const SYNC_PLATFORMS=['codeforces','atcoder'];
+let submissionSyncRunning=false;
+export async function desktopResponse(request,{db,learnerId,catalogRoot,loadCatalog,loadCompany,gitSync,contestSchedule,submissionFetcher=fetch,submissionSleep}) {
   const {pathname:path,searchParams}=new URL(request.url),method=request.method;
   if(path==='/api/local/contest-sync'){if(method==='GET')return json(contestSchedule.status());if(method==='PUT')return json(await contestSchedule.configure(await request.json()));}
   if(path==='/api/local/repositories'){if(method==='GET')return json({repositories:(await db.prepare('SELECT repo_id,path_hint AS path,branch FROM git_repositories WHERE learner_id=? ORDER BY repo_id').bind(learnerId).all()).results});if(method==='POST'){const input=await request.json();if(!input||Object.keys(input).some(k=>!['repoId','path','branch'].includes(k)))throw new Error('invalid repository registration');return json(await registerRepository(db,learnerId,input),201);}}
@@ -37,6 +40,41 @@ export async function desktopResponse(request,{db,learnerId,catalogRoot,loadCata
     const input=await request.json();
     if(typeof input.path!=='string'||typeof input.source!=='string'||input.source.length>1_000_000)throw new Error('invalid daily log');
     return json(parseDailyLog(input.path,input.source,(await loadCatalog()).catalog));
+  }
+  // Submission capture (specs/submission-capture S6-S7). Network only on an explicit POST from the user.
+  if(path==='/api/local/submissions'&&method==='GET'){
+    const {readLedger}=await import('./mastery/ledger.mjs');const ledger=await readLedger(db,learnerId),preferences=await getPreferences(db,learnerId);
+    const accounts=preferences.platform_accounts??{},counts={};
+    for(const r of ledger.platform_submissions??[]){const c=counts[r.payload.platform]??={submissions:0,accepted:0};c.submissions++;if(r.payload.verdict==='accepted')c.accepted++;}
+    return json({accounts,running:submissionSyncRunning,platforms:Object.fromEntries(SYNC_PLATFORMS.map(p=>{const m=lastMark(ledger,p,accounts[p]);return [p,{handle:accounts[p]??null,counts:counts[p]??{submissions:0,accepted:0},last:m?{recorded_at:m.recorded_at,status:m.payload.status,fetched:m.payload.fetched,detail:m.payload.detail}:null}];}))});
+  }
+  if(path==='/api/local/submissions/sync'&&method==='POST'){
+    const input=await request.json();
+    if(!input||Object.keys(input).some(k=>!['platform','handle'].includes(k))||!SYNC_PLATFORMS.includes(input.platform))throw new Error('invalid submission sync request');
+    const preferences=await getPreferences(db,learnerId),accounts=preferences.platform_accounts??{};
+    const handle=typeof input.handle==='string'&&input.handle.trim()?input.handle.trim():accounts[input.platform];
+    if(!handle)throw new Error('handle required');
+    if(submissionSyncRunning)return json({error:'submission sync already running'},409);
+    if(accounts[input.platform]!==handle)await putPreferences(db,learnerId,{platform_accounts:{...accounts,[input.platform]:handle}});
+    submissionSyncRunning=true;
+    try{return json(await syncSubmissions(db,learnerId,{platform:input.platform,handle,fetcher:submissionFetcher,...(submissionSleep?{sleep:submissionSleep}:{})}));}
+    finally{submissionSyncRunning=false;}
+  }
+  // Problem-days known only from platform submissions: the rows S7 may append to <platform>/YY-MM-DD.md.
+  if(path==='/api/local/submissions/log-candidates'&&method==='GET'){
+    const {ledger,catalog}=await loadCatalog(),items=[];
+    for(const a of ledger.attempts){
+      if(a.evidence_source!=='platform_submission')continue;
+      const p=catalog.problems.get(a.problem_key);
+      if(!p||!SYNC_PLATFORMS.includes(p.platform)||typeof p.url!=='string')continue;   // gym/unknown problems stay out of the log (SC-7)
+      items.push({platform:p.platform,date:a.id.slice(-10),problem_key:a.problem_key,url:p.url,title:p.title,solved:a.outcome==='independent'});
+    }
+    return json({items:items.sort((x,y)=>x.date.localeCompare(y.date)||x.problem_key.localeCompare(y.problem_key))});
+  }
+  if(path==='/api/local/daily-log/keys'&&method==='POST'){
+    const input=await request.json();
+    if(typeof input.path!=='string'||typeof input.source!=='string'||input.source.length>1_000_000)throw new Error('invalid daily log');
+    return json({keys:dailyLogKeys(input.path,input.source,(await loadCatalog()).catalog)});
   }
   if(path==='/api/company/mock'&&method==='POST'){
     const input=await request.json(),{catalog,ledger}=await loadCatalog(),layer=await loadCompany(catalog);

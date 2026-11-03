@@ -46,7 +46,47 @@ export function attemptStream(ledger) {
   for (const g of ledger.git_observations ?? []) out.push({id:g.entry_id,table:'git_observations',occurred_at:g.occurred_at,recorded_at:g.recorded_at,
     problem_key:g.payload.problem_key,...solvedView(g.payload.outcome,g.payload.hints),activity_type:g.payload.activity_type,
     transfer_from:g.payload.transfer_from,evidence_source:g.source==='manual_correction'?'git_correction':'git',self_minutes:g.payload.self_minutes,...(g.payload.self_seconds!=null?{self_seconds:g.payload.self_seconds}:{})});
-  return out.sort((a,b)=>a.occurred_at.localeCompare(b.occurred_at) || RANK[a.table]-RANK[b.table] || a.id.localeCompare(b.id));
+  return projectSubmissions(ledger,out).sort((a,b)=>a.occurred_at.localeCompare(b.occurred_at) || RANK[a.table]-RANK[b.table] || a.id.localeCompare(b.id));
+}
+// Layer-2 projection of platform submissions (specs/submission-capture/design.md). One attempt per problem per KST date.
+// With no submission rows the stream is returned untouched (SC-11).
+const KST_DATE=iso=>new Date(Date.parse(iso)+9*3600000).toISOString().slice(0,10);
+function projectSubmissions(ledger,attempts) {
+  const rows=ledger.platform_submissions ?? [];
+  if (!rows.length) return attempts;
+  // SC-10: a platform_import event is the same submission as the row with that platform id. Matching is per
+  // problem-day group; other problems on the same date are never affected.
+  const imported=new Set(ledger.events.filter(e=>e.kind==='attempt' && e.source==='platform_import').map(e=>`${e.payload.platform}:${e.payload.external_id}`));
+  const importIds=new Set(ledger.events.filter(e=>e.kind==='attempt' && e.source==='platform_import').map(e=>e.event_id));
+  const groups=new Map();
+  for (const row of rows) {
+    const key=`${row.payload.problem_key}|${KST_DATE(row.occurred_at)}`;
+    if (!groups.has(key)) groups.set(key,[]);
+    groups.get(key).push(row);
+  }
+  const out=[...attempts];
+  for (const [key,group] of groups) {
+    const [problemKey,date]=key.split('|');
+    const sameDay=a=>a.problem_key===problemKey && KST_DATE(a.occurred_at)===date;
+    const ordered=[...group].sort((a,b)=>a.occurred_at.localeCompare(b.occurred_at) || a.entry_id.localeCompare(b.entry_id));
+    const accepted=ordered.find(r=>r.payload.verdict==='accepted') ?? null;
+    const extra={submissions:ordered.length,failed_before_accept:accepted ? ordered.filter(r=>r.occurred_at<accepted.occurred_at || (r.occurred_at===accepted.occurred_at && r.entry_id<accepted.entry_id)).length : ordered.length,
+      first_submitted_at:ordered[0].occurred_at,last_submitted_at:ordered.at(-1).occurred_at,accepted_at:accepted?.occurred_at ?? null};
+    const outcome=accepted ? solvedView('reported_completion',null) : solvedView('failed',null);
+    const logIndex=out.findIndex(a=>a.table==='git_observations' && sameDay(a));
+    if (logIndex>=0) { out[logIndex]={...out[logIndex],...outcome,...extra}; continue; }
+    // An Accepted-only import of this problem-day (same id, or the same day with ids the importer never saw) stays
+    // the attempt and keeps its solved outcome; the group only adds its counts.
+    const importIndex=out.findIndex(a=>a.table==='events' && importIds.has(a.id) && sameDay(a));
+    if (importIndex>=0 || group.some(r=>r.payload.submission_id!==null && imported.has(`${r.payload.platform}:${r.payload.submission_id}`))) {
+      if (importIndex>=0) out[importIndex]={...out[importIndex],...extra};
+      continue;
+    }
+    out.push({id:`subday:${problemKey}:${date}`,table:'platform_submissions',occurred_at:accepted?.occurred_at ?? extra.last_submitted_at,
+      recorded_at:ordered.map(r=>r.recorded_at).sort().at(-1),problem_key:problemKey,...outcome,activity_type:null,transfer_from:null,
+      evidence_source:'platform_submission',self_minutes:null,...extra});
+  }
+  return out;
 }
 export const isKnownOutcome = a => ['independent','assisted','failed'].includes(a.outcome);
 export const solvedIndependently = a => a.outcome==='independent' && a.hints===false;

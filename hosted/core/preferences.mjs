@@ -22,7 +22,7 @@ export function normalizeMastery(input={}) {
   return m;
 }
 export function normalizePreferences(input) {
-  if (!input || typeof input!=='object' || Array.isArray(input) || Object.keys(input).some(k=>!['weekday_minutes','target_keys','weekly_rhythm','mastery','review_targets'].includes(k))) throw new Error('invalid preferences');
+  if (!input || typeof input!=='object' || Array.isArray(input) || Object.keys(input).some(k=>!['weekday_minutes','target_keys','weekly_rhythm','mastery','review_targets','platform_accounts'].includes(k))) throw new Error('invalid preferences');
   const next={...defaultPreferences(),...input};
   if(!Number.isInteger(next.weekday_minutes)||next.weekday_minutes<1||next.weekday_minutes>480||!Array.isArray(next.target_keys)||new Set(next.target_keys).size!==next.target_keys.length)throw new Error('invalid preferences');
   next.target_keys.forEach(problemKey);
@@ -38,6 +38,10 @@ export function normalizePreferences(input) {
       if(!Number.isFinite(date.getTime())||date.toISOString().slice(0,10)!==target.date)throw new Error('invalid review date');
       const key=target.date+':'+target.problem_key;if(seen.has(key))throw new Error('invalid duplicate review target');seen.add(key);
     }
+  }
+  if ('platform_accounts' in next) {
+    const a=next.platform_accounts;
+    if(!a||typeof a!=='object'||Array.isArray(a)||Object.keys(a).some(k=>!['codeforces','atcoder'].includes(k)||typeof a[k]!=='string'||!/^[A-Za-z0-9_.-]{1,64}$/.test(a[k])))throw new Error('invalid platform accounts');
   }
   if ('mastery' in next) next.mastery=normalizeMastery(next.mastery);
   return structuredClone(next);

@@ -171,7 +171,7 @@ Algorithm RAG Engine began (2026-01) as a batch pipeline that recommended Englis
 study notes (OpenAI embeddings, NumPy index, GPT-4o-mini reasons, Slack). Baekjoon shut down and the pipeline, its Docker
 files, workflows and evaluation scripts were removed on 2026-10-18; the last state is the git tag `legacy-pipeline-final`
 (`git checkout legacy-pipeline-final -- <path>` restores any file). The repository is now the local-first mastery system plus
-research (see "Current direction" at the end). Historical docs (`README.md` lower half, `STAR.md`, `specs/production-recommender/`)
+research (see "Current direction" at the end). Historical docs (`specs/production-recommender/`, `specs/recommendation-engine-audit/`; the old README pipeline section and `STAR.md` were removed 2026-11-03 and stay in git history)
 describe the removed pipeline.
 
 ## Strict Architectural Constraints
@@ -886,7 +886,7 @@ Keep these distinctions clear in summaries and docs:
   falls back to the 고급 Client ID field; system Git credentials still work for clone and push.
 - `stage/datasets/*.sqlite3` is read-only, so the copy under `target/debug/datasets` is too and every later cargo build fails with EACCES.
   Remove `desktop/src-tauri/target/debug/datasets` before each cargo build/test.
-- App icon source is `desktop/src-tauri/icons/source/aldy.svg`. Regenerate with `rsvg-convert -w 1024 -h 1024` then `tauri icon <png> -o <scratch>`,
+- App icon source is `branding/aldy-icon.svg`. Regenerate with `rsvg-convert -w 1024 -h 1024` then `tauri icon <png> -o <scratch>`,
   copying only the desktop files listed in tauri.conf.json `bundle.icon`. Company rows use initials, never logos.
 - hosted/app.mjs `render()` must toggle the nav `active` class with `aria-current`, or two items stay highlighted.
 
@@ -909,4 +909,53 @@ Keep these distinctions clear in summaries and docs:
 
 - `screenshots/*.png` (1440x900) come only from authored fixtures: desktop/redesign-browser-smoke.mjs, desktop/start-panel-smoke.mjs,
   desktop/ide-browser-smoke.mjs, and a fresh empty learner DB with authored contests for contests.png. Never capture the real learner
-  DB or a copy of it. Refresh them after visible UI changes and keep ReadME.md's descriptions in step.
+  DB or a copy of it. Refresh them after visible UI changes and keep README.md's descriptions in step.
+
+## English daily logs (2026-11-03)
+
+- `dailyHeader` in hosted/mastery/daily-log.mjs is the only header matcher: Korean or English names (Problem/Result/Time/Review/Memo,
+  Notes), fixed order, mapped to the Korean canonical names. desktop/backend/dailylog.mjs reuses it; do not add another regex.
+- New repositories and the built-in fallback use the English template; existing Korean templates and logs keep working.
+
+## Settings modal (2026-11-03)
+
+- Desktop settings (`#settings-drawer`, class `settings-modal`) is a centered native dialog, not a side drawer; the id stays for scripts/tests.
+- Appearance is the icon radio group `#appearance [data-mode=light|system|dark]` in the modal header (no select). There is no language
+  setting yet; do not add an inert language control.
+
+
+## Record-centric Code Workspace (2026-11-03)
+
+- User decision: problems are solved on the platforms; ALDY only records. Do not reintroduce run/test/stop/stdin/test-case controls or
+  CPU/memory run displays in the Code Workspace (specs/desktop-app/new-user-workspace.md NW-11). Bottom panel = Git (default) + history.
+- Backend `run`, `extractCodeBlock` and desktop/native-runner remain for compatibility; a judge stays out of scope.
+
+
+## Submission ledger (2026-11-03, specs/submission-capture, ADR 010)
+
+- Migration 009 adds `platform_submissions` (layer 1, one row per platform verdict) and `submission_sync_marks`; both are registered in
+  `LEDGERS` (ranks 8 and 9), so backup export/import and `readLedger` pick them up automatically. Existing stores get the VACUUM INTO
+  snapshot before 009. The generic ledger contract test needs a payload fixture for every new LEDGERS table.
+- `attemptStream` projects submissions in `projectSubmissions` (ledger.mjs): group by (problem_key, KST date). If
+  the first same-day `git_observations` attempt exists (log id and user fields kept, outcome from the platform), merge into it; else if a
+  `platform_import` attempt exists for that problem-day (or has one of the group's ids), keep the import and add only the counts; else emit
+  `evidence_source:'platform_submission'` with id `subday:<key>:<date>`. All matching is per problem-day: never drop other problems of that date.
+  With zero rows the stream is untouched.
+  Extra read-only fields: submissions, failed_before_accept (all non-accepted when none accepted), first/last_submitted_at, accepted_at.
+- Re-inserting the same entry_id with a different recorded_at throws "conflicting ledger entry ID", so sync filters known entry_ids itself
+  instead of relying on appendLedger idempotence. Sync mark ids are `submark:<platform>:<handle>:<n>`.
+- `sha256Hex` in mastery/submissions.mjs is a synchronous pure-JS hash for fingerprints (Worker-safe); do not swap in node:crypto there.
+  providers.mjs now exports `submissionIdentity`; its Accepted-only `platform_import` path is unchanged and still deduped by SC-10.
+- The two sync cursors differ on purpose. Codeforces user.status is newest first by id, so offsets shift when submissions are added or
+  removed: the cursor `cf2:<low>:<high>:<top>:<off>:<done>` is id-based ([low, high] stored, off = offset hint). A run reads head pages until
+  one reaches an id <= high, then backfills from off-1 and requires the first row to be >= low (one-row overlap); if not, it steps back a page.
+  AtCoder Problems is `epoch_second >= from_second ORDER BY epoch_second LIMIT 500` with no id tiebreak: each page re-reads its last second,
+  and a run starts one day before the cursor because the crawler adds older submissions late. In-progress submissions (TESTING, WJ, n/m)
+  hold both cursors below them so they are re-read. Old offset-only cursors restart from the newest page (rows dedupe). Spacing 2 s / 1 s.
+- `preferences.platform_accounts` is an additive key like `review_targets`: reload older local readers before writing it.
+- S6-S7 (app): settings "플랫폼 제출 가져오기" calls desktop commands `submissions-status|sync|log`; the engine endpoints live in
+  local-desktop.mjs (`startLocal` takes `submissionFetcher`/`submissionSleep` for tests). The log writer appends rows only for
+  `platform_submission` attempts whose catalog problem has a URL, skips problems the table already names (`dailyLogKeys` counts
+  empty-result rows too), never edits rows, skips files with a differing unsaved draft, asks above 10 rows, and never commits.
+  Journal entries carry `platform_submissions {count, failed_before_accept, accepted_at}`; the UI shows "제출 확인" / "플랫폼 채점".
+- A desktop preview needs the engine started without `apiOnly` (apiOnly 404s design-system.css and the learning frame).

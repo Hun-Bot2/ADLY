@@ -9,7 +9,7 @@ import {createSupervisor} from './backend/supervisor.mjs';
 import {appDataRoot,readJson,atomicWrite,safePath} from './backend/paths.mjs';
 import * as repositories from './backend/repositories.mjs';
 import {saveDraft,loadDraft} from './backend/drafts.mjs';
-import {prepareDailyLog,openDailyLog,addProblemToDaily} from './backend/dailylog.mjs';
+import {prepareDailyLog,openDailyLog,addProblemToDaily,readDailyOrTemplate,withResultRows} from './backend/dailylog.mjs';
 import {createUpdater} from './backend/updates.mjs';
 import {availableCatalogs,installDatasets} from './backend/datasets.mjs';
 import {detectToolchains,runFile} from './backend/runner.mjs';
@@ -26,6 +26,37 @@ export async function startDesktop({port=0,appData=appDataRoot(),catalogRoot=pro
  const tracked=async operation=>{const controller=new AbortController(),pending=Promise.resolve().then(()=>operation(controller.signal));runs.set(controller,pending);try{return await pending;}finally{runs.delete(controller);}};
  const engine=async(path,{method='GET',body:payload}={})=>{if(!connection)throw Error('engine reconnecting');const r=await fetch(connection.url+path,{method,headers:{Origin:origin,'X-App-Token':connection.token,'Content-Type':'application/json'},...(payload?{body:JSON.stringify(payload)}:{})});const result=await r.json();if(!r.ok)throw Error(result.error??'engine request failed');return result;};
  async function registerEngine(repo){const branch=repositories.git(repo.path,['branch','--show-current']);try{repositories.git(repo.path,['rev-parse','HEAD']);}catch{return {status:'awaiting_first_commit'};}return engine('/api/local/repositories',{method:'POST',body:{repoId:repo.id,path:repo.path,branch}});}
+ // Submission capture S7: append platform-reported problem-days to <platform>/YY-MM-DD.md. Large backfills return the
+ // counts first and write only after confirmation. Nothing is committed here (the Git panel stays explicit).
+ const CONFIRM_ROWS=10;
+ async function appendSubmissionRows(repo,confirmed){
+  const {items}=await engine('/api/local/submissions/log-candidates'),byFile=new Map();
+  for(const item of items){const key=item.platform+'/'+item.date;if(!byFile.has(key))byFile.set(key,[]);byFile.get(key).push(item);}
+  const plan=[],skipped=[];
+  for(const group of byFile.values()){
+   const file=readDailyOrTemplate(repo.path,{date:group[0].date,folder:group[0].platform});
+   const {keys}=file.exists?await engine('/api/local/daily-log/keys',{method:'POST',body:{path:file.relative,source:file.content}}):{keys:[]};
+   const rows=group.filter(item=>!keys.includes(item.problem_key));
+   if(!rows.length)continue;
+   // An unsaved editor draft of this file would overwrite the new rows on its next save: leave that file alone.
+   const draft=file.exists?loadDraft(appData,repo.path,file.relative):null;
+   if(draft&&draft.content!==file.content){skipped.push(file.relative);continue;}
+   plan.push({...file,rows});
+  }
+  const summary={files:plan.length,rows:plan.reduce((n,f)=>n+f.rows.length,0),paths:plan.map(f=>f.relative),skipped_drafts:skipped};
+  if(!confirmed&&summary.rows>CONFIRM_ROWS)return {...summary,needsConfirmation:true,written:false};
+  for(const file of plan){
+   const content=withResultRows(file.content,file.rows);
+   const validated=await engine('/api/local/daily-log/validate',{method:'POST',body:{path:file.relative,source:content}});
+   const recorded=new Set((validated.rows??[]).map(r=>r.metadata.problem_key));
+   const missing=file.rows.filter(r=>!recorded.has(r.problem_key));
+   if(missing.length)throw Error(`${file.relative}: rows did not validate (${missing.map(r=>r.problem_key).join(', ')})`);
+   repositories.saveFile(repo.path,file.relative,content);
+   // A draft identical to the old file would restore the old text on reopen: move it along with the file.
+   if(file.exists&&loadDraft(appData,repo.path,file.relative))saveDraft(appData,repo.path,file.relative,content);
+  }
+  return {...summary,needsConfirmation:false,written:true};
+ }
  const commands=async input=>{
   if(closing)throw Error('desktop shutting down');
   const {command}=input;
@@ -45,12 +76,14 @@ export async function startDesktop({port=0,appData=appDataRoot(),catalogRoot=pro
    const layout={...(state.layout??{})};
    for(const [key,value]of Object.entries(inputLayout)){
     if(['explorerCollapsed','panelCollapsed'].includes(key)){if(typeof value!=='boolean')throw Error('invalid layout flag');layout[key]=value;}
-    else if(key==='panel'){if(!['output','input','tests','record','git'].includes(value))throw Error('invalid workspace panel');layout[key]=value;}
+    else if(key==='panel'){if(!['record','git'].includes(value))throw Error('invalid workspace panel');layout[key]=value;}
     else{if(typeof value!=='number'||!Number.isFinite(value))throw Error('invalid layout dimension');const [min,max]=key==='explorerWidth'?[160,440]:[160,520];layout[key]=Math.max(min,Math.min(max,Math.round(value)));}
    }
    state.layout=layout;persist();return {layout};
   }
   if(command==='catalog')return engine('/api/catalog/use',{method:'POST',body:{version:input.version}});
+  if(command==='submissions-status')return engine('/api/local/submissions');
+  if(command==='submissions-sync')return engine('/api/local/submissions/sync',{method:'POST',body:{platform:input.platform,...(typeof input.handle==='string'&&input.handle.trim()?{handle:input.handle.trim()}:{})}});
   const repo=state.repositories.find(r=>r.id===input.repoId);if(!repo)throw Error('unknown registered repository');
   if(command==='cancel-run'){activeRuns.get(repo.id)?.abort();return {cancelled:true};}
   if(command==='draft'){safePath(repo.path,input.path);saveDraft(appData,repo.path,input.path,input.content);return {saved:true};}
@@ -65,6 +98,7 @@ export async function startDesktop({port=0,appData=appDataRoot(),catalogRoot=pro
     case 'daily-add':return repositories.withRepositoryLock(repo.path,()=>addProblemToDaily(repo.path,{date:input.date,folder:input.folder,url:input.url,title:input.title,language:input.language}));
     case 'save':return repositories.withRepositoryLock(repo.path,()=>{repositories.saveFile(repo.path,input.path,input.content);saveDraft(appData,repo.path,input.path,input.content);return {saved:true};});
     case 'record':return await repositories.withRepositoryLock(repo.path,async()=>{const prepared=prepareDailyLog(repo.path,input);const validated=await engine('/api/local/daily-log/validate',{method:'POST',body:{path:prepared.relative,source:prepared.content}});if(!Array.isArray(validated.flags)||validated.flags.length)throw Error('Daily log validation failed: '+(validated.flags??['invalid validation response']).join(', '));repositories.saveFile(repo.path,prepared.relative,prepared.content);return prepared;});
+    case 'submissions-log':return await repositories.withRepositoryLock(repo.path,()=>appendSubmissionRows(repo,input.confirmed===true));
     case 'preview':return repositories.previewCommit(repo.path,input.paths);
     case 'commit':{const committed=await repositories.withRepositoryLock(repo.path,()=>repositories.commitFiles(repo.path,input.paths,input.message));try{const registration=await registerEngine(repo);return {...committed,registration,ingestion:await engine('/api/local/ingest',{method:'POST',body:{}})};}catch(error){return {...committed,ingestion:{status:'error',error:error.message},notice:'Commit saved locally; retry ingestion, not commit.'};}}
     case 'run':{const controller=new AbortController();const pending=runFile(repo.path,input.path,{signal:controller.signal,input:input.input??'',line:Number.isInteger(input.line)&&input.line>0?input.line:1,...(input.tests?{tests:input.tests}:{})});runs.set(controller,pending);activeRuns.set(repo.id,controller);try{return await pending;}finally{runs.delete(controller);activeRuns.delete(repo.id);}}

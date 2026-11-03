@@ -27,6 +27,13 @@ export function navigateDate(date, amount, mode='month') {
 export function completion(entry) {
   return ['independent','assisted','reported_completion'].includes(entry.outcome);
 }
+// Submission capture: the platform judged this problem-day (Codeforces API / AtCoder Problems).
+export function submissionLabel(entry) {
+  const s=entry?.platform_submissions;
+  if(!s)return null;
+  return `제출 ${s.count}회${s.failed_before_accept?` · 정답 전 실패 ${s.failed_before_accept}회`:''}`;
+}
+export const EVIDENCE_LABELS={git:'풀이 저장소 일지',git_correction:'일지 수정',manual:'수동 기록',platform_import:'플랫폼 가져오기',platform_submission:'플랫폼 제출'};
 export function outcomeText(entry) {
   if(entry.status==='superseded')return '수정 전';
   // Policy v3 (ADR 005): help is not tracked; every completion is shown as solved.

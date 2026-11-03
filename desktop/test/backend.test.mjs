@@ -43,3 +43,9 @@ test('markdown runs execute the fenced block at or above the cursor',async t=>{
 test('a new repository can point origin at a GitHub repository without pushing',t=>{const root=mkdtempSync(join(tmpdir(),'desktop-remote-'));t.after(()=>rmSync(root,{recursive:true,force:true}));
  createRepository(join(root,'a'),{remote:'https://github.com/me/algorithm-solution.git'});assert.equal(git(join(root,'a'),['remote','get-url','origin']),'https://github.com/me/algorithm-solution.git');
  assert.throws(()=>createRepository(join(root,'b'),{remote:'https://evil.invalid/x.git'}));});
+test('English daily logs: new repositories use the English template and added rows keep its columns',t=>{const {repo}=fixture(t);
+ assert.match(readFileSync(join(repo,'templates/daily.md'),'utf8'),/\| Problem \| Result \| Time \| Review \| Memo \|/);
+ const added=addProblemToDaily(repo,{date:'2026-11-03',folder:'leetcode',url:'https://leetcode.com/problems/authored/',title:'Authored'});
+ const lines=added.content.split('\n');assert.equal(lines[2],'| Problem | Result | Time | Review | Memo |');assert.equal(lines[4],'| https://leetcode.com/problems/authored/ | | | 0 | |');
+ assert.deepEqual(parseDailyLog(added.relative,added.content,authoredCatalog).flags,['daily_outcome_unrecorded:line_5']);
+ const recorded=appendDailyLog(repo,{date:'2026-11-03',url:'https://leetcode.com/problems/authored/',solved:true,minutes:10});assert.ok(recorded.content.includes('| https://leetcode.com/problems/authored/ | 1 | 10m | 0 |  |'));});

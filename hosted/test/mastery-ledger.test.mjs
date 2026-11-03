@@ -13,6 +13,8 @@ export const payloads = {
   git_watermarks:{repo_id:'solutions',branch:'main',last_processed_sha:SHA('a'),status:'ok',observed:1,detail:null},
   practice_feedback:{snapshot_ref:'plan-2026-10-12',source_key:'leetcode:two-sum',candidate_key:'codeforces:4A',verdict:'related',channel:'concept'},
   rating_observations:{platform:'codeforces',handle:null,rating:1234,rated_participations:5,contest_id:null,old_rating:null,rank:null},
+  platform_submissions:{platform:'codeforces',submission_id:'1',id_kind:'native',problem_key:'codeforces:4A',verdict:'accepted',raw_verdict:'OK',language:null,judge_time_ms:null,judge_memory_bytes:null,passed_tests:null,elapsed_seconds:null,active_seconds:null,time_source:'none',time_confidence:'none',contest_id:'4'},
+  submission_sync_marks:{platform:'codeforces',handle:'tourist',cursor:null,newest_submitted_at:null,status:'ok',fetched:0,detail:null},
   catalog_switches:{from_version:null,to_version:'catalog-v1',catalog_sha256:'b'.repeat(64)},
 };
 const entry = (table,id,extra={}) => ({schema_version:1,entry_id:id,learner_id:'owner',occurred_at:T('12'),recorded_at:T('12'),source:LEDGERS[table].sources[0],payload:structuredClone(payloads[table]),supersedes:null,...extra});

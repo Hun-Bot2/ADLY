@@ -14,10 +14,10 @@ retrieved public schedule metadata and used disposable databases for integration
 | Legacy Git trailers/files | `classify`: independent + explicit no-hints is independent; accepted/solved/unmarked commits remain `reported_completion`. |
 | Web/CLI attempt | Event validator checks explicit outcome/hints and activity; review/transfer metadata is distinct. A platform-imported AC is only reported completion. |
 
-Code: [daily-log.mjs](../hosted/mastery/daily-log.mjs) `parseDailyLog` L15–70;
-[markdown-attempt.mjs](../hosted/mastery/markdown-attempt.mjs) L51–70;
-[git-convention.mjs](../hosted/mastery/git-convention.mjs) `classify` L57–81;
-[events.mjs](../hosted/core/events.mjs) payload validation.
+Code: [daily-log.mjs](../../hosted/mastery/daily-log.mjs) `parseDailyLog` L15–70;
+[markdown-attempt.mjs](../../hosted/mastery/markdown-attempt.mjs) L51–70;
+[git-convention.mjs](../../hosted/mastery/git-convention.mjs) `classify` L57–81;
+[events.mjs](../../hosted/core/events.mjs) payload validation.
 
 The current dirty daily parser also accepts an optional `시간` column/self-reported minutes.
 That is uncommitted work, not part of `a5fcc72`'s original three-column change. The October 20
@@ -44,10 +44,10 @@ import was a three-column table and stored minutes=null. Timers and manual minut
 7. Calibration, concept counters, review replay and progression are derived views of those attempts.
    The exact counting predicates and reset rules are in [ALGORITHMS](ALGORITHMS.md).
 
-Sources: [git-ingest.mjs](../hosted/mastery/git-ingest.mjs) L39–92,95–126;
-[ledger.mjs](../hosted/mastery/ledger.mjs) L10–49;
-[build.py](../research/mastery_catalog/build.py) `load_concept_map`/`build`;
-[catalog.mjs](../hosted/mastery/catalog.mjs) L13–56.
+Sources: [git-ingest.mjs](../../hosted/mastery/git-ingest.mjs) L39–92,95–126;
+[ledger.mjs](../../hosted/mastery/ledger.mjs) L10–49;
+[build.py](../../research/mastery_catalog/build.py) `load_concept_map`/`build`;
+[catalog.mjs](../../hosted/mastery/catalog.mjs) L13–56.
 
 ## 3. Today's three problems: verified joins and outcomes
 
@@ -130,8 +130,8 @@ For this checkout, records show the old Gemini/NVIDIA HTTP failures, later Gemin
 NVIDIA HTTP-200 truncation, and NVIDIA success after its model-specific thinking switch. Usage
 and failures are preserved independently. Safe output/evidence-ID checks are **not semantic
 validation**. Keys and raw provider error bodies are excluded; no live API call was made here.
-See [explanations.mjs](../hosted/mastery/explanations.mjs) `explain`, `presented`, `withExplanations`
-and [explanation-store.mjs](../hosted/mastery/explanation-store.mjs).
+See [explanations.mjs](../../hosted/mastery/explanations.mjs) `explain`, `presented`, `withExplanations`
+and [explanation-store.mjs](../../hosted/mastery/explanation-store.mjs).
 
 ## Reproduce safely
 

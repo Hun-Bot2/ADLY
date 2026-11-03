@@ -23,8 +23,8 @@ test('desktop bridge authenticates, edits, tests, records, commits and triggers 
   assert.equal((await(await request('/desktop/api/state')).json()).appearance,'dark');
   assert.equal(JSON.parse(readFileSync(join(root,'app/state.json'),'utf8')).appearance,'dark');
   assert.equal((await request('/desktop/api/command',{method:'POST',body:JSON.stringify({command:'appearance-setting',appearance:'bad'})})).status,400);
-  const savedLayout=await command('layout-setting',{layout:{explorerWidth:999,panelHeight:240,explorerCollapsed:false,panelCollapsed:false,panel:'tests'}});assert.equal(savedLayout.layout.explorerWidth,440);
-  assert.equal((await(await request('/desktop/api/state')).json()).layout.panel,'tests');
+  const savedLayout=await command('layout-setting',{layout:{explorerWidth:999,panelHeight:240,explorerCollapsed:false,panelCollapsed:false,panel:'record'}});assert.equal(savedLayout.layout.explorerWidth,440);
+  assert.equal((await(await request('/desktop/api/state')).json()).layout.panel,'record');
   const invalidLayout=await request('/desktop/api/command',{method:'POST',body:JSON.stringify({command:'layout-setting',layout:{arbitrary:'no'}})});assert.equal(invalidLayout.status,400);
   const created=await command('create',{path:join(root,'solutions')});const repoId=created.id;
   execFileSync('git',['-C',created.path,'config','user.name','Fixture']);execFileSync('git',['-C',created.path,'config','user.email','fixture@example.invalid']);

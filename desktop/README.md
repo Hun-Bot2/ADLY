@@ -21,13 +21,14 @@ newest available catalog automatically. The tools panel can explicitly select an
 Do not launch a candidate against real learner data for tests.
 
 Open the existing workspace or use **코드 · 실행 · 기록**:
-connect/create/clone a repository; open a problem; edit in CodeMirror; save; run user-authored tests; record a result;
+connect/create/clone a repository; open today's log or add a problem; edit in CodeMirror; save; write the result in the log;
 review the diff; commit selected paths. Only local commits feed ingestion. Push is an explicit separate action.
 An imported solution must exist in the catalog before the engine accepts a daily log entry. Conflicting rows are rejected
 before saving. A successful commit with failed ingestion remains a successful commit; retry ingestion rather than commit.
 
-Drafts persist in app data independently of repository saves. Every run executes the saved file. Runs are not sandboxed;
-macOS memory is not enforced. Windows requires the native Job Object helper:
+Drafts persist in app data independently of repository saves. The Code Workspace has no run/test controls since 2026-11-03
+(record-centric: problems are solved on the platforms). The backend `run` command and the Windows Job Object helper below are kept
+for compatibility only; runs are not sandboxed and macOS memory is not enforced:
 
 ```sh
 cargo build --release --manifest-path desktop/native-runner/Cargo.toml --locked
@@ -78,6 +79,13 @@ To include private, reviewed dataset versions, add explicit `--dataset /path/to/
 Never archive a repository root. Stage output, dependencies, compiled helpers and installers are ignored by Git.
 `DESKTOP_PACKAGED=1` copies shipped datasets into app data with hash verification; existing immutable versions are never
 replaced. See the Tauri commands below for unsigned builds. Distribution considerations still require user review.
+
+## macOS DMG
+
+After `npm run package` in `desktop/src-tauri`, run `desktop/package-dmg.sh` from the repository root. It writes
+`desktop/src-tauri/target/release/bundle/dmg/ALDY-macos-arm64.dmg` (the README download name). `tauri build --bundles dmg`
+also works on a normal desktop session; in headless sessions its Finder AppleScript times out. A Windows `.exe` (NSIS,
+`npm run package:windows`) must be built on Windows with the Windows Node runtime and native runner helper.
 
 ## GitHub sign-in (one-time maintainer setup)
 

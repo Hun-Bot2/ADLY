@@ -46,3 +46,13 @@ make GitHub sign-in work, and make the Code Workspace edit the daily Markdown lo
 - [x] T4 Start panel step flow (sign in, repository list, create on GitHub); browser check with a mocked native bridge.
 - [x] T5 Rebuilt ALDY.app (2026-11-02, unsigned, Apple Silicon); onboarding smoke passes close/cancel/new on the packaged binary.
   Not verified natively: live GitHub sign-in (no client ID registered yet), the folder picker dialog, Windows.
+
+## Record-centric workspace (user decision 2026-11-03)
+
+Problems are solved on LeetCode, Codeforces and AtCoder, not in ALDY. The Code Workspace therefore records rather than executes:
+
+- NW-11 THE SYSTEM SHALL NOT show run, test, stop, standard-input or test-case controls in the Code Workspace. Its bottom panel SHALL
+  contain only Git (default) and solution history. NW-9 (run the fenced block at the cursor) is superseded for the UI.
+- NW-12 The backend `run` command, `extractCodeBlock` and the native runner stay for compatibility and tests; they are not reachable
+  from the UI. A judge (official tests, sandbox) is out of scope; verified outcomes, if added, come from platform submission data.
+- Stored layout values `output`, `input` and `tests` fall back to `git`.

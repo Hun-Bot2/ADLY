@@ -69,7 +69,8 @@ export async function fetchContests(platform, { fetcher = defaultFetch, now = ne
   }
 }
 
-export function submissionEvent(platform, item, learnerId, recordedAt) {
+// Shared field extraction for submission mappers (also used by mastery/submissions.mjs). Throws invalid_submission.
+export function submissionIdentity(platform, item) {
   let accepted, id, key, seconds;
   if (platform === 'codeforces') {
     accepted = item.verdict === 'OK'; id = item.id; seconds = item.creationTimeSeconds;
@@ -81,6 +82,11 @@ export function submissionEvent(platform, item, learnerId, recordedAt) {
     if (!/^[A-Za-z0-9_]+$/.test(item.problem_id)) throw new Error('invalid_submission');
     key = `atcoder:${item.problem_id}`;
   } else throw new Error('unsupported_platform');
+  return { accepted, id, key, seconds };
+}
+
+export function submissionEvent(platform, item, learnerId, recordedAt) {
+  const { accepted, id, key, seconds } = submissionIdentity(platform, item);
   if (!Number.isInteger(id) || !Number.isFinite(seconds) || seconds < 0) throw new Error('invalid_submission');
   if (!accepted) return null;
   return { schema_version: 1, event_id: `import:${platform}:${learnerId}:${id}`, learner_id: learnerId,

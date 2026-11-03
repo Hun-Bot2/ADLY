@@ -1,6 +1,6 @@
 # Recommendation engine: implementation audit
 
-Current journal recommendation: progression-v2 (ADR 006); see [design](../specs/adaptive-progression/design.md), [validation](../specs/adaptive-progression/validation.md) and the [Korean runbook](../specs/mastery-journal/runbook.md). The audit below remains historical.
+Current journal recommendation: progression-v2 (ADR 006); see [design](../adaptive-progression/design.md), [validation](../adaptive-progression/validation.md) and the [Korean runbook](../mastery-journal/runbook.md). The audit below remains historical.
 
 > Historical snapshot (2026-10-20). Since policy v3 (2026-10-28, ADR 005) the policy counts every completion as solved;
 > stored outcomes below are unchanged. Current desktop-readiness state: `specs/desktop-readiness/status.md`.
@@ -41,22 +41,22 @@ flowchart LR
 ```
 
 The canonical learner engine is **JavaScript + local SQLite**, not a remote RAG service.
-[ADR 003](../specs/adaptive-learning/adrs/003-local-first-canonical.md) and
-[mastery SDD](../specs/mastery-system/design.md) govern it. Python builds immutable catalogs
+[ADR 003](../adaptive-learning/adrs/003-local-first-canonical.md) and
+[mastery SDD](../mastery-system/design.md) govern it. Python builds immutable catalogs
 and runs offline research; `src/learning/store.py` is a recovery/foundation implementation,
 not a second active mastery engine. Recommendations work without an LLM or network.
 
 | Layer | Actual implementation and boundary |
 |---|---|
-| Runtime | [hosted/local.mjs](../hosted/local.mjs) `startLocal`: loopback server; registered Git polling; same learner DB as CLI |
-| Learner evidence | [ledger.mjs](../hosted/mastery/ledger.mjs) `readLedger`/`attemptStream`, events and append-only side ledgers; corrections supersede rather than overwrite |
-| Catalog | [catalog.mjs](../hosted/mastery/catalog.mjs) `attachCatalog`/`loadCatalog`: receipt/hash verification, read-only SQLite ATTACH, native IDs/difficulty, concepts and cached title neighbors |
-| Base policy | [planner.mjs](../hosted/mastery/planner.mjs) `planDay`: reviews, repair, placement/exploit and calendar-rotated exploration |
-| Current journal policy | [journal.mjs](../hosted/mastery/journal.mjs) `journalPlan` L33–60: retains base review slots, replaces normal practice with staged `planProgression`, at most one 30-minute progression activity |
+| Runtime | [hosted/local.mjs](../../hosted/local.mjs) `startLocal`: loopback server; registered Git polling; same learner DB as CLI |
+| Learner evidence | [ledger.mjs](../../hosted/mastery/ledger.mjs) `readLedger`/`attemptStream`, events and append-only side ledgers; corrections supersede rather than overwrite |
+| Catalog | [catalog.mjs](../../hosted/mastery/catalog.mjs) `attachCatalog`/`loadCatalog`: receipt/hash verification, read-only SQLite ATTACH, native IDs/difficulty, concepts and cached title neighbors |
+| Base policy | [planner.mjs](../../hosted/mastery/planner.mjs) `planDay`: reviews, repair, placement/exploit and calendar-rotated exploration |
+| Current journal policy | [journal.mjs](../../hosted/mastery/journal.mjs) `journalPlan` L33–60: retains base review slots, replaces normal practice with staged `planProgression`, at most one 30-minute progression activity |
 | State identity | `createJournalService.view` L65–75 hashes date, catalog, attempts, ratings, preferences, curriculum/pattern and policy source; immutable evidence-revision snapshot |
-| Presentation | [hosted/public/app.mjs](../hosted/public/app.mjs), including current uncommitted calendar/workspace surfaces and the journal; `/api/journal` uses the local catalog-backed service |
-| LLM prose | [explanations.mjs](../hosted/mastery/explanations.mjs) `withExplanations`: decorates a copy outside the policy hash; explicit `explain` generates both providers concurrently |
-| Prose research ledger | [explanation-store.mjs](../hosted/mastery/explanation-store.mjs): private SQLite inputs/attempts/results/cost receipts; independent of learner backup and provider availability |
+| Presentation | [hosted/public/app.mjs](../../hosted/public/app.mjs), including current uncommitted calendar/workspace surfaces and the journal; `/api/journal` uses the local catalog-backed service |
+| LLM prose | [explanations.mjs](../../hosted/mastery/explanations.mjs) `withExplanations`: decorates a copy outside the policy hash; explicit `explain` generates both providers concurrently |
+| Prose research ledger | [explanation-store.mjs](../../hosted/mastery/explanation-store.mjs): private SQLite inputs/attempts/results/cost receipts; independent of learner backup and provider availability |
 
 There are **three different selection surfaces**, not interchangeable algorithms: the small
 reviewed-curriculum `/api/state` mission (`hosted/core/policy.mjs`), the broad mastery CLI `plan`
@@ -78,7 +78,7 @@ exploration code alone does not describe the journal's final practice choice.
   select the journal's Easy practice problem.
 - LLMs explain existing evidence; they do not choose problems or update mastery. Direct provider
   calls require explicit generation. Page reads/restarts use durable results; missing usage/cost is
-  unknown, not zero. [Explanation runbook](../specs/recommendation-explanations/runbook.md).
+  unknown, not zero. [Explanation runbook](../recommendation-explanations/runbook.md).
 - No hosted deployment, scheduled delivery or online judge is established by this checkout.
   Langfuse is an optional **offline redacted OTLP export**, not canonical storage; no LangChain,
   Grafana or extra service is required.
@@ -108,15 +108,15 @@ Suggested commit after reviewing existing unrelated dirty work: `feat: add cache
 
 ## Contest discovery and calendar diagnostics (working-tree implementation)
 
-Specification: [requirements](../specs/contest-discovery/requirements.md),
-[design](../specs/contest-discovery/design.md), [tasks](../specs/contest-discovery/tasks.md).
+Specification: [requirements](../contest-discovery/requirements.md),
+[design](../contest-discovery/design.md), [tasks](../contest-discovery/tasks.md).
 
 | Layer | Implementation / boundary |
 |---|---|
-| Public metadata | [contest-discovery.mjs](../hosted/contest-discovery.mjs): `normalizeSchedule`, `fetchDiscovery`, `officialContestUrl`; bounded sources, official-link checks, identity deduplication |
-| Durable cache | [provider-service.mjs](../hosted/provider-service.mjs): existing owner-scoped SQLite `provider_cache`; `<platform>:discovery` takes precedence over compatible old `:calendar` entries; no migration |
+| Public metadata | [contest-discovery.mjs](../../hosted/contest-discovery.mjs): `normalizeSchedule`, `fetchDiscovery`, `officialContestUrl`; bounded sources, official-link checks, identity deduplication |
+| Durable cache | [provider-service.mjs](../../hosted/provider-service.mjs): existing owner-scoped SQLite `provider_cache`; `<platform>:discovery` takes precedence over compatible old `:calendar` entries; no migration |
 | Explicit sync | Local-only `POST /api/contests/sync {}`; same-origin enforcement in `local.mjs`; three sources fail independently. State GET and page refresh only read the cache. Submission imports remain separately gated. |
-| Personalization | [contest-discovery-fit.mjs](../hosted/mastery/contest-discovery-fit.mjs): `contestDiscoveryFit`, existing `fitAll/predict`, active ledger and immutable catalog; separate from existing problem policy |
+| Personalization | [contest-discovery-fit.mjs](../../hosted/mastery/contest-discovery-fit.mjs): `contestDiscoveryFit`, existing `fitAll/predict`, active ledger and immutable catalog; separate from existing problem policy |
 | Calendar / modal | `workspace-data.mjs::workspaceEvents` converts actual instants to KST. `workspace.mjs::contestDetails/renderContestList` shows exact date/time, duration, official link, source/cache times, uncertainty and recommendation evidence. Weekends are badges/shading, never date shifts. |
 | Import diagnostics | `workspace-data.mjs::syncDiagnostic` and `app.mjs::pollLocalEvidence` distinguish conflicting edits, malformed rows and stopped history reads. No automatic rewrite of imported attempts. |
 

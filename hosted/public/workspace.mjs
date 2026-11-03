@@ -4,7 +4,7 @@ import {renderResearchComparison} from './research-view.mjs';
 import {pageHeader,compactMetric,emptyState,icon} from './ui.mjs';
 import {dashboardModel,reviewQueue,contestPhase,filterContestPhase,calendarMarks} from './learning-data.mjs';
 import {renderAnalytics} from './analytics.mjs';
-import {TIME_ZONE,localDate,shiftDate,calendarDates,navigateDate,workspaceEvents,activeAttempts,filterAttempts,completion,outcomeText,outcomeSymbol,groupCounts,conversion,eventCategory,filterCalendarEvents,daySummary,contestList,recommendationBasis,pendingPlans,CARRY_DAYS,editorProblem,contestDuration,PLATFORM_NAMES} from './workspace-data.mjs';
+import {TIME_ZONE,localDate,shiftDate,calendarDates,navigateDate,workspaceEvents,activeAttempts,filterAttempts,completion,outcomeText,outcomeSymbol,groupCounts,conversion,eventCategory,filterCalendarEvents,daySummary,contestList,recommendationBasis,pendingPlans,CARRY_DAYS,editorProblem,contestDuration,PLATFORM_NAMES,submissionLabel,EVIDENCE_LABELS} from './workspace-data.mjs';
 const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined&&text!==null)n.textContent=String(text);return n;};
 const btn=(text,action,cls='button secondary')=>{const n=el('button',cls,text);n.type='button';if(text)n.dataset.focus=text;n.addEventListener('click',event=>{n.focus({preventScroll:true});action(event);});return n;};
 const fmt=(v,options={dateStyle:'medium',timeStyle:'short'})=>Number.isFinite(new Date(v).getTime())?new Intl.DateTimeFormat('ko-KR',{timeZone:TIME_ZONE,hourCycle:'h23',...options}).format(new Date(v)):'시각 미기록';
@@ -23,7 +23,7 @@ export function createWorkspace({root,getState,getJournal,adapters}) {
   const heading=(name,subtitle)=>pageHeader(name,subtitle);
   const empty=text=>{const state=emptyState(text);state.classList.add('empty');return state;};
   const card=(name,description)=>{const c=el('section','card analytics-card');c.append(el('h2','',name));if(description)c.append(el('p','meta',description));return c;};
-  function status(e){return e.layer==='actual'?outcomeText(e):e.layer==='contest'?'대회':e.layer==='mock'?'모의 대회':e.kind==='review'?'복습 예정':'학습 예정';}
+  function status(e){return e.layer==='actual'?outcomeText(e)+(e.platform_submissions?' · 제출 확인':''):e.layer==='contest'?'대회':e.layer==='mock'?'모의 대회':e.kind==='review'?'복습 예정':'학습 예정';}
   const symbol=e=>e.layer==='actual'?outcomeSymbol(e):e.layer==='contest'?'⚑':e.layer==='mock'?'◆':'◇';
   const LEVELS=['','Easy','Medium','Hard'];
   const solvingTime=m=>m%60?(m>=60?`${Math.floor(m/60)}시간 ${m%60}분`:`${m}분`):`${m/60}시간`;
@@ -89,12 +89,12 @@ export function createWorkspace({root,getState,getJournal,adapters}) {
     if(e.layer==='plan')return recommendation(e);
     if(e.layer==='mock')return mockDetails(e);
     const c=el('div','problem-details'),actions=problemActions(e);
-    c.append(section('학습',facts([['결과',outcomeText(e)],['풀이 시각',fmt(e.occurred_at)],['직접 기록 시간',recordedDuration(e)],['주제',e.pattern?.split(',').map(x=>topicLabel(x.trim())).join(' · ')||'미기록']])));
+    c.append(section('학습',facts([['결과',outcomeText(e)],...(e.platform_submissions?[['플랫폼 채점',submissionLabel(e)]]:[]),['풀이 시각',fmt(e.occurred_at)],['직접 기록 시간',recordedDuration(e)],['주제',e.pattern?.split(',').map(x=>topicLabel(x.trim())).join(' · ')||'미기록']])));
     if(e.reason)c.append(section('복습 · 메모',el('p','inspector-note',e.reason)));
     const editable=(getState()?.events || []).some(x=>x.event_id===e.id&&x.source==='manual')&&e.status!=='superseded';
     const controls=el('div','actions');if(editable)controls.append(btn('기록 수정',()=>edit(e)));else controls.append(el('p','meta',e.status==='superseded'?'수정 전 기록 · 읽기 전용':'기록 수정은 원본 풀이 저장소에서 가능합니다.'));c.append(section('기록 관리',controls));
     const attempts=data().filter(x=>x.layer==='actual'&&x.problem_key===e.problem_key).sort((a,b)=>b.date.localeCompare(a.date)),history=disclosure(`모든 시도 · ${attempts.length}`);for(const x of attempts){const r=el('div','attempt-audit');r.append(el('strong','',`${x.date} · ${outcomeText(x)}${x.status==='superseded'?' · 수정 전':''}`),el('p','meta',`${fmt(x.occurred_at)} · ${recordedDuration(x)} · ${x.id}`));if(x.reason)r.append(el('p','inspector-note',x.reason));history.append(r);}c.append(section('풀이 이력',history));
-    c.append(section('기록 근거',disclosure('출처 · 시간 기록 범위',facts([['문제 키',e.problem_key],['저장 시각',e.recorded_at?fmt(e.recorded_at):'미기록'],['활동',e.activity_type||'미기록'],['출처',e.evidence_source||'수동 기록']]),el('p','meta','날짜만 있는 일지는 KST 날짜 경계로 저장됩니다. 확인된 타이머와 직접 입력 시간은 겹칠 수 있어 합산하지 않습니다.'))));
+    c.append(section('기록 근거',disclosure('출처 · 시간 기록 범위',facts([['문제 키',e.problem_key],['저장 시각',e.recorded_at?fmt(e.recorded_at):'미기록'],['활동',e.activity_type||'미기록'],['출처',EVIDENCE_LABELS[e.evidence_source]??e.evidence_source??'수동 기록']]),el('p','meta','날짜만 있는 일지는 KST 날짜 경계로 저장됩니다. 확인된 타이머와 직접 입력 시간은 겹칠 수 있어 합산하지 않습니다.'))));
     openInspector(title(e),c,{sourceUrl:e.url||getState()?.curriculum?.problems?.find(p=>p.problem_key===e.problem_key)?.canonical_url,metadata:[e.platform,e.platform==='leetcode'?LEVELS[e.difficulty]||e.difficulty:e.difficulty].filter(Boolean).join(' · '),actions});
   }
   function recommendation(e){
@@ -356,7 +356,7 @@ export function createWorkspace({root,getState,getJournal,adapters}) {
   function filterControl(label,name,choices,rerender){const wrap=el('label','filter-control',label),s=el('select');s.setAttribute('aria-label',label);for(const[v,t]of choices){const o=el('option','',t);o.value=v;s.append(o);}s.value=filters[name]||'';s.addEventListener('change',()=>{filters[name]=s.value;rerender();});wrap.append(s);return wrap;}
   function history(){
     const controls=el('div','history-filters'),search=el('input');search.type='search';search.placeholder='문제 이름, 키 또는 알고리즘 주제 검색';search.setAttribute('aria-label','풀이 이력 검색');search.value=filters.query;
-    const results=el('section','history-results');const update=()=>{results.replaceChildren();const rows=filterAttempts(data(),filters).sort((a,b)=>b.date.localeCompare(a.date));results.append(el('p','meta',`${rows.length}회 시도 · 현재 기록 기준 · 수정 전 기록은 문제 상세에서 확인`));if(!rows.length)results.append(empty('조건에 맞는 풀이 기록이 없어요.'));else{const table=el('div','history-table');const header=el('div','history-table-head');for(const t of ['문제 / 주제','플랫폼 · 난이도','결과','풀이 날짜','시간'])header.append(el('span','',t));table.append(header);for(const e of rows){const b=btn('',()=>details(e),'history-table-row');const name=el('span','history-problem');name.append(el('strong','',title(e)),el('span','meta',e.pattern||'주제 미기록'));if(e.recommended)name.append(recommendationBadge(e));b.append(name,el('span','',`${e.platform || '미상'} · ${e.difficulty??'미기록'}`),el('span','',outcomeText(e)),el('time','',e.date),el('span','',recordedDuration(e)));table.append(b);}results.append(table);}};
+    const results=el('section','history-results');const update=()=>{results.replaceChildren();const rows=filterAttempts(data(),filters).sort((a,b)=>b.date.localeCompare(a.date));results.append(el('p','meta',`${rows.length}회 시도 · 현재 기록 기준 · 수정 전 기록은 문제 상세에서 확인`));if(!rows.length)results.append(empty('조건에 맞는 풀이 기록이 없어요.'));else{const table=el('div','history-table');const header=el('div','history-table-head');for(const t of ['문제 / 주제','플랫폼 · 난이도','결과','풀이 날짜','시간'])header.append(el('span','',t));table.append(header);for(const e of rows){const b=btn('',()=>details(e),'history-table-row');const name=el('span','history-problem');name.append(el('strong','',title(e)),el('span','meta',e.pattern||'주제 미기록'));if(e.recommended)name.append(recommendationBadge(e));b.append(name,el('span','',`${e.platform || '미상'} · ${e.difficulty??'미기록'}`),el('span','',outcomeText(e)+(e.platform_submissions?' · 제출 확인':'')),el('time','',e.date),el('span','',recordedDuration(e)));table.append(b);}results.append(table);}};
     search.addEventListener('input',()=>{filters.query=search.value;update();});controls.append(search);
     const all=activeAttempts(data()),choices=key=>[...new Set(all.map(e=>e[key]).filter(v=>v!=null).map(String))].sort().map(v=>[v,v]);
     controls.append(filterControl('플랫폼','platform',[['','모든 플랫폼'],...choices('platform')],update),filterControl('결과','outcome',[['','모든 결과'],['independent','해결'],['failed','미해결']],update),filterControl('난이도 (플랫폼별)','difficulty',[['','모든 난이도'],...choices('difficulty')],update));
