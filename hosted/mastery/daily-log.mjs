@@ -21,8 +21,11 @@ export function dailyHeader(line){
   const middle=names.slice(2,-1);
   return ['','시간','복습','시간,복습'].includes(middle.join(','))?names:null;
 }
-export function parseDailyLog(path,source,catalog) {
-  const match=dailyPath(path), rows=[], flags=[], review_targets=[];
+export function parseDailyLog(path,source,catalog) { const {keys,...parsed}=parseDailyTable(path,source,catalog); return parsed; }
+// Every problem the table names, including rows whose result is still empty (submission capture SC-12 dedupe).
+export const dailyLogKeys=(path,source,catalog)=>parseDailyTable(path,source,catalog).keys ?? [];
+function parseDailyTable(path,source,catalog) {
+  const match=dailyPath(path), rows=[], flags=[], review_targets=[], keys=[];
   if (!match) return {rows,review_targets,flags};
   const date=`20${match[2]}`, time=Date.parse(`${date}T00:00:00Z`);
   if (!Number.isFinite(time) || new Date(time).toISOString().slice(0,10)!==date) return {rows,review_targets,flags:['daily_invalid_date']};
@@ -70,6 +73,7 @@ export function parseDailyLog(path,source,catalog) {
       else if(candidates?.size>1){flags.push(`daily_ambiguous_problem:${at}`);continue;}
     }
     if(!key || (platform && catalog.problems.get(key).platform!==platform)){flags.push(`daily_unresolved_problem:${at}`);continue;}
+    if(!keys.includes(key))keys.push(key);
     if(seen.has(key)) {
       if(seen.get(key)!==outcome){flags.push(`daily_conflicting_rows:${key}`);for(let j=rows.length-1;j>=0;j--)if(rows[j].metadata.problem_key===key)rows.splice(j,1);seen.set(key,'conflict');for(let j=review_targets.length-1;j>=0;j--)if(review_targets[j].problem_key===key)review_targets.splice(j,1);}
       continue;
@@ -80,5 +84,5 @@ export function parseDailyLog(path,source,catalog) {
     if(outcome==='-' || outcome===''){flags.push(`daily_outcome_unrecorded:${at}`);continue;}
     rows.push({date,line:i+1,raw:lines[i],metadata:{problem_key:key,attempt:`daily-${date}`,outcome:outcome==='1'?'reported_completion':outcome==='O'?'independent':'failed',hints:outcome==='O'?false:null,self_minutes:minutes,...(seconds!==null?{self_seconds:seconds}:{}),activity_type:'practice',transfer_from:null}});
   }
-  return {rows,review_targets,flags};
+  return {rows,review_targets,flags,keys};
 }

@@ -84,6 +84,20 @@ ledger change. No change to core/policy.mjs, calibration.mjs or progression.mjs.
 - Errors append a mark and keep rows; re-reads are harmless because rows dedupe by entry_id.
 - Triggers: CLI `submissions sync --platform codeforces`, a settings button in the app; no automatic first-launch fetch (SC-14).
 
+## App and Markdown log (S6-S7)
+
+- Engine (hosted/local-desktop.mjs): `GET /api/local/submissions` (handles, stored counts, last mark; no network),
+  `POST /api/local/submissions/sync {platform, handle?}` (stores the handle, one sync at a time), `GET /api/local/submissions/log-candidates`
+  (attempts with `evidence_source = 'platform_submission'` whose problem is in the active catalog with a URL; gym/unknown problems are
+  never written), `POST /api/local/daily-log/keys` (every problem the table names, including empty-result rows; `dailyLogKeys`).
+- Desktop (desktop/dev.mjs): commands `submissions-status`, `submissions-sync`, `submissions-log {repoId, confirmed}`. The log command
+  groups candidates by date file, drops problems the table already names, and returns `{files, rows, needsConfirmation}` without writing
+  when more than 10 rows would be added. On write each file gets rows `| <url> | 1/0 | | 0 | |` at the end of its table
+  (`withResultRows`), is validated by the engine (every new problem must parse as a row) and saved. Existing rows are never edited.
+  A file whose unsaved editor draft differs from disk is skipped (`skipped_drafts`). Nothing is committed.
+- After the user commits, Git ingestion adds the log rows and the projection merges each into its problem-day (rule 2), so the
+  problem-day stays one attempt with the platform verdict.
+
 ## Open decisions
 
 Decided 2026-11-03: **D-1** yes, auto-append to the date's log (SC-12; backfill after a count confirmation). **D-2** platform verdict,

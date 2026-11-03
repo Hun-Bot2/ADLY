@@ -486,3 +486,11 @@ test('CLI: submissions sync stores the handle, uses an injected fetcher, list sh
   assert.equal(listing.marks.length,2);
   assert.equal(await cli(['submissions','sync','--platform','codeforces','--now','2026-11-02T02:00:00Z',...common],{print,fetcher:async()=>response('x',500),sleep:async()=>{}}),4);
 });
+
+test('UI labels: platform-judged attempts say how many submissions; other attempts have no label', async()=>{
+  const {submissionLabel,EVIDENCE_LABELS}=await import('../public/workspace-data.mjs');
+  assert.equal(submissionLabel({platform_submissions:{count:6,failed_before_accept:5,accepted_at:'x'}}),'제출 6회 · 정답 전 실패 5회');
+  assert.equal(submissionLabel({platform_submissions:{count:1,failed_before_accept:0,accepted_at:'x'}}),'제출 1회');
+  assert.equal(submissionLabel({outcome:'independent'}),null);
+  assert.equal(EVIDENCE_LABELS.platform_submission,'플랫폼 제출');
+});

@@ -93,7 +93,7 @@ function navigate(value,{notifyFrame=true,legacy=false}={}){
 }
 frame.addEventListener('load',()=>{if(route!=='workspace')frame.contentWindow.postMessage({type:'algorithm-navigate',view:route},location.origin);});
 action('tools-tab',()=>navigate('workspace'));action('workspace-tab',()=>navigate('calendar'));
-action('open-settings',()=>$('settings-drawer').showModal());action('connect-repository',()=>{$('settings-drawer').close();navigate('workspace');$('workspace-start').querySelector('input')?.focus();});action('repository-settings',()=>$('settings-drawer').showModal());
+action('open-settings',()=>{$('settings-drawer').showModal();void loadSubmissionStatus();});action('connect-repository',()=>{$('settings-drawer').close();navigate('workspace');$('workspace-start').querySelector('input')?.focus();});action('repository-settings',()=>{$('settings-drawer').showModal();void loadSubmissionStatus();});
 action('close-settings',()=>requestDialogClose($('settings-drawer')));action('open-problem',()=>{$('problem-form').reset();$('platform').value=dailyFolder;$('problem-dialog').showModal();});action('close-problem',()=>requestDialogClose($('problem-dialog')));
 action('keyboard-help',()=>{if(!document.querySelector('dialog[open]'))$('shortcut-dialog').togglePopover();});action('close-shortcuts',()=>$('shortcut-dialog').hidePopover());
 action('learning-settings',()=>{if(!requestDialogClose($('settings-drawer')))return;navigate('today',{legacy:true});});
@@ -208,7 +208,7 @@ action('update-stage',async()=>{const result=await command('update-stage',{confi
 window.addEventListener('message',event=>{
  if(event.origin!==location.origin||event.source!==frame.contentWindow)return;
  if(event.data?.type==='algorithm-route-changed'){const value=normalizeRoute(event.data.view);if(value==='settings'&&route!=='workspace')navigate('today',{notifyFrame:false,legacy:true});else if(value!=='workspace'&&route!=='workspace')navigate(value,{notifyFrame:false});return;}
- if(event.data?.type==='algorithm-open-settings'){$('settings-drawer').showModal();return;}
+ if(event.data?.type==='algorithm-open-settings'){$('settings-drawer').showModal();void loadSubmissionStatus();return;}
  if(event.data?.type!=='algorithm-open-problem')return;const problem=validatedProblem(event.data.problem);if(!problem)return;
  navigate('workspace');$('platform').value=problem.platform;$('problem-id').value=problem.id;$('problem-url').value=problem.url;$('problem-title').value=problem.title??'';if(repo)$('problem-form').requestSubmit();else notify('풀이 저장소를 먼저 연결한 뒤 문제를 열어주세요.');
 });
@@ -225,3 +225,36 @@ window.addEventListener('pagehide',()=>{if(repo&&path)fetch('/desktop/api/comman
 setInterval(()=>request('/desktop/api/state').then(connectionText).catch(()=>{$('connection').textContent='연결 끊김';}),3000);
 if(!/Mac/.test(navigator.platform))for(const key of document.querySelectorAll('kbd'))key.textContent=key.textContent.replaceAll('⌘','Ctrl');
 applyLayout();navigate(location.hash.slice(1)||'dashboard');refreshState().catch(report);refreshAuth().catch(report);
+
+// Platform submission capture (specs/submission-capture S6-S7). Network only when the user presses 동기화.
+const SYNC_STATE={ok:'완료',partial:'일부만 가져옴',error:'실패'};
+function syncLine(info){
+ const counts=`저장된 제출 ${info.counts.submissions}개 (정답 ${info.counts.accepted})`;
+ if(!info.last)return counts+' · 아직 동기화하지 않음';
+ const at=new Date(info.last.recorded_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',dateStyle:'short',timeStyle:'short'});
+ return `${at} ${SYNC_STATE[info.last.status]??info.last.status} · 새 제출 ${info.last.fetched}개 · ${counts}${info.last.status==='ok'?'':' · '+(info.last.detail??'')}`;
+}
+async function loadSubmissionStatus(){
+ try{const status=await command('submissions-status');for(const [platform,info] of Object.entries(status.platforms)){const input=$('handle-'+platform);if(input&&!input.value&&info.handle)input.value=info.handle;const line=document.querySelector(`[data-sync-status="${platform}"]`);if(line)line.textContent=syncLine(info);}}
+ catch(error){$('submission-result').textContent='제출 상태를 읽지 못했습니다: '+error.message;}
+}
+let pendingSubmissionLog=false;
+async function writeSubmissionLog(confirmed){
+ if(!repo){$('submission-result').textContent='저장소를 연결하면 가져온 제출을 기록 파일에 추가합니다.';return;}
+ const result=await command('submissions-log',{repoId:repo.id,confirmed});
+ const skipped=result.skipped_drafts?.length?` · 저장하지 않은 편집이 있어 건너뜀: ${result.skipped_drafts.join(', ')}`:'';
+ if(result.needsConfirmation){pendingSubmissionLog=true;$('submission-confirm-text').textContent=`기록 파일 ${result.files}개에 ${result.rows}행을 추가합니다. 기존 행은 바꾸지 않고, 커밋은 Git 패널에서 직접 합니다.${skipped}`;$('submission-confirm').hidden=false;return;}
+ pendingSubmissionLog=false;$('submission-confirm').hidden=true;
+ $('submission-result').textContent=(result.rows?`기록 파일 ${result.files}개에 ${result.rows}행을 추가했습니다. Git 패널에서 커밋하세요.`:'기록 파일에 추가할 새 문제가 없습니다.')+skipped;
+ if(result.rows){await refreshFiles();if(repo&&path&&result.paths.includes(path)){const r=await command('read',{repoId:repo.id,path});const content=r.draft?.content??r.content;buffers.set(bufferKey(repo.id,path),{repoId:repo.id,path,content});setText(content,path);}}
+}
+document.querySelectorAll('[data-sync-platform]').forEach(button=>button.addEventListener('click',async()=>{
+ const platform=button.dataset.syncPlatform,handle=$('handle-'+platform).value.trim();
+ if(!handle){$('submission-result').textContent='핸들을 먼저 입력하세요.';return;}
+ button.disabled=true;$('submission-result').textContent=`${platform==='codeforces'?'Codeforces':'AtCoder'} 제출을 가져오는 중…`;
+ try{const result=await command('submissions-sync',{platform,handle});$('submission-result').textContent=`${SYNC_STATE[result.status]??result.status} · 새 제출 ${result.fetched}개${result.status==='ok'?'':' · '+(result.detail??'')}`;await loadSubmissionStatus();if(result.status!=='error'){await writeSubmissionLog(false);frame.contentWindow.location.reload();}}
+ catch(error){$('submission-result').textContent='동기화 실패: '+error.message;}
+ finally{button.disabled=false;}
+}));
+action('submission-confirm-write',async()=>{if(pendingSubmissionLog)await writeSubmissionLog(true);});
+action('submission-confirm-cancel',async()=>{pendingSubmissionLog=false;$('submission-confirm').hidden=true;$('submission-result').textContent='기록 파일에는 아직 추가하지 않았습니다. 다음 동기화 때 다시 물어봅니다.';});

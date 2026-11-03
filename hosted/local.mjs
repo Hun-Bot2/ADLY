@@ -22,7 +22,7 @@ const ROOT=fileURLToPath(new URL('..',import.meta.url));
 const PUBLIC = new URL('./public/',import.meta.url);
 const TYPES = {'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.woff2':'font/woff2','.txt':'text/plain; charset=utf-8','.json':'application/json'};
 export async function startLocal({port=8787,database=resolve(ROOT,'private-learning/hosted.sqlite3'),learnerId='local-owner',
-  curriculum,annotations={},catalogRoot=resolve(ROOT,'private-learning/mastery'),catalogProvider=null,gitSyncIntervalMs=5000,autoGitSync=true,explanationEnv=process.env,contestFetcher,progressionVersion='v2',companyRoot=catalogRoot,companyProvider=null,comparisonFetcher,apiOnly=false,appToken=null,allowedOrigin=null}={}) {
+  curriculum,annotations={},catalogRoot=resolve(ROOT,'private-learning/mastery'),catalogProvider=null,gitSyncIntervalMs=5000,autoGitSync=true,explanationEnv=process.env,contestFetcher,progressionVersion='v2',companyRoot=catalogRoot,companyProvider=null,comparisonFetcher,submissionFetcher,submissionSleep,apiOnly=false,appToken=null,allowedOrigin=null}={}) {
   if(apiOnly && (typeof appToken!=='string'||appToken.length<32||!allowedOrigin))throw new Error('API-only mode requires APP_TOKEN (at least 32 characters) and APP_ORIGIN');
   const databasePath = database === ':memory:' ? database : resolve(database);
   if (databasePath !== ':memory:') await mkdir(dirname(databasePath),{recursive:true,mode:0o700});
@@ -99,7 +99,7 @@ export async function startLocal({port=8787,database=resolve(ROOT,'private-learn
         body=Buffer.concat(chunks);
       }
       const request=new Request(url,{method:incoming.method,headers,...(body?{body}:{})});
-      const response = await desktopResponse(request.clone(),{db,learnerId,catalogRoot,loadCatalog,loadCompany,gitSync,contestSchedule}) ?? await app.fetch(request);
+      const response = await desktopResponse(request.clone(),{db,learnerId,catalogRoot,loadCatalog,loadCompany,gitSync,contestSchedule,...(submissionFetcher?{submissionFetcher}:{}),submissionSleep}) ?? await app.fetch(request);
       outgoing.writeHead(response.status,Object.fromEntries(response.headers));
       outgoing.end(Buffer.from(await response.arrayBuffer()));
     } catch(error) { outgoing.writeHead(400,{'content-type':'application/json'});outgoing.end(JSON.stringify({error:error.message??'Local service error'})); }

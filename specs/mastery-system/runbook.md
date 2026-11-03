@@ -198,6 +198,7 @@ still sees one attempt per problem per KST date (a daily-log row for the same pr
 node hosted/cli.mjs submissions sync --platform codeforces --handle <handle> [--pages 10]   # handle is remembered in preferences.platform_accounts
 node hosted/cli.mjs submissions sync --platform atcoder                                      # AtCoder Problems (unofficial), >= 1 s between requests
 node hosted/cli.mjs submissions list [--platform codeforces] [--limit 10]                    # counts, recent rows and sync marks; no network
+# In the app: Settings > 플랫폼 제출 가져오기 > 동기화. New problem-days are appended to <platform>/YY-MM-DD.md (asks first above 10 rows); commit them in the Git panel.
 ```
 
 - Backfill is page limited (`--pages`, default 10, max 50; Codeforces 100 rows per page, AtCoder 500). A `partial` mark stores the resume point;

@@ -953,4 +953,9 @@ Keep these distinctions clear in summaries and docs:
   and a run starts one day before the cursor because the crawler adds older submissions late. In-progress submissions (TESTING, WJ, n/m)
   hold both cursors below them so they are re-read. Old offset-only cursors restart from the newest page (rows dedupe). Spacing 2 s / 1 s.
 - `preferences.platform_accounts` is an additive key like `review_targets`: reload older local readers before writing it.
-
+- S6-S7 (app): settings "플랫폼 제출 가져오기" calls desktop commands `submissions-status|sync|log`; the engine endpoints live in
+  local-desktop.mjs (`startLocal` takes `submissionFetcher`/`submissionSleep` for tests). The log writer appends rows only for
+  `platform_submission` attempts whose catalog problem has a URL, skips problems the table already names (`dailyLogKeys` counts
+  empty-result rows too), never edits rows, skips files with a differing unsaved draft, asks above 10 rows, and never commits.
+  Journal entries carry `platform_submissions {count, failed_before_accept, accepted_at}`; the UI shows "제출 확인" / "플랫폼 채점".
+- A desktop preview needs the engine started without `apiOnly` (apiOnly 404s design-system.css and the learning frame).
