@@ -18,11 +18,15 @@ Status: accepted by the user (2026-11-03). Private research only; nothing here c
   place problems on the same axis in research maps; it is never a training label, and LeetCode difficulty stays categorical while
   Codeforces rating stays continuous.
 - D-7 (user, 2026-11-03) Statements already in the 2026-01 snapshot are reused; only problems added since then are requested.
-- D-8 (user, 2026-11-03) AtCoder difficulty (AtCoder Problems `problem-models`, AtCoder rating scale) is placed on the Codeforces
-  axis as Codeforces ~= AtCoder + 300 (community estimate). With D-6 this gives AtCoder bands Easy <= 800, Medium 900-1200,
-  Hard >= 1300. Values below 0 in the raw model (unclipped) count as Easy; problems without a model stay "unknown". Like D-6 it is a
-  research axis, never a label. The +300 rule comes from user-rating conversions; applying it to problem difficulty is an extra
-  assumption, so results are reported per platform as well as on the shared axis.
+- D-8 (user, 2026-11-03, revised) AtCoder difficulty (AtCoder Problems `problem-models`, AtCoder rating scale) is placed on the
+  Codeforces axis with a linear fit, Codeforces ~= 0.78 x AtCoder + 705. The fit is read by hand from the chart at
+  https://silverfoxxxy.github.io/rating-correlation (4,517 users with at least 7 contests on both sites; collected about 5 years ago,
+  per the user), so it is approximate and may be stale. It replaces the earlier "+300" rule, which matches only near AtCoder
+  1700-2000. With D-6 this gives AtCoder bands Easy <= ~570, Medium ~570-1080, Hard >= ~1080. Below Codeforces ~800 the chart is
+  flat (AtCoder's low-rating correction), so conversions there are least reliable. Values below 0 in the raw model count as Easy;
+  problems without a model stay "unknown". Rationale for applying a user-rating fit to problems: both platforms define problem
+  difficulty on their own user-rating scale (about a 50% solve chance at that rating). Research axis only, never a label;
+  results are reported per platform as well as on the shared axis.
 
 ## Snapshot (step 0)
 

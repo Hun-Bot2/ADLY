@@ -971,4 +971,5 @@ Keep these distinctions clear in summaries and docs:
 - Title representations (R2) are research only; app matching and recommendation still never use title embeddings.
 - By default the content phase reuses 2026-01 statements (source `snapshot-2026-01`) and requests only newer problems (`live`).
   Codeforces 800-1100/1200-1500/1600+ = Easy/Medium/Hard is a provisional research band (D-6), never a label. AtCoder uses
-  Codeforces ~= AtCoder + 300 (D-8): Easy <= 800, Medium 900-1200, Hard >= 1300 on AtCoder Problems difficulty.
+  the linear fit Codeforces ~= 0.78 x AtCoder + 705 (D-8, hand-read from a ~5-year-old user-rating chart; supersedes "+300"):
+  Easy <= ~570, Medium ~570-1080, Hard >= ~1080 on AtCoder Problems difficulty.
