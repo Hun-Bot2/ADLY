@@ -10,7 +10,15 @@ assets = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(assets)
 
 
+# The pinned data files are untracked (AGENTS.md "Data and Artifacts"): present on the owner's machine, absent in CI.
+PRIVATE_DATA = (ROOT / 'data/raw/leetcode_raw_data.jsonl').exists()
+
+
+needs_private_data = unittest.skipUnless(PRIVATE_DATA, 'untracked pinned data files are not present (e.g. CI)')
+
+
 class AssetTest(unittest.TestCase):
+    @needs_private_data
     def test_frozen_private_assets(self):
         registry = assets.verify()
         self.assertFalse(any(e['hosted_release'] for e in registry['assets']))
@@ -20,6 +28,7 @@ class AssetTest(unittest.TestCase):
         self.assertIsNone(manifest['preprocessing_hash'])
         self.assertFalse(manifest['inference_compatible'])
 
+    @needs_private_data
     def test_bundle_excludes_all_unapproved_assets(self):
         with TemporaryDirectory() as tmp:
             dest = Path(tmp) / 'release'

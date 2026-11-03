@@ -35,6 +35,7 @@ xattr -dr com.apple.quarantine /Applications/ALDY.app
    | https://leetcode.com/problems/two-sum/ | 1 | 12m | 0 | hash map |
    ```
    한국어 머리글(`| 문제 | 결과 | 시간 | 복습 | 메모 |`)도 똑같이 읽습니다.
+   Codeforces·AtCoder에서 푼 문제는 직접 적지 않아도 됩니다. 아래 [플랫폼 제출 가져오기](#플랫폼-제출-가져오기)를 쓰면 일지에 자동으로 한 줄씩 들어갑니다.
 4. **Git 패널에서 커밋합니다.** 커밋한 일지가 학습 기록으로 들어가고, 대시보드에 다음 계획과 복습이 나옵니다. Push는 직접 누를 때만 합니다.
 5. **대시보드와 캘린더에서 오늘 할 일을 확인합니다.** 대회 일정, 기업별 문제 목록, 학습 분석도 같은 앱에서 볼 수 있습니다.
 
@@ -108,6 +109,19 @@ xattr -dr com.apple.quarantine /Applications/ALDY.app
 - **풀이는 각 사이트에서**: 앱은 채점기가 아니라 기록 도구입니다. 코드 실행·테스트 버튼은 없습니다.
 - **Git** 패널에서 고른 파일만 커밋하고, Push는 직접 누를 때만 합니다. 커밋된 일지가 학습 기록으로 들어갑니다.
 
+### 플랫폼 제출 가져오기
+
+**설정 → 플랫폼 제출 가져오기**에 Codeforces 핸들이나 AtCoder ID를 넣고 **동기화**를 누르면, 그 계정의 제출 결과(정답·오답 모두)를 가져옵니다.
+
+- Codeforces는 공식 API, AtCoder는 AtCoder Problems(비공식)에서 가져옵니다. 버튼을 누를 때만 인터넷에 연결합니다.
+- 가져온 문제는 그날 일지(`codeforces/YY-MM-DD.md`, `atcoder/YY-MM-DD.md`)에 `| 문제 URL | 1 또는 0 | | 0 | |` 한 줄로 추가됩니다.
+  - 이미 표에 있는 문제는 다시 넣지 않고, 기존 줄은 고치지 않습니다.
+  - 한 번에 10줄이 넘으면 "파일 N개에 M줄 추가"를 먼저 보여 주고, 확인을 누를 때만 씁니다.
+  - 커밋은 하지 않습니다. 내용을 확인하고 Git 패널에서 직접 커밋하세요.
+- 같은 날 같은 문제는 제출이 여러 번이어도 시도 1번으로 셉니다. 결과는 플랫폼 채점을 따르고, 캘린더와 문제 탐색에 `제출 확인`이 붙습니다.
+- **코드는 가져오지 않습니다.** 풀이 코드를 남기고 싶으면 그날 일지의 `## 문제 제목` 아래 코드 블록에 직접 붙여 넣으세요.
+- LeetCode는 아직 자동으로 가져오지 않습니다(브라우저 확장 계획 중). 일지에 직접 적으세요.
+
 ## 추천은 이렇게 동작합니다
 
 - 내 풀이 기록만으로 계획합니다. 못 푼 문제는 다음 날 우선 복습에 들어가고, Easy → Medium → 다른 문제로 옮겨 풀기 → 간격을 둔 복습 순서로 진행합니다.
@@ -126,6 +140,10 @@ node hosted/local.mjs
 node hosted/cli.mjs repo add --id solutions --path ~/algorithm-solution
 node hosted/cli.mjs repo ingest
 node hosted/cli.mjs journal
+
+# 플랫폼 제출 동기화 (인터넷 연결; 핸들은 저장됨)
+node hosted/cli.mjs submissions sync --platform codeforces --handle <핸들>
+node hosted/cli.mjs submissions list
 
 # 테스트
 node --test hosted/test/*.test.mjs

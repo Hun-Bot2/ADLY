@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync,statSync} from 'node:fs';
+import {existsSync,readFileSync,statSync} from 'node:fs';
 import {resolve,join} from 'node:path';
 import {createApp} from '../core/app.mjs';
 import {createDatabase} from './helpers/d1.mjs';
@@ -188,6 +188,8 @@ test('catalog-v4 is attached read-only from the active switch without learner DB
   const db=createDatabase(':memory:');t.after(()=>db.close());
   const root=resolve('private-learning/mastery');
   const version='catalog-v4';
+  // The private catalog exists only on the owner's machine (git-ignored), never in CI.
+  if(!existsSync(join(root,version,'receipt.json'))){t.skip('private catalog-v4 not present');return;}
   const receipt=JSON.parse(readFileSync(join(root,version,'receipt.json'),'utf8'));
   const path=join(root,version,`${version}.sqlite3`),before=statSync(path);
   const time=at('2026-10-19',12);
