@@ -224,3 +224,13 @@ PROGRESSION_VERSION=v1 node hosted/local.mjs     # 로컬 화면도 이전 정�
 Daily tables may use `| Problem | Result | Time | Review | Memo |` (case-insensitive; `Notes` is accepted for `Memo`) instead of the
 Korean names. Order and optional columns are the same: Problem, Result, [Time], [Review], Memo. A `#review` memo tag works like `#복습`.
 New repositories created by the desktop app get the English template.
+
+## Platform submission rows (2026-11-03)
+
+Settings > 플랫폼 제출 가져오기 > 동기화 (or `node hosted/cli.mjs submissions sync --platform codeforces|atcoder --handle <h>`)
+fetches the account's verdicts. Problem-days that are not yet in the log are appended to `<platform>/YY-MM-DD.md` as
+`| <problem URL> | 1/0 | | 0 | |`: the result is the platform verdict for that KST day, review is `0`, time and memo stay empty.
+A problem already in that day's table (even with an empty result) gets no second row; existing rows are never edited.
+Commit the files yourself. Source code is not fetched: paste your final code under the problem's `##` section if you want
+to keep it (SC-17). Problems outside the active catalog (Codeforces gym) are stored but never written to the log.
+

@@ -17,4 +17,5 @@ Step 0 (this spec) → step 1 (Codeforces sync). Steps 2–5 get their own task 
       with a mocked provider (2026-11-03).
 - [x] S7 Synced problem-days are appended to `<platform>/YY-MM-DD.md` by the desktop backend after each successful sync; more than 10
       rows asks first. Dedupe verified end to end in desktop/test/submissions.test.mjs (real engine, temporary DB, mocked API).
-- [ ] S8 Docs: runbook commands, AGENTS.md notes, user guide line on pasting code (SC-17); one live Codeforces sync of the user's own handle only after explicit approval.
+- [x] S8a Docs: runbook commands, AGENTS.md notes, README "플랫폼 제출 가져오기" and the journal runbook, including the line on pasting code (SC-17).
+- [ ] S8b One live Codeforces sync of the user's own handle, only after explicit approval (on a copy of the learner DB unless the user approves the real one).
