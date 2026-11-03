@@ -1,4 +1,4 @@
-<p align="center"><img src="screenshots/banner.png" alt="ALDY — Algorithm Daily" width="100%"></p>
+<p align="center"><img src="branding/banner.png" alt="ALDY — Algorithm Daily" width="100%"></p>
 
 **ALDY**는 LeetCode · Codeforces · AtCoder 풀이 기록을 읽어 매일 무엇을 풀고 복습할지 계획해 주는 로컬 학습 앱입니다.
 학습 기록은 내 컴퓨터의 SQLite와 내 Git 풀이 저장소에만 저장되며, 서버나 유료 API 없이 동작합니다.

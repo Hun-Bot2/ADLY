@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="100 100 824 824">
+  <!-- ALDY app icon: an "A" whose crossbar is a check mark (a problem solved today). -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5a86b4"/>
+      <stop offset="1" stop-color="#3d6188"/>
+    </linearGradient>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="186" fill="url(#bg)"/>
+  <rect x="100" y="100" width="824" height="824" rx="186" fill="none" stroke="#000" stroke-opacity=".08" stroke-width="4"/>
+  <path d="M318 742 L512 268 L706 742" fill="none" stroke="#fff" stroke-width="92" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M392 598 L470 672 L640 500" fill="none" stroke="#edc948" stroke-width="72" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

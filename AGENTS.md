@@ -886,7 +886,7 @@ Keep these distinctions clear in summaries and docs:
   falls back to the 고급 Client ID field; system Git credentials still work for clone and push.
 - `stage/datasets/*.sqlite3` is read-only, so the copy under `target/debug/datasets` is too and every later cargo build fails with EACCES.
   Remove `desktop/src-tauri/target/debug/datasets` before each cargo build/test.
-- App icon source is `desktop/src-tauri/icons/source/aldy.svg`. Regenerate with `rsvg-convert -w 1024 -h 1024` then `tauri icon <png> -o <scratch>`,
+- App icon source is `branding/aldy-icon.svg`. Regenerate with `rsvg-convert -w 1024 -h 1024` then `tauri icon <png> -o <scratch>`,
   copying only the desktop files listed in tauri.conf.json `bundle.icon`. Company rows use initials, never logos.
 - hosted/app.mjs `render()` must toggle the nav `active` class with `aria-current`, or two items stay highlighted.
 
