@@ -929,3 +929,22 @@ Keep these distinctions clear in summaries and docs:
 - User decision: problems are solved on the platforms; ALDY only records. Do not reintroduce run/test/stop/stdin/test-case controls or
   CPU/memory run displays in the Code Workspace (specs/desktop-app/new-user-workspace.md NW-11). Bottom panel = Git (default) + history.
 - Backend `run`, `extractCodeBlock` and desktop/native-runner remain for compatibility; a judge stays out of scope.
+
+
+## Submission ledger (2026-11-03, specs/submission-capture, ADR 010)
+
+- Migration 009 adds `platform_submissions` (layer 1, one row per platform verdict) and `submission_sync_marks`; both are registered in
+  `LEDGERS` (ranks 8 and 9), so backup export/import and `readLedger` pick them up automatically. Existing stores get the VACUUM INTO
+  snapshot before 009. The generic ledger contract test needs a payload fixture for every new LEDGERS table.
+- `attemptStream` projects submissions in `projectSubmissions` (ledger.mjs): group by (problem_key, KST date), drop a group when a
+  `platform_import` event has one of its ids, merge into the first same-day `git_observations` attempt (log id and user fields kept, outcome from
+  the platform), else emit `evidence_source:'platform_submission'` with id `subday:<key>:<date>`. With zero rows the stream is untouched.
+  Extra read-only fields: submissions, failed_before_accept (all non-accepted when none accepted), first/last_submitted_at, accepted_at.
+- Re-inserting the same entry_id with a different recorded_at throws "conflicting ledger entry ID", so sync filters known entry_ids itself
+  instead of relying on appendLedger idempotence. Sync mark ids are `submark:<platform>:<handle>:<n>`.
+- `sha256Hex` in mastery/submissions.mjs is a synchronous pure-JS hash for fingerprints (Worker-safe); do not swap in node:crypto there.
+  providers.mjs now exports `submissionIdentity`; its Accepted-only `platform_import` path is unchanged and still deduped by SC-10.
+- Codeforces user.status is newest first: a `partial`/`error` mark cursor is the next row offset, resumed after a head pass; AtCoder Problems
+  is ascending from `from_second` (cursor = last epoch second, boundary second re-read and de-duplicated). Codeforces spacing is 2 s, AtCoder 1 s.
+- `preferences.platform_accounts` is an additive key like `review_targets`: reload older local readers before writing it.
+

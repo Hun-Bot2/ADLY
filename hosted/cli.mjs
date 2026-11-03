@@ -25,6 +25,7 @@ import {registerRepository,ingestRepository} from './mastery/git-ingest.mjs';
 import {fetchCodeforcesRatings,ratingEntries} from './mastery/ratings.mjs';
 import {createViews,findProblems} from './mastery/views.mjs';
 import {normalizeMastery} from './core/preferences.mjs';
+import {syncSubmissions,summarizeSubmissions} from './mastery/submission-sync.mjs';
 import {cachedProviders} from './provider-service.mjs';
 
 const USAGE=`usage: node hosted/cli.mjs <command> [options]
@@ -36,6 +37,8 @@ const USAGE=`usage: node hosted/cli.mjs <command> [options]
   feedback --plan DATE --candidate KEY --verdict related|partly|unrelated|skip [--source KEY] [--channel C]
   rating set --platform codeforces|atcoder --rating N [--participations N]
   rating sync-cf --handle H                   NETWORK: one Codeforces API call (opt-in)
+  submissions sync --platform codeforces|atcoder [--handle H] [--pages N]   NETWORK: fetch the account's submission verdicts (handle is remembered)
+  submissions list [--platform P] [--limit N]  stored submission counts, recent rows and sync marks (no network)
   prefs [--mastery JSON] [--weekday-minutes N] show or update preferences
   explain                                    NETWORK: dual Gemini + NVIDIA explanations [--retry-failed]
   explanation-usage                          aggregate actual dispatch usage by provider/model
@@ -60,7 +63,7 @@ const options={progression:{type:'string'},db:{type:'string'},learner:{type:'str
   concept:{type:'string'},'concept-status':{type:'string'},tag:{type:'string'},difficulty:{type:'string'},predicted:{type:'string'},status:{type:'string'},near:{type:'string'},
   'max-rank':{type:'string'},'archive-category':{type:'string'},provenance:{type:'string'},limit:{type:'string'},json:{type:'boolean'},now:{type:'string'},'retry-failed':{type:'boolean'},count:{type:'string'}};
 
-export async function run(argv,{print=console.log,fetcher=fetch,env=process.env}={}) {
+export async function run(argv,{print=console.log,fetcher=fetch,env=process.env,sleep}={}) {
   const {values:o,positionals}=parseArgs({args:argv,options,allowPositionals:true});
   const [command,sub]=positionals;
   if (!command) { print(USAGE); return 1; }
@@ -137,6 +140,20 @@ export async function run(argv,{print=console.log,fetcher=fetch,env=process.env}
     if (command==='rating' && sub==='sync-cf') {
       const changes=await fetchCodeforcesRatings(o.handle,{fetcher});
       out(await appendLedger(db,learnerId,{rating_observations:ratingEntries(learnerId,o.handle,changes,nowIso)})); return 0;
+    }
+    if (command==='submissions' && sub==='sync') {
+      if (!['codeforces','atcoder'].includes(o.platform)) throw new Error('--platform codeforces|atcoder required');
+      const preferences=await getPreferences(db,learnerId);
+      const accounts=preferences.platform_accounts ?? {};
+      const handle=o.handle ?? accounts[o.platform];
+      if (!handle) throw new Error('no handle stored: pass --handle');
+      const pages=o.pages===undefined ? 10 : Number(o.pages);
+      if (o.handle && accounts[o.platform]!==o.handle) await putPreferences(db,learnerId,{platform_accounts:{...accounts,[o.platform]:o.handle}});
+      const report=await syncSubmissions(db,learnerId,{platform:o.platform,handle,fetcher,now,pages,...(sleep?{sleep}:{})});
+      out(report); return report.status==='error' ? 4 : 0;
+    }
+    if (command==='submissions' && sub==='list') {
+      out(summarizeSubmissions(await readLedger(db,learnerId),{platform:o.platform ?? null,limit:o.limit===undefined?10:Number(o.limit)})); return 0;
     }
     if (command==='prefs') {
       const patch={};

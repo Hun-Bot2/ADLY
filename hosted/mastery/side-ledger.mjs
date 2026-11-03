@@ -60,6 +60,37 @@ function catalogSwitch(p) {
   return p;
 }
 
+const SUBMISSION_VERDICTS=['accepted','wrong_answer','time_limit','memory_limit','runtime_error','compile_error','other'];
+// Layer-1 platform submission (specs/submission-capture/design.md). Unknown values are null, never inferred (SC-6).
+function platformSubmission(p) {
+  if (!exact(p,['platform','submission_id','id_kind','problem_key','verdict','raw_verdict','language','judge_time_ms','judge_memory_bytes','passed_tests','elapsed_seconds','active_seconds','time_source','time_confidence','contest_id'])) throw new Error('invalid platform submission payload');
+  oneOf(p.platform,['leetcode','codeforces','atcoder'],'invalid submission platform');
+  nullable(p.submission_id,v=>text(v,64));
+  oneOf(p.id_kind,['native','fingerprint'],'invalid submission id kind');
+  if ((p.id_kind==='native')!==(p.submission_id!==null)) throw new Error('native submissions require an id and fingerprints must not carry one');
+  problemKey(p.problem_key);
+  if (!p.problem_key.startsWith(p.platform+':')) throw new Error('submission problem key does not match platform');
+  oneOf(p.verdict,SUBMISSION_VERDICTS,'invalid submission verdict');
+  text(p.raw_verdict,64); nullable(p.language,v=>text(v,100));
+  for (const field of ['judge_time_ms','judge_memory_bytes','passed_tests']) nullable(p[field],count);
+  for (const field of ['elapsed_seconds','active_seconds']) nullable(p[field],v=>{ if (!Number.isInteger(v) || v<0 || v>31536000) throw new Error('invalid submission seconds'); return v; });
+  oneOf(p.time_source,['none','browser_elapsed','browser_active','user'],'invalid submission time source');
+  oneOf(p.time_confidence,['none','low','medium','high'],'invalid submission time confidence');
+  const unknown=p.elapsed_seconds===null && p.active_seconds===null;
+  if (p.time_source==='none' ? (!unknown || p.time_confidence!=='none') : (unknown || p.time_confidence==='none')) throw new Error('submission time fields disagree with time source');
+  nullable(p.contest_id,v=>text(v,64));
+  return p;
+}
+function submissionSyncMark(p) {
+  if (!exact(p,['platform','handle','cursor','newest_submitted_at','status','fetched','detail'])) throw new Error('invalid submission sync mark payload');
+  oneOf(p.platform,['codeforces','atcoder'],'invalid sync platform');
+  text(p.handle,100); nullable(p.cursor,v=>text(v,200));
+  nullable(p.newest_submitted_at,timestamp);
+  oneOf(p.status,['ok','error','partial'],'invalid sync status');
+  count(p.fetched); nullable(p.detail,v=>text(v,1000));
+  return p;
+}
+
 // Table rank fixes the deterministic cross-table merge order (R1.7).
 export const LEDGERS = {
   git_observations:{rank:3,sources:['git','manual_correction'],payload:gitObservation},
@@ -67,6 +98,8 @@ export const LEDGERS = {
   practice_feedback:{rank:4,sources:['manual'],payload:practiceFeedback},
   rating_observations:{rank:7,sources:['manual','codeforces_api'],payload:ratingObservation},
   catalog_switches:{rank:5,sources:['manual'],payload:catalogSwitch},
+  platform_submissions:{rank:8,sources:['codeforces_api','atcoder_problems_api','extension','manual'],payload:platformSubmission},
+  submission_sync_marks:{rank:9,sources:['codeforces_api','atcoder_problems_api'],payload:submissionSyncMark},
 };
 const spec = table => { const s=LEDGERS[table]; if (!s) throw new Error('unknown ledger'); return s; };
 

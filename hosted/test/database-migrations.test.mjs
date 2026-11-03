@@ -29,7 +29,7 @@ test('pending migration snapshots committed WAL rows; current and fresh stores d
   assert.equal(saved.prepare('SELECT learner_id FROM learners').get().learner_id,'preserved');
   assert.equal(saved.prepare('SELECT MAX(version) AS v FROM schema_migrations').get().v,1);
   assert.equal(saved.prepare('PRAGMA integrity_check').get().integrity_check,'ok');saved.close();
-  assert.equal(upgraded.sqlite.prepare('SELECT MAX(version) AS v FROM schema_migrations').get().v,8);upgraded.close();
+  assert.equal(upgraded.sqlite.prepare('SELECT MAX(version) AS v FROM schema_migrations').get().v,9);upgraded.close();
   const current=createDatabase(path);assert.equal(current.migrationBackup,null);current.close();
   const fresh=createDatabase(join(root,'fresh.sqlite3'));assert.equal(fresh.migrationBackup,null);fresh.close();
   assert.equal(readdirSync(root).filter(n=>n.startsWith('.migration-backup-')).length,1);
