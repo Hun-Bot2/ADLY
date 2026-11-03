@@ -970,4 +970,5 @@ Keep these distinctions clear in summaries and docs:
   and the script refuses to write under `data/`. Gap >= 2 s, resumable, paid-only rows recorded without a request.
 - Title representations (R2) are research only; app matching and recommendation still never use title embeddings.
 - By default the content phase reuses 2026-01 statements (source `snapshot-2026-01`) and requests only newer problems (`live`).
-  Codeforces 800-1100/1200-1500/1600+ = Easy/Medium/Hard is a provisional research band (D-6), never a label.
+  Codeforces 800-1100/1200-1500/1600+ = Easy/Medium/Hard is a provisional research band (D-6), never a label. AtCoder uses
+  Codeforces ~= AtCoder + 300 (D-8): Easy <= 800, Medium 900-1200, Hard >= 1300 on AtCoder Problems difficulty.

@@ -18,6 +18,11 @@ Status: accepted by the user (2026-11-03). Private research only; nothing here c
   place problems on the same axis in research maps; it is never a training label, and LeetCode difficulty stays categorical while
   Codeforces rating stays continuous.
 - D-7 (user, 2026-11-03) Statements already in the 2026-01 snapshot are reused; only problems added since then are requested.
+- D-8 (user, 2026-11-03) AtCoder difficulty (AtCoder Problems `problem-models`, AtCoder rating scale) is placed on the Codeforces
+  axis as Codeforces ~= AtCoder + 300 (community estimate). With D-6 this gives AtCoder bands Easy <= 800, Medium 900-1200,
+  Hard >= 1300. Values below 0 in the raw model (unclipped) count as Easy; problems without a model stay "unknown". Like D-6 it is a
+  research axis, never a label. The +300 rule comes from user-rating conversions; applying it to problem difficulty is an extra
+  assumption, so results are reported per platform as well as on the shared axis.
 
 ## Snapshot (step 0)
 
