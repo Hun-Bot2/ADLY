@@ -959,3 +959,13 @@ Keep these distinctions clear in summaries and docs:
   empty-result rows too), never edits rows, skips files with a differing unsaved draft, asks above 10 rows, and never commits.
   Journal entries carry `platform_submissions {count, failed_before_accept, accepted_at}`; the UI shows "제출 확인" / "플랫폼 채점".
 - A desktop preview needs the engine started without `apiOnly` (apiOnly 404s design-system.css and the learning frame).
+
+## LeetCode statement research (2026-11-03)
+
+- User decision D-1 (specs/leetcode-statement-research/): LeetCode statements are re-collected for the user's private research. This
+  supersedes the 2026-10-16 "no statement collection" decision for LeetCode only; terms-review.v1.json stays byte-identical as history.
+  Statements and anything derived from them stay under private-learning/ and are never committed or bundled into the app.
+- The user runs the network fetch (`scripts/learning/fetch_leetcode_snapshot.py list|content`) in their own terminal; agents do not
+  run it. Output is `private-learning/leetcode-snapshots/v2/`; the asset-pinned `data/raw/leetcode_raw_data.jsonl` is never modified
+  and the script refuses to write under `data/`. Gap >= 2 s, resumable, paid-only rows recorded without a request.
+- Title representations (R2) are research only; app matching and recommendation still never use title embeddings.
