@@ -54,10 +54,11 @@ The existing `providers.mjs` importer stays for compatibility; its `submissionEv
 ## Projection rules (ledger.mjs)
 
 1. Group submissions by (problem_key, KST date of submitted_at).
-2. Drop a group if a `platform_import` event carries the same platform id (SC-10).
-3. If a daily-log attempt exists for the same problem-day: emit one attempt with the log's id, user fields and time; outcome from the
-   platform group (SC-9, no conflict flag). Otherwise emit a submission attempt
-   (`evidence_source = 'platform_submission'`, `self_minutes = null`).
+2. If a daily-log attempt exists for the same problem-day: emit one attempt with the log's id, user fields and time; outcome from the
+   platform group (SC-9, no conflict flag).
+3. Else, if a `platform_import` attempt exists for the same problem-day or carries one of the group's ids (SC-10), keep it (solved) and add
+   only the counts. Otherwise emit a submission attempt (`evidence_source = 'platform_submission'`, `self_minutes = null`). Every rule
+   matches one problem-day; other problems on that date are unaffected.
 4. Attempt carries `submissions`, `failed_before_accept`, `first_submitted_at`, `accepted_at` as extra read-only fields; policy v2 may
    ignore them until an ADR changes it.
 5. With zero submission rows the function returns today's stream byte-for-byte (SC-11; regression test on existing fixtures).
@@ -69,8 +70,18 @@ ledger change. No change to core/policy.mjs, calibration.mjs or progression.mjs.
 
 - Preference `preferences.platform_accounts = {codeforces: handle, atcoder: handle}` (user-entered).
 - `submission_sync_marks` side ledger: `{platform, handle, cursor, newest_submitted_at, status ok|error|partial, fetched, detail}`.
-- Backfill pages oldest-unknown → newest with a page limit per run; incremental sync stops at the first known id (existing
-  providers.mjs logic). Errors append a mark and keep rows.
+- Cursors are platform-specific (review 2026-11-03):
+  - Codeforces `user.status` returns submissions by descending id, so row offsets shift when submissions are added or removed. The
+    cursor is id-based, `cf2:<low>:<high>:<top>:<off>:<done>`: ids in [low, high] are stored, `top` is the newest id seen, `off` an offset
+    hint for `low`. A run first reads newest pages until one reaches an id <= high (the gap above is then closed and `off` grows by the
+    number of new ids), then backfills from `off - 1`. The first backfill row must be >= low (one-row overlap); otherwise rows were removed
+    upstream and the run steps back a page. A page limit leaves `partial` with the state reached so far.
+  - AtCoder Problems returns `epoch_second >= from_second ORDER BY epoch_second LIMIT 500` with no id tiebreak. The cursor is a second;
+    each page re-reads its last second, so a second split across pages in any order is stored once. A new run starts 86,400 s before the
+    cursor because the crawler can add older submissions late.
+  - Submissions still being judged are not stored and hold the cursor below them (`high < id` / `cursor <= second`), so a later run
+    re-reads them once they have a verdict.
+- Errors append a mark and keep rows; re-reads are harmless because rows dedupe by entry_id.
 - Triggers: CLI `submissions sync --platform codeforces`, a settings button in the app; no automatic first-launch fetch (SC-14).
 
 ## Open decisions
@@ -81,4 +92,4 @@ no conflict flag. **D-3** no code in v1; the guide tells users to paste code (SC
 ## Validation
 
 Migration test (fresh and upgraded DB, VACUUM INTO snapshot path unchanged), validator tests per field, normalizer fixtures per
-platform, projection tests (no-submission identity, log+submission dedupe, import dedupe, WA×5→AC sequence preserved), idempotent re-sync, interrupted backfill resume, and the existing Node suite unchanged.
+platform, projection tests (no-submission identity, log+submission dedupe, import dedupe per problem-day, WA×5→AC sequence preserved), idempotent re-sync, interrupted backfill resume, offsets shifted by added/removed submissions, same-second page splits, in-progress and late-crawled submissions, and the existing Node suite unchanged.

@@ -70,6 +70,8 @@ function normalize(platform,items,{learnerId,recordedAt}) {
   }
   return {entries,skipped};
 }
+// True while the platform is still judging; sync cursors must not pass such a submission (it is re-read later).
+export const isInProgress=(platform,item)=>Boolean(item) && typeof item==='object' && inProgress[platform](platform==='codeforces' ? item.verdict : item.result);
 // Codeforces user.status result items. Gym problems keep their native key (SC-7).
 export const normalizeCodeforcesSubmissions=(items,options)=>normalize('codeforces',items,options);
 // AtCoder Problems user/submissions items (unofficial source).

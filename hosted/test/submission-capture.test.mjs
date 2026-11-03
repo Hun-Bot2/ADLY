@@ -241,7 +241,7 @@ test('sync: backfill, idempotent re-run, mark per run, incremental stops at firs
   assert.equal(again.fetched,0); assert.equal(again.requests,1,'incremental stops at the first page containing a known id');
   assert.equal((await listEntries(db,'platform_submissions',L)).length,130,'no second row (SC-3)');
   const marks=await listEntries(db,'submission_sync_marks',L);
-  assert.deepEqual(marks.map(m=>[m.payload.status,m.payload.fetched,m.payload.cursor]),[['ok',130,null],['ok',0,null]]);
+  assert.deepEqual(marks.map(m=>[m.payload.status,m.payload.fetched,m.payload.cursor]),[['ok',130,'cf2:1001:1130:1130:130:1'],['ok',0,'cf2:1001:1130:1130:130:1']]);
   assert.equal(marks[0].payload.newest_submitted_at,items[0] && new Date(items[0].creationTimeSeconds*1000).toISOString().replace('.000Z','.000000Z'));
   // A new submission appears: only head page fetched, one row added.
   items.unshift(cfItem(2000,'OK','2026-11-02T02:00:00Z'));
@@ -256,13 +256,13 @@ test('sync: interrupted backfill resumes from the sync mark', async t=>{
   const fetcher=async url=>cfPages(items)(url);
   const sleep=async()=>{};
   const first=await syncSubmissions(db,L,{platform:'codeforces',handle:'tourist',fetcher,sleep,pages:2,now:new Date('2026-11-02T00:00:00Z')});
-  assert.equal(first.status,'partial'); assert.equal(first.cursor,'200'); assert.equal(first.fetched,200);
+  assert.equal(first.status,'partial'); assert.equal(first.cursor,'cf2:1151:1350:1350:200:0'); assert.equal(first.fetched,200);
   const seen=[];
   const second=await syncSubmissions(db,L,{platform:'codeforces',handle:'tourist',fetcher:async url=>{seen.push(new URL(url).searchParams.get('from'));return cfPages(items)(url);},sleep,pages:10,now:new Date('2026-11-02T01:00:00Z')});
-  assert.deepEqual(seen,['1','201','301'],'head page first (known id), then resume at the stored offset');
+  assert.deepEqual(seen,['1','200','300'],'head page first (known id), then resume one row before the stored offset (overlap check)');
   assert.equal(second.status,'ok'); assert.equal(second.fetched,150); assert.equal((await listEntries(db,'platform_submissions',L)).length,350);
   const last=(await listEntries(db,'submission_sync_marks',L)).at(-1);
-  assert.equal(last.payload.status,'ok'); assert.equal(last.payload.cursor,null);
+  assert.equal(last.payload.status,'ok'); assert.equal(last.payload.cursor,'cf2:1001:1350:1350:350:1');
 });
 
 test('sync: an error appends a mark, keeps stored rows and the resume point; a later run recovers', async t=>{
@@ -272,7 +272,7 @@ test('sync: an error appends a mark, keeps stored rows and the resume point; a l
   const fetcher=async url=>{ if (fail && new URL(url).searchParams.get('from')==='101') return response({status:'FAILED',comment:'limit exceeded'},429); return cfPages(items)(url); };
   const sleep=async()=>{};
   const bad=await syncSubmissions(db,L,{platform:'codeforces',handle:'tourist',fetcher,sleep,now:new Date('2026-11-02T00:00:00Z')});
-  assert.equal(bad.status,'error'); assert.match(bad.detail,/429/); assert.equal(bad.cursor,'100');
+  assert.equal(bad.status,'error'); assert.match(bad.detail,/429/); assert.equal(bad.cursor,'cf2:1151:1250:1250:100:0','resume point: ids 1151..1250 stored');
   assert.equal((await listEntries(db,'platform_submissions',L)).length,100,'rows from the first page are kept');
   fail=false;
   const good=await syncSubmissions(db,L,{platform:'codeforces',handle:'tourist',fetcher,sleep,now:new Date('2026-11-02T01:00:00Z')});
@@ -311,7 +311,7 @@ test('sync: AtCoder ascending cursor, 1 s spacing, resume and idempotence', asyn
   assert.equal(part.status,'partial'); assert.equal(part.fetched,500); assert.equal(part.cursor,String(all[499].epoch_second));
   const rest=await syncSubmissions(db,L,{platform:'atcoder',handle:'u',fetcher,sleep,now:new Date('2026-11-02T01:00:00Z')});
   assert.equal(rest.status,'ok'); assert.equal(rest.fetched,100);
-  assert.equal(calls[1],all[499].epoch_second,'resumes at the stored second');
+  assert.equal(calls[1],all[499].epoch_second-86400,'resumes one crawl-overlap day before the stored second');
   assert.equal((await listEntries(db,'platform_submissions',L)).length,600);
   const idem=await syncSubmissions(db,L,{platform:'atcoder',handle:'u',fetcher,sleep,now:new Date('2026-11-02T02:00:00Z')});
   assert.equal(idem.fetched,0); assert.equal((await listEntries(db,'platform_submissions',L)).length,600);
@@ -323,6 +323,126 @@ test('sync: AtCoder ascending cursor, 1 s spacing, resume and idempotence', asyn
   const error=await syncSubmissions(db,L,{platform:'atcoder',handle:'u',fetcher:async()=>response('boom',503),sleep,now:new Date('2026-11-02T03:00:00Z')});
   assert.equal(error.status,'error'); assert.equal((await listEntries(db,'platform_submissions',L)).length,600);
   assert.equal((await listEntries(db,'submission_sync_marks',L)).at(-1).payload.cursor,String(all[599].epoch_second),'error keeps the resume cursor');
+});
+
+test('sync (codeforces): new submissions during an interrupted backfill shift offsets without gaps or extra rows', async t=>{
+  const db=createDatabase();t.after(()=>db.close());
+  const items=cfList(350);
+  const fetcher=async url=>cfPages(items)(url);
+  const sleep=async()=>{};
+  await syncSubmissions(db,L,{platform:'codeforces',handle:'h',fetcher,sleep,pages:2,now:new Date('2026-11-02T00:00:00Z')});
+  // 130 new submissions arrive before the next run: every stored row moves 130 offsets down.
+  for (let i=1;i<=130;i++) items.unshift(cfItem(5000+i,'OK','2026-11-01T12:00:00Z'));
+  const seen=[];
+  const run=async(pages,at)=>syncSubmissions(db,L,{platform:'codeforces',handle:'h',fetcher:async url=>{seen.push(Number(new URL(url).searchParams.get('from')));return cfPages(items)(url);},sleep,pages,now:new Date(at)});
+  const head=await run(1,'2026-11-02T01:00:00Z');
+  assert.equal(head.status,'partial'); assert.match(head.detail,/new submissions/);
+  const second=await run(10,'2026-11-02T02:00:00Z');
+  assert.equal(second.status,'ok');
+  assert.deepEqual(seen,[1,1,101,330,430],'head pages until a covered id, then the tail at old offset 200 + 130 new, one row early');
+  const ids=(await listEntries(db,'platform_submissions',L)).map(e=>Number(e.payload.submission_id)).sort((a,b)=>a-b);
+  assert.equal(ids.length,480); assert.equal(new Set(ids).size,480);
+  assert.deepEqual(ids,[...items.map(i=>i.id)].sort((a,b)=>a-b),'every submission stored exactly once');
+});
+
+test('sync (codeforces): rows removed upstream make the offset hint overshoot; the tail steps back and overlaps', async t=>{
+  const db=createDatabase();t.after(()=>db.close());
+  let items=cfList(450);
+  const seen=[];
+  const fetcher=async url=>{seen.push(Number(new URL(url).searchParams.get('from')));return cfPages(items)(url);};
+  const sleep=async()=>{};
+  await syncSubmissions(db,L,{platform:'codeforces',handle:'h',fetcher,sleep,pages:2,now:new Date('2026-11-02T00:00:00Z')});
+  items=items.filter((_,i)=>i<50 || i>=80);   // 30 stored submissions disappear (e.g. a removed contest)
+  seen.length=0;
+  const next=await syncSubmissions(db,L,{platform:'codeforces',handle:'h',fetcher,sleep,now:new Date('2026-11-02T01:00:00Z')});
+  assert.equal(next.status,'ok');
+  assert.deepEqual(seen,[1,200,100,200,300,400],'the page at the hint starts below low, so step back one page before continuing');
+  const stored=new Set((await listEntries(db,'platform_submissions',L)).map(e=>Number(e.payload.submission_id)));
+  assert.ok(items.every(i=>stored.has(i.id)),'no gap below the old boundary');
+});
+
+test('sync (codeforces): a submission still judged deep in the list is re-read until it has a verdict', async t=>{
+  const db=createDatabase();t.after(()=>db.close());
+  const items=cfList(150);
+  items[120]={...items[120],verdict:'TESTING'};
+  const fetcher=async url=>cfPages(items)(url);
+  const sleep=async()=>{};
+  const first=await syncSubmissions(db,L,{platform:'codeforces',handle:'h',fetcher,sleep,now:new Date('2026-11-02T00:00:00Z')});
+  assert.equal(first.status,'ok'); assert.equal(first.fetched,149);
+  items[120]={...items[120],verdict:'OK'};
+  const second=await syncSubmissions(db,L,{platform:'codeforces',handle:'h',fetcher,sleep,now:new Date('2026-11-02T01:00:00Z')});
+  assert.equal(second.fetched,1,'the judged submission is picked up once it is final');
+  assert.equal(second.requests,2,'head reads down to the pending id');
+  const third=await syncSubmissions(db,L,{platform:'codeforces',handle:'h',fetcher,sleep,now:new Date('2026-11-02T02:00:00Z')});
+  assert.equal(third.requests,1,'afterwards incremental sync is one page again');
+});
+
+test('sync (codeforces): an old offset-only cursor restarts from the newest page without duplicates', async t=>{
+  const db=createDatabase();t.after(()=>db.close());
+  const items=cfList(120);
+  await appendLedger(db,L,{submission_sync_marks:[{schema_version:1,entry_id:'submark:codeforces:h:1',learner_id:L,occurred_at:REC,recorded_at:REC,source:'codeforces_api',supersedes:null,
+    payload:{platform:'codeforces',handle:'h',cursor:'100',newest_submitted_at:null,status:'partial',fetched:0,detail:null}}]});
+  const r=await syncSubmissions(db,L,{platform:'codeforces',handle:'h',fetcher:async url=>cfPages(items)(url),sleep:async()=>{},now:new Date('2026-11-02T00:00:00Z')});
+  assert.equal(r.status,'ok'); assert.equal(r.fetched,120);
+});
+
+test('sync (atcoder): same-second submissions split across pages in unstable order are all stored once', async t=>{
+  const db=createDatabase();t.after(()=>db.close());
+  const base=sec('2026-10-01T00:00:00Z');
+  // 498 earlier submissions, then 5 in one second straddling the 500-row page boundary.
+  const all=[...Array.from({length:498},(_,i)=>acItem(i+1,'WA',new Date((base+i)*1000).toISOString())),...Array.from({length:5},(_,i)=>acItem(1000+i,'AC',new Date((base+600)*1000).toISOString()))];
+  let call=0;
+  const fetcher=async url=>{
+    const from=Number(new URL(url).searchParams.get('from_second'));
+    const rows=all.filter(s=>s.epoch_second>=from).sort((a,b)=>a.epoch_second-b.epoch_second);
+    // No id tiebreak upstream: rotate rows that share a second differently on each call.
+    const same=rows.filter(r=>r.epoch_second===base+600),other=rows.filter(r=>r.epoch_second!==base+600),k=call++%same.length;
+    return response([...other,...same.slice(k),...same.slice(0,k)].slice(0,500));
+  };
+  const r=await syncSubmissions(db,L,{platform:'atcoder',handle:'u',fetcher,sleep:async()=>{},now:new Date('2026-11-02T00:00:00Z')});
+  assert.equal(r.status,'ok'); assert.equal(r.fetched,503);
+  assert.equal(r.cursor,String(base+600));
+  assert.equal((await listEntries(db,'platform_submissions',L)).length,503);
+});
+
+test('sync (atcoder): a judging submission holds the cursor; a late-crawled older submission is still found', async t=>{
+  const db=createDatabase();t.after(()=>db.close());
+  const at=s=>new Date(s*1000).toISOString(),base=sec('2026-10-01T00:00:00Z');
+  let all=[acItem(1,'AC',at(base)),acItem(2,'WJ',at(base+100)),acItem(3,'WA',at(base+200))];
+  const fetcher=async url=>{const from=Number(new URL(url).searchParams.get('from_second'));return response(all.filter(s=>s.epoch_second>=from).slice(0,500));};
+  const first=await syncSubmissions(db,L,{platform:'atcoder',handle:'u',fetcher,sleep:async()=>{},now:new Date('2026-11-02T00:00:00Z')});
+  assert.equal(first.fetched,2); assert.equal(first.cursor,String(base+100),'cursor stays at the judging submission');
+  // The judging one finishes, and the crawler adds an older submission (base+150) it had missed.
+  all=[acItem(1,'AC',at(base)),acItem(2,'AC',at(base+100)),acItem(4,'TLE',at(base+150)),acItem(3,'WA',at(base+200))];
+  const second=await syncSubmissions(db,L,{platform:'atcoder',handle:'u',fetcher,sleep:async()=>{},now:new Date('2026-11-02T01:00:00Z')});
+  assert.equal(second.fetched,2); assert.equal(second.cursor,String(base+200));
+  // Later than the overlap window, so a third run starts after it.
+  all.push(acItem(5,'AC',at(base+300)));
+  const third=await syncSubmissions(db,L,{platform:'atcoder',handle:'u',fetcher,sleep:async()=>{},now:new Date('2026-11-02T02:00:00Z')});
+  assert.equal(third.fetched,1);
+});
+
+test('projection: an imported problem-day never hides another problem on the same date', async t=>{
+  const db=createDatabase();t.after(()=>db.close());
+  await appendEvents(db,L,[importEvent(2,T('2026-11-01T02:00:00Z'))]);
+  await appendLedger(db,L,{git_observations:[logObservation('log-b',T('2026-10-31T15:00:00Z'),'codeforces:1B')],
+    platform_submissions:[sub(1,'wrong_answer',T('2026-11-01T01:00:00Z')),sub(2,'accepted',T('2026-11-01T02:00:00Z')),
+      sub(3,'wrong_answer',T('2026-11-01T03:00:00Z'),'codeforces:1A'),sub(4,'accepted',T('2026-11-01T04:00:00Z'),'codeforces:1B')]});
+  const {attempts}=await readLedger(db,L);
+  assert.deepEqual(attempts.map(a=>[a.problem_key,a.id,a.outcome]).sort(),[
+    ['codeforces:1A','subday:codeforces:1A:2026-11-01','failed'],
+    ['codeforces:1B','log-b','independent'],
+    ['codeforces:4A','import:codeforces:owner:2','independent']]);
+  const imported=attempts.find(a=>a.problem_key==='codeforces:4A');
+  assert.equal(imported.submissions,2); assert.equal(imported.failed_before_accept,1,'import keeps its id and gains the day counts');
+});
+
+test('projection: an import and submissions with other ids on the same problem-day stay one attempt', async t=>{
+  const db=createDatabase();t.after(()=>db.close());
+  await appendEvents(db,L,[importEvent(7,T('2026-11-01T05:00:00Z'))]);
+  await appendLedger(db,L,{platform_submissions:[sub(1,'wrong_answer',T('2026-11-01T01:00:00Z'))]});
+  const {attempts}=await readLedger(db,L);
+  assert.deepEqual(attempts.map(a=>[a.id,a.outcome,a.submissions]),[['import:codeforces:owner:7','independent',1]]);
 });
 
 test('sync rejects bad input and summaries read stored rows', async t=>{

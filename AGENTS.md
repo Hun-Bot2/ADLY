@@ -936,15 +936,21 @@ Keep these distinctions clear in summaries and docs:
 - Migration 009 adds `platform_submissions` (layer 1, one row per platform verdict) and `submission_sync_marks`; both are registered in
   `LEDGERS` (ranks 8 and 9), so backup export/import and `readLedger` pick them up automatically. Existing stores get the VACUUM INTO
   snapshot before 009. The generic ledger contract test needs a payload fixture for every new LEDGERS table.
-- `attemptStream` projects submissions in `projectSubmissions` (ledger.mjs): group by (problem_key, KST date), drop a group when a
-  `platform_import` event has one of its ids, merge into the first same-day `git_observations` attempt (log id and user fields kept, outcome from
-  the platform), else emit `evidence_source:'platform_submission'` with id `subday:<key>:<date>`. With zero rows the stream is untouched.
+- `attemptStream` projects submissions in `projectSubmissions` (ledger.mjs): group by (problem_key, KST date). If
+  the first same-day `git_observations` attempt exists (log id and user fields kept, outcome from the platform), merge into it; else if a
+  `platform_import` attempt exists for that problem-day (or has one of the group's ids), keep the import and add only the counts; else emit
+  `evidence_source:'platform_submission'` with id `subday:<key>:<date>`. All matching is per problem-day: never drop other problems of that date.
+  With zero rows the stream is untouched.
   Extra read-only fields: submissions, failed_before_accept (all non-accepted when none accepted), first/last_submitted_at, accepted_at.
 - Re-inserting the same entry_id with a different recorded_at throws "conflicting ledger entry ID", so sync filters known entry_ids itself
   instead of relying on appendLedger idempotence. Sync mark ids are `submark:<platform>:<handle>:<n>`.
 - `sha256Hex` in mastery/submissions.mjs is a synchronous pure-JS hash for fingerprints (Worker-safe); do not swap in node:crypto there.
   providers.mjs now exports `submissionIdentity`; its Accepted-only `platform_import` path is unchanged and still deduped by SC-10.
-- Codeforces user.status is newest first: a `partial`/`error` mark cursor is the next row offset, resumed after a head pass; AtCoder Problems
-  is ascending from `from_second` (cursor = last epoch second, boundary second re-read and de-duplicated). Codeforces spacing is 2 s, AtCoder 1 s.
+- The two sync cursors differ on purpose. Codeforces user.status is newest first by id, so offsets shift when submissions are added or
+  removed: the cursor `cf2:<low>:<high>:<top>:<off>:<done>` is id-based ([low, high] stored, off = offset hint). A run reads head pages until
+  one reaches an id <= high, then backfills from off-1 and requires the first row to be >= low (one-row overlap); if not, it steps back a page.
+  AtCoder Problems is `epoch_second >= from_second ORDER BY epoch_second LIMIT 500` with no id tiebreak: each page re-reads its last second,
+  and a run starts one day before the cursor because the crawler adds older submissions late. In-progress submissions (TESTING, WJ, n/m)
+  hold both cursors below them so they are re-read. Old offset-only cursors restart from the newest page (rows dedupe). Spacing 2 s / 1 s.
 - `preferences.platform_accounts` is an additive key like `review_targets`: reload older local readers before writing it.
 
