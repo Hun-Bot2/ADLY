@@ -79,6 +79,13 @@ Never archive a repository root. Stage output, dependencies, compiled helpers an
 `DESKTOP_PACKAGED=1` copies shipped datasets into app data with hash verification; existing immutable versions are never
 replaced. See the Tauri commands below for unsigned builds. Distribution considerations still require user review.
 
+## macOS DMG
+
+After `npm run package` in `desktop/src-tauri`, run `desktop/package-dmg.sh` from the repository root. It writes
+`desktop/src-tauri/target/release/bundle/dmg/ALDY-macos-arm64.dmg` (the README download name). `tauri build --bundles dmg`
+also works on a normal desktop session; in headless sessions its Finder AppleScript times out. A Windows `.exe` (NSIS,
+`npm run package:windows`) must be built on Windows with the Windows Node runtime and native runner helper.
+
 ## GitHub sign-in (one-time maintainer setup)
 
 The app signs in with GitHub's device flow, which needs a public client ID (there is no secret):

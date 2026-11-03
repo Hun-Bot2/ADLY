@@ -7,12 +7,14 @@
 
 | 플랫폼 | 파일 | 상태 |
 |---|---|---|
-| macOS (Apple Silicon) | [**ALDY-macos-arm64.zip**](https://github.com/Hun-Bot2/Algorithm-RAG-Engine/releases/latest/download/ALDY-macos-arm64.zip) | 미리보기 빌드 (서명 없음) |
-| Windows | 준비 중 | 검증 전 |
+| macOS (Apple Silicon) | [**ALDY-macos-arm64.dmg**](https://github.com/Hun-Bot2/Algorithm-RAG-Engine/releases/latest/download/ALDY-macos-arm64.dmg) | 미리보기 빌드 (서명 없음) |
+| Windows (.exe) | 준비 중 | Windows에서 빌드·검증 전 |
 
 모든 버전은 [Releases](https://github.com/Hun-Bot2/Algorithm-RAG-Engine/releases)에 있습니다.
 
-**처음 열 때 (서명 없는 앱):** 압축을 풀고 `ALDY.app`을 응용 프로그램 폴더로 옮긴 뒤, Finder에서 `ALDY`를 **Control-클릭 → 열기**를 누릅니다.
+**설치:** `.dmg`를 열고 `ALDY`를 `Applications` 폴더로 끌어 옮깁니다.
+
+**처음 열 때 (서명 없는 앱):** 응용 프로그램 폴더에서 `ALDY`를 **Control-클릭 → 열기**를 누릅니다.
 그래도 막히면 터미널에서 다음을 한 번 실행합니다.
 
 ```sh
