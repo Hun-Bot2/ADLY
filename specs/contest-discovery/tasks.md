@@ -8,4 +8,4 @@
 - [x] Inspect rendered desktop/mobile UI with disposable data.
 - [x] Update four RECOMMENDATION_ENGINE documents and run final regressions.
 
-Validation commands, receipts and remaining limitations are recorded in [ISSUES_AND_FIXES](../../RECOMMENDATION_ENGINE/ISSUES_AND_FIXES.md#follow-up-validation-receipts). No private learner correction, deployment or Git commit was performed.
+Validation commands, receipts and remaining limitations are recorded in [ISSUES_AND_FIXES](../recommendation-engine-audit/ISSUES_AND_FIXES.md#follow-up-validation-receipts). No private learner correction, deployment or Git commit was performed.

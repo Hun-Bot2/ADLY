@@ -8,18 +8,18 @@ Architecture and version boundaries are in [README](README.md); concrete learner
 
 ### Independent outcomes and concept evidence
 
-[ledger.mjs](../hosted/mastery/ledger.mjs) `solvedIndependently` L49 requires
+[ledger.mjs](../../hosted/mastery/ledger.mjs) `solvedIndependently` L49 requires
 `outcome === 'independent' && hints === false`. `related.mjs::trustedConcepts` L10–11 accepts
 only `approved`/`ai_reviewed` catalog entries. Neither an accepted platform submission nor an
 unmarked Git commit is automatically independent.
 
-[progression.mjs](../hosted/mastery/progression.mjs) `collectEvidence` L34–78 replays attempts
+[progression.mjs](../../hosted/mastery/progression.mjs) `collectEvidence` L34–78 replays attempts
 chronologically per concept, resolving canonical keys. Easy/Medium evidence is a **Map keyed
 by problem**, not the number of commits or repetitions. Variation signatures use an explicit
 `variation_group`, else sorted trusted concepts + native tags (L15–20); this is a metadata
 proxy, not a verified distinct solution technique.
 
-The versioned [pattern](../hosted/mastery/progression-pattern.v1.json) requires:
+The versioned [pattern](../../hosted/mastery/progression-pattern.v1.json) requires:
 
 1. Three distinct LeetCode Easy problems **and three distinct variation signatures**.
 2. Two distinct Medium problems/variations, credited only once Easy requirements are already met
@@ -33,7 +33,7 @@ The versioned [pattern](../hosted/mastery/progression-pattern.v1.json) requires:
 Easy failure/assistance clears Easy and downstream evidence; Medium failure preserves Easy but
 clears Medium/downstream; Hard failure is separately observed without erasing Easy/Medium.
 These are explicit software rules, not empirically validated thresholds. Tests:
-[mastery-progression.test.mjs](../hosted/test/mastery-progression.test.mjs).
+[mastery-progression.test.mjs](../../hosted/test/mastery-progression.test.mjs).
 
 `candidateFor` L85–103 filters active/free/eligible/trusted-concept candidates, excludes attempted
 and previously recommended keys, and requires a new variation when configured. **Easy/Medium
@@ -45,7 +45,7 @@ not a finite “recent” window, despite the explanation wording.
 
 ### Per-platform difficulty calibration
 
-[calibration.mjs](../hosted/mastery/calibration.mjs), `practiceObservations` L75–85, excludes
+[calibration.mjs](../../hosted/mastery/calibration.mjs), `practiceObservations` L75–85, excludes
 reviews and reported completions; it includes independent/assisted/failed practice outcomes.
 Repeated attempts count here even though progression deduplicates problem identities.
 `y=1` only for independent/no-hints; other included outcomes give `y=0`.
@@ -82,7 +82,7 @@ not demonstrate calibration on this learner: today's n=3 is still sparse.
 
 ### Base planner, review and related-practice score
 
-[planner.mjs](../hosted/mastery/planner.mjs) `planDay` L96–195 allocates due reviews first
+[planner.mjs](../../hosted/mastery/planner.mjs) `planDay` L96–195 allocates due reviews first
 (15 min each), repair, then 30-minute practice/exploration within budget. Cold-start targets
 rotate .85/.65/.45; ordinary conservative success band is .60–.80, stretch .35–.55. Concept need
 uses Beta(1+s,1+f) over 56 days plus .5 for an explicitly targeted concept. Exploration is a fixed
@@ -90,13 +90,13 @@ calendar rotation with a weekly budget cap, not a learned bandit. The journal ke
 and substitutes progression practice (`journal.mjs::journalPlan`); these base slots are not all
 shown in the journal.
 
-[reviews.mjs](../hosted/mastery/reviews.mjs) ranks due reviews by urgency
+[reviews.mjs](../../hosted/mastery/reviews.mjs) ranks due reviews by urgency
 `2*overdue_days + (priority ? 10+2*min(consecutive_failures,5) : 0)`, then retention risk, date/key.
-The shared state machine [core/policy.mjs](../hosted/core/policy.mjs) L7,16–40 uses intervals
+The shared state machine [core/policy.mjs](../../hosted/core/policy.mjs) L7,16–40 uses intervals
 1/3/7/14/30/60 days. Failures reset to next-day priority review; unverified completion can enter
 review without advancing mastery.
 
-[related.mjs](../hosted/mastery/related.mjs) `relatedCandidates` L15–55 combines reviewed-edge
+[related.mjs](../../hosted/mastery/related.mjs) `relatedCandidates` L15–55 combines reviewed-edge
 support E, concept Jaccard J, best title-channel rank r and conservative probability p:
 
 `score = 4E + 3J + 120/(60+r) + 2*max(0,1−abs(p−.70)/.70) − D − 1.5*S`.
@@ -112,11 +112,11 @@ not fitted or validated outcome effects.
 | Stage | What actually ran; status |
 |---|---|
 | Retired batch | OpenAI `text-embedding-3-small` / 1,536D index; squared-L2 and random top-pool sampling. Removed, preserved at `legacy-pipeline-final`. |
-| Small pilot | [minilm_pilot](../research/minilm_pilot/REPORT.md): 90 authored English metadata annotations, title vs title+rationale; only three eligible ranking groups. Historical conditional scores do not establish catalog relevance. |
-| A1/A2 full-catalog | [inputs.py](../research/full_catalog/inputs.py): A1 eligible titles without encoder flags; A1-all all eligible titles for lexical diagnostics; A2 LC/CF title+tags, matched within variant. Word/character TF-IDF and MiniLM compared on frozen inputs. |
-| Statement research | [statements.py](../research/algorithm_system/statements.py) L62–116: one admitted 9,424-row publisher corpus, word/character TF-IDF, MiniLM title, prefix title+statement and complete-token chunk pooling. No quarantined LC text admitted. |
-| Unified title map | [build.py](../research/unified_map/build.py): exact cosine title neighbors, taxonomy Jaccard and matched-cohort hybrid. [full_embed.py](../research/unified_map/full_embed.py) extends title vectors to 24,297 nodes. |
-| Language correction | [language_bias](../research/language_bias/REPORT.md), commit `6580d21`: English-translated titles with the same MiniLM selected over multilingual alternatives; these cached title neighbors feed catalog channels, not a live model runtime. |
+| Small pilot | [minilm_pilot](../../research/minilm_pilot/REPORT.md): 90 authored English metadata annotations, title vs title+rationale; only three eligible ranking groups. Historical conditional scores do not establish catalog relevance. |
+| A1/A2 full-catalog | [inputs.py](../../research/full_catalog/inputs.py): A1 eligible titles without encoder flags; A1-all all eligible titles for lexical diagnostics; A2 LC/CF title+tags, matched within variant. Word/character TF-IDF and MiniLM compared on frozen inputs. |
+| Statement research | [statements.py](../../research/algorithm_system/statements.py) L62–116: one admitted 9,424-row publisher corpus, word/character TF-IDF, MiniLM title, prefix title+statement and complete-token chunk pooling. No quarantined LC text admitted. |
+| Unified title map | [build.py](../../research/unified_map/build.py): exact cosine title neighbors, taxonomy Jaccard and matched-cohort hybrid. [full_embed.py](../../research/unified_map/full_embed.py) extends title vectors to 24,297 nodes. |
+| Language correction | [language_bias](../../research/language_bias/REPORT.md), commit `6580d21`: English-translated titles with the same MiniLM selected over multilingual alternatives; these cached title neighbors feed catalog channels, not a live model runtime. |
 
 Pinned MiniLM is `sentence-transformers/all-MiniLM-L6-v2`, revision
 `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`, 384D, 256-token limit. The local backend verifies
@@ -148,9 +148,9 @@ These are research methods, **not the journal's online selection algorithm**.
 | UMAP | Builds adaptive local fuzzy neighborhoods and optimizes a low-D fuzzy cross-entropy embedding. Executed cosine metric, 15 neighbors, min_dist=.1, 2D, one thread, fixed seed. Local structure emphasis; global distances/density are not calibrated. |
 | t-SNE | Gaussian high-D neighborhoods (perplexity 30), symmetrized P; low-D Student-t Q; minimizes `KL(P||Q)`. Executed cosine input metric, Barnes–Hut, 1,000 iterations, automatic learning rate. Recorded sklearn PCA-init repeats were identical; random-init repeats are used for seed sensitivity. |
 
-Sources: [reduction.py](../research/unified_map/reduction.py) L74–191,
-[full_project.py](../research/unified_map/full_project.py) L32–63,
-[compress.py](../research/algorithm_system/compress.py) `pca_project`, `svd_project`, `gaussian_project`.
+Sources: [reduction.py](../../research/unified_map/reduction.py) L74–191,
+[full_project.py](../../research/unified_map/full_project.py) L32–63,
+[compress.py](../../research/algorithm_system/compress.py) `pca_project`, `svd_project`, `gaussian_project`.
 2D neighbors are **Euclidean**, not coordinate cosine (the origin is arbitrary). Trustworthiness
 penalizes false low-D neighbors by their high-D ranks; continuity penalizes lost high-D neighbors.
 These and Top10 overlap diagnose projection fidelity, not algorithm clusters or learner benefit.
@@ -167,8 +167,8 @@ checked against their receipts. No encoder fitting or quarantined legacy-vector 
 | SVD 256 / 128 / 64 | .957356 / .799221 / .611743 | .973875 / .842763 / .681335 |
 | Gaussian RP 256 / 128 / 64, seed 17 | Not in this title ablation | .598376 / .467445 / .324066 |
 
-Receipts: [title reduction](../research/unified_map/reduction-receipt.v2.json),
-[statement compression](../research/algorithm_system/compression.v1.json).
+Receipts: [title reduction](../../research/unified_map/reduction-receipt.v2.json),
+[statement compression](../../research/algorithm_system/compression.v1.json).
 Columns are different corpora/protocols: do not rank one corpus against the other.
 
 For all-node 2D maps (24,297 titles), recomputed means of saved per-node neighbor-intersection
@@ -183,12 +183,12 @@ These are all-platform Top10 overlaps, not the separate 3,000-node stratified cr
 ablation in `reduction-receipt.v2.json`. Raw legacy 1,536D timing/geometry receipts were inspected
 only; their underlying quarantined vectors were not reprocessed and their latency was not rerun.
 
-Recounted [labels.v1.jsonl](../research/full_catalog/labels.v1.jsonl): **3,647** records = 2,886
+Recounted [labels.v1.jsonl](../../research/full_catalog/labels.v1.jsonl): **3,647** records = 2,886
 judged + 761 abstentions; grades 2/3 give **44 positives**. The reported label sparsity therefore
 is real. Evaluation uses positives `grade>=2`, observed precision `positive/judged`, and bounds
 `[positive/all_slots, (positive+unknown)/all_slots]`. Conditional nDCG removes unknowns before
 ranking a shared judged-target intersection, with gain `2^grade−1` and `log2(rank+1)` discount;
-it is not full-catalog nDCG. See [evaluate.py](../research/algorithm_system/evaluate.py) L142–149,245–300.
+it is not full-catalog nDCG. See [evaluate.py](../../research/algorithm_system/evaluate.py) L142–149,245–300.
 
 Rehashed the language evaluation and reapplied `select_representation.decide`: winner **C2**,
 consistency gain **.4899833055** over C0. Receipt values .505676 vs .015693 reproduce that gain;

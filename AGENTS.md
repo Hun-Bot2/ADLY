@@ -171,7 +171,7 @@ Algorithm RAG Engine began (2026-01) as a batch pipeline that recommended Englis
 study notes (OpenAI embeddings, NumPy index, GPT-4o-mini reasons, Slack). Baekjoon shut down and the pipeline, its Docker
 files, workflows and evaluation scripts were removed on 2026-10-18; the last state is the git tag `legacy-pipeline-final`
 (`git checkout legacy-pipeline-final -- <path>` restores any file). The repository is now the local-first mastery system plus
-research (see "Current direction" at the end). Historical docs (`README.md` lower half, `STAR.md`, `specs/production-recommender/`)
+research (see "Current direction" at the end). Historical docs (`specs/production-recommender/`, `specs/recommendation-engine-audit/`; the old README pipeline section and `STAR.md` were removed 2026-11-03 and stay in git history)
 describe the removed pipeline.
 
 ## Strict Architectural Constraints
@@ -909,4 +909,4 @@ Keep these distinctions clear in summaries and docs:
 
 - `screenshots/*.png` (1440x900) come only from authored fixtures: desktop/redesign-browser-smoke.mjs, desktop/start-panel-smoke.mjs,
   desktop/ide-browser-smoke.mjs, and a fresh empty learner DB with authored contests for contests.png. Never capture the real learner
-  DB or a copy of it. Refresh them after visible UI changes and keep ReadME.md's descriptions in step.
+  DB or a copy of it. Refresh them after visible UI changes and keep README.md's descriptions in step.

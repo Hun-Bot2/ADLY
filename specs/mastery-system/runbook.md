@@ -144,7 +144,7 @@ their actual KST date. Hosted/Worker discovery remains unavailable unless explic
 Fit labels are conditional opening-problem practice goals based on existing platform calibration and
 historical native difficulty, with at least six distinct independent practice solves; insufficient data
 stays **판단 근거 부족**. This does not estimate an official rating or assert registration eligibility.
-See `specs/contest-discovery/` and `RECOMMENDATION_ENGINE/` for exact thresholds and evidence.
+See `specs/contest-discovery/` and `specs/recommendation-engine-audit/` for exact thresholds and evidence.
 
 A `markdown_attempt_conflict` after adding a duration to an already-imported daily row preserves the
 original attempt. It is not evidence that Markdown parsing lost the solve. Do not invent a new attempt

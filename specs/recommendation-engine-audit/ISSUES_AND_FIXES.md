@@ -22,7 +22,7 @@ Git baseline and current architecture are in [README](README.md).
 
 ### Research review findings: corrected within their introducing changes
 
-[IMPLEMENTATION-REVIEW.md](../research/unified_map/IMPLEMENTATION-REVIEW.md) records actual
+[IMPLEMENTATION-REVIEW.md](../../research/unified_map/IMPLEMENTATION-REVIEW.md) records actual
 2026-10-17 findings. **`3679a61`** already contains their corrected form; the Git snapshot does
 not independently preserve every earlier broken intermediate, so these are not invented separate
 fix commits:
