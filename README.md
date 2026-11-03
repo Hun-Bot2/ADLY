@@ -30,10 +30,11 @@ xattr -dr com.apple.quarantine /Applications/ALDY.app
    다 풀면 표의 결과 칸에 `1`(해결) 또는 `0`(미해결)을 적습니다.
 
    ```md
-   | 문제 | 결과 | 시간 | 복습 | 메모 |
+   | Problem | Result | Time | Review | Memo |
    | --- | --- | --- | --- | --- |
-   | https://leetcode.com/problems/two-sum/ | 1 | 12m | 0 | 해시맵 |
+   | https://leetcode.com/problems/two-sum/ | 1 | 12m | 0 | hash map |
    ```
+   한국어 머리글(`| 문제 | 결과 | 시간 | 복습 | 메모 |`)도 똑같이 읽습니다.
 4. **Git 패널에서 커밋합니다.** 커밋한 일지가 학습 기록으로 들어가고, 대시보드에 다음 계획과 복습이 나옵니다. Push는 직접 누를 때만 합니다.
 5. **대시보드와 캘린더에서 오늘 할 일을 확인합니다.** 대회 일정, 기업별 문제 목록, 학습 분석도 같은 앱에서 볼 수 있습니다.
 

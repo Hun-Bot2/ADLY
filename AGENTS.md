@@ -910,3 +910,9 @@ Keep these distinctions clear in summaries and docs:
 - `screenshots/*.png` (1440x900) come only from authored fixtures: desktop/redesign-browser-smoke.mjs, desktop/start-panel-smoke.mjs,
   desktop/ide-browser-smoke.mjs, and a fresh empty learner DB with authored contests for contests.png. Never capture the real learner
   DB or a copy of it. Refresh them after visible UI changes and keep README.md's descriptions in step.
+
+## English daily logs (2026-11-03)
+
+- `dailyHeader` in hosted/mastery/daily-log.mjs is the only header matcher: Korean or English names (Problem/Result/Time/Review/Memo,
+  Notes), fixed order, mapped to the Korean canonical names. desktop/backend/dailylog.mjs reuses it; do not add another regex.
+- New repositories and the built-in fallback use the English template; existing Korean templates and logs keep working.

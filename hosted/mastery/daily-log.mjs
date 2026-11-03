@@ -12,6 +12,15 @@ const urlId = input => {
   } catch {}
   return null;
 };
+// Korean or English column names; both map to the Korean canonical names used below (English logs, 2026-11-03).
+const COLUMN_NAMES={'문제':'문제','problem':'문제','결과':'결과','result':'결과','시간':'시간','time':'시간','복습':'복습','review':'복습','메모':'메모','memo':'메모','notes':'메모'};
+export function dailyHeader(line){
+  if(!/^\|.*\|\s*$/.test(line))return null;
+  const names=line.trim().split('|').slice(1,-1).map(x=>COLUMN_NAMES[x.trim().toLowerCase()]??null);
+  if(names.includes(null)||names[0]!=='문제'||names[1]!=='결과'||names.at(-1)!=='메모')return null;
+  const middle=names.slice(2,-1);
+  return ['','시간','복습','시간,복습'].includes(middle.join(','))?names:null;
+}
 export function parseDailyLog(path,source,catalog) {
   const match=dailyPath(path), rows=[], flags=[], review_targets=[];
   if (!match) return {rows,review_targets,flags};
@@ -26,9 +35,9 @@ export function parseDailyLog(path,source,catalog) {
     if(f){if(!fence)fence=f[1][0];else if(fence===f[1][0])fence=null;continue;}
     if(fence)continue;
     if(/^#{1,6}\s/.test(lines[i]))break;
-    if(/^\|\s*문제\s*\|\s*결과\s*\|(?:\s*시간\s*\|)?(?:\s*복습\s*\|)?\s*메모\s*\|\s*$/.test(lines[i])){header=i;break;}
+    if(dailyHeader(lines[i])){header=i;break;}
   }
-  const columns=header<0?[]:lines[header].split('|').slice(1,-1).map(x=>x.trim());
+  const columns=header<0?[]:dailyHeader(lines[header]);
   const timeIndex=columns.indexOf('시간'),reviewIndex=columns.indexOf('복습');
   const separators=(lines[header+1] ?? '').trim().split('|').slice(1,-1);
   if(header<0 || separators.length!==columns.length || !separators.every(x=>/^\s*:?-{3,}:?\s*$/.test(x)))return {rows,review_targets,flags:['daily_invalid_table']};
@@ -67,7 +76,7 @@ export function parseDailyLog(path,source,catalog) {
     }
     seen.set(key,outcome);
     const memo=parts.at(-1);
-    if(reviewIndex>=0?['1','O'].includes(parts[reviewIndex]):/(?:^|\s)#복습(?=$|\s|[,.;!])/.test(memo))review_targets.push({problem_key:key,date});
+    if(reviewIndex>=0?['1','O'].includes(parts[reviewIndex]):/(?:^|\s)#(?:복습|review)(?=$|\s|[,.;!])/i.test(memo))review_targets.push({problem_key:key,date});
     if(outcome==='-' || outcome===''){flags.push(`daily_outcome_unrecorded:${at}`);continue;}
     rows.push({date,line:i+1,raw:lines[i],metadata:{problem_key:key,attempt:`daily-${date}`,outcome:outcome==='1'?'reported_completion':outcome==='O'?'independent':'failed',hints:outcome==='O'?false:null,self_minutes:minutes,...(seconds!==null?{self_seconds:seconds}:{}),activity_type:'practice',transfer_from:null}});
   }

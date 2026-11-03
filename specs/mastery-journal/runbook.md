@@ -218,3 +218,9 @@ PROGRESSION_VERSION=v1 node hosted/local.mjs     # 로컬 화면도 이전 정�
 정정했지만 기존 `isr` JSON 키와 통계 계산은 호환성을 위해 유지합니다. 주간 복습/보정 통계는 기존 정의이며 v2 성능 검증이 아닙니다.
 
 검증 기록: `specs/adaptive-progression/validation.md`. 실제 학습자 DB는 테스트에 사용하지 않았습니다.
+
+## English column names (2026-11-03)
+
+Daily tables may use `| Problem | Result | Time | Review | Memo |` (case-insensitive; `Notes` is accepted for `Memo`) instead of the
+Korean names. Order and optional columns are the same: Problem, Result, [Time], [Review], Memo. A `#review` memo tag works like `#복습`.
+New repositories created by the desktop app get the English template.

@@ -182,3 +182,14 @@ test('Git seconds persist exactly and equivalent unit edits do not duplicate att
  commit('leetcode/26-10-23.md',body('1m'));const r=await ingest();assert.equal(r.observed,0);assert.deepEqual(r.flags,{});
  commit('leetcode/26-10-23.md',body('61s'));assert.ok(Object.values((await ingest()).flags).flat().includes('markdown_attempt_conflict:leetcode:two-sum'));
 });
+
+test('English daily-log headers parse like the Korean ones', () => {
+  const source='# 2026-11-03\n\n| Problem | Result | Time | Review | Memo |\n| --- | --- | --- | --- | --- |\n| https://leetcode.com/problems/two-sum/ | 1 | 12m | 1 | hash map |\n| Other | 0 | | 0 | retry #review |\n';
+  const parsed=parseDailyLog('leetcode/26-11-03.md',source,catalog);
+  assert.deepEqual(parsed.flags,[]);
+  assert.deepEqual(parsed.rows.map(r=>[r.metadata.problem_key,r.metadata.outcome,r.metadata.self_minutes]),[['leetcode:two-sum','reported_completion',12],['leetcode:other','failed',null]]);
+  assert.deepEqual(parsed.review_targets.map(t=>t.problem_key),['leetcode:two-sum']);
+  const memoOnly='# 2026-11-03\n\n| problem | result | notes |\n| --- | --- | --- |\n| Other | 0 | retry #review |\n';
+  assert.deepEqual(parseDailyLog('leetcode/26-11-03.md',memoOnly,catalog).review_targets.map(t=>t.problem_key),['leetcode:other']);
+  assert.deepEqual(parseDailyLog('leetcode/26-11-03.md','# 2026-11-03\n\n| Problem | Memo | Result |\n| --- | --- | --- |\n| Other | x | 1 |\n',catalog).flags,['daily_invalid_table']);
+});
