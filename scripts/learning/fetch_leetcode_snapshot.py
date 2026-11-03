@@ -19,6 +19,9 @@ import urllib.request
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = ROOT / "private-learning" / "leetcode-snapshots" / "v2"
+# The 2026-01 snapshot (asset-pinned, read only). Its statements are reused so only new problems are requested.
+OLD_SNAPSHOT = ROOT / "data" / "raw" / "leetcode_raw_data.jsonl"
+OLD_SOURCE = "snapshot-2026-01"
 ENDPOINT = "https://leetcode.com/graphql"
 USER_AGENT = "AlgorithmRAGEngine-research/1.0 (private snapshot)"
 MIN_GAP = 2.0
@@ -114,8 +117,19 @@ def fetch_list(out, post=http_post, sleep=time.sleep, gap=MIN_GAP):
     return receipt
 
 
-def fetch_content(out, post=http_post, sleep=time.sleep, gap=MIN_GAP, limit=None, log=print):
-    """Phase 2: one statement per free problem. Resumable; an error row is retried on the next run."""
+def load_old_statements(path):
+    """slug -> statement from the 2026-01 snapshot. Read only; the file itself is never modified."""
+    if path is None or not Path(path).exists():
+        return {}
+    return {r["titleSlug"]: r["content"] for r in read_jsonl(Path(path)) if r.get("titleSlug") and r.get("content")}
+
+
+def fetch_content(out, post=http_post, sleep=time.sleep, gap=MIN_GAP, limit=None, log=print, reuse=None):
+    """Phase 2: one statement per free problem. Resumable; an error row is retried on the next run.
+
+    With `reuse` (the 2026-01 snapshot), problems already there are copied without a request (source snapshot-2026-01);
+    only problems added since then are fetched (source live)."""
+    old = load_old_statements(reuse)
     problems = read_jsonl(out / "problems.jsonl")
     if not problems:
         raise FileNotFoundError("run the list phase first")
@@ -124,19 +138,24 @@ def fetch_content(out, post=http_post, sleep=time.sleep, gap=MIN_GAP, limit=None
     for row in read_jsonl(target):
         done[row["slug"]] = row
     stored = {slug for slug, row in done.items() if row["reason"] in ("ok", "paid_only", "not_found")}
-    started, requests, written, errors, consecutive = now_iso(), 0, 0, 0, 0
+    started, requests, written, errors, consecutive, reused = now_iso(), 0, 0, 0, 0, 0
     stopped = None
     for problem in problems:
         slug = problem["slug"]
         if slug in stored:
             continue
-        if limit is not None and requests >= limit:
-            break
         base = {"slug": slug, "frontend_id": problem["frontend_id"]}
+        if slug in old:
+            append_jsonl(target, {**base, "content": old[slug], "reason": "ok", "source": OLD_SOURCE, "fetched_at": None})
+            written += 1
+            reused += 1
+            continue
         if problem["paid_only"]:
-            append_jsonl(target, {**base, "content": None, "reason": "paid_only", "fetched_at": None})
+            append_jsonl(target, {**base, "content": None, "reason": "paid_only", "source": "list", "fetched_at": None})
             written += 1
             continue
+        if limit is not None and requests >= limit:
+            break
         if requests:
             sleep(gap)
         requests += 1
@@ -153,7 +172,7 @@ def fetch_content(out, post=http_post, sleep=time.sleep, gap=MIN_GAP, limit=None
             row = {**base, "content": None, "reason": "error", "error": str(error)[:200]}
             errors += 1
             consecutive += 1
-        append_jsonl(target, {**row, "fetched_at": now_iso()})
+        append_jsonl(target, {**row, "source": "live", "fetched_at": now_iso()})
         written += 1
         if requests % 50 == 0:
             log(f"{requests} requests, {errors} errors, last {slug}")
@@ -167,7 +186,12 @@ def fetch_content(out, post=http_post, sleep=time.sleep, gap=MIN_GAP, limit=None
     for row in latest.values():
         counts[row["reason"]] = counts.get(row["reason"], 0) + 1
     remaining = sum(1 for p in problems if latest.get(p["slug"], {}).get("reason") not in ("ok", "paid_only", "not_found"))
+    sources = {}
+    for row in latest.values():
+        if row["reason"] == "ok":
+            sources[row.get("source", "live")] = sources.get(row.get("source", "live"), 0) + 1
     receipt = {"phase": "content", "started_at": started, "finished_at": now_iso(), "requests": requests, "rows_written": written,
+               "reused_this_run": reused, "ok_by_source": dict(sorted(sources.items())),
                "errors_this_run": errors, "by_reason": dict(sorted(counts.items())), "remaining": remaining, "stopped": stopped,
                "gap_seconds": gap, "sha256": sha256(target)}
     write_receipt(out, "content", receipt)
@@ -181,6 +205,7 @@ def main(argv=None):
     parser.add_argument("--gap", type=float, default=MIN_GAP, help="seconds between requests (minimum 2)")
     parser.add_argument("--limit", type=int, default=None, help="content phase: fetch at most N statements, then stop")
     parser.add_argument("--dry-run", action="store_true", help="print what would be requested and exit")
+    parser.add_argument("--no-reuse", action="store_true", help="fetch every statement again instead of reusing the 2026-01 snapshot")
     args = parser.parse_args(argv)
     if args.gap < MIN_GAP:
         raise ValueError(f"--gap must be at least {MIN_GAP} seconds")
@@ -190,13 +215,17 @@ def main(argv=None):
     if args.dry_run:
         problems = read_jsonl(out / "problems.jsonl")
         stored = {r["slug"] for r in read_jsonl(out / "statements.jsonl") if r["reason"] in ("ok", "paid_only", "not_found")}
-        todo = [p for p in problems if p["slug"] not in stored and not p["paid_only"]]
+        old = {} if args.no_reuse else load_old_statements(OLD_SNAPSHOT)
+        pending = [p for p in problems if p["slug"] not in stored]
+        reusable = [p for p in pending if p["slug"] in old]
+        todo = [p for p in pending if p["slug"] not in old and not p["paid_only"]]
         print(f"{args.phase}: output {out}")
-        print(f"list: {'present' if problems else 'missing'} ({len(problems)} rows); statements still to fetch: {len(todo)}")
+        print(f"list: {'present' if problems else 'missing'} ({len(problems)} rows); reused from 2026-01: {len(reusable)}; to fetch: {len(todo)}")
         print(f"estimated time at {args.gap}s per request: {len(todo) * args.gap / 60:.0f} min")
         return 0
     out.mkdir(parents=True, exist_ok=True, mode=0o700)
-    receipt = fetch_list(out, gap=args.gap) if args.phase == "list" else fetch_content(out, gap=args.gap, limit=args.limit)
+    reuse = None if args.no_reuse else OLD_SNAPSHOT
+    receipt = fetch_list(out, gap=args.gap) if args.phase == "list" else fetch_content(out, gap=args.gap, limit=args.limit, reuse=reuse)
     print(json.dumps(receipt, indent=2, sort_keys=True))
     return 1 if receipt.get("stopped") else 0
 

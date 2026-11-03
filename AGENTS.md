@@ -969,3 +969,5 @@ Keep these distinctions clear in summaries and docs:
   run it. Output is `private-learning/leetcode-snapshots/v2/`; the asset-pinned `data/raw/leetcode_raw_data.jsonl` is never modified
   and the script refuses to write under `data/`. Gap >= 2 s, resumable, paid-only rows recorded without a request.
 - Title representations (R2) are research only; app matching and recommendation still never use title embeddings.
+- By default the content phase reuses 2026-01 statements (source `snapshot-2026-01`) and requests only newer problems (`live`).
+  Codeforces 800-1100/1200-1500/1600+ = Easy/Medium/Hard is a provisional research band (D-6), never a label.

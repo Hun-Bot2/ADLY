@@ -11,8 +11,13 @@ Status: accepted by the user (2026-11-03). Private research only; nothing here c
 - D-3 Representations: R0 tags only (baseline; no random baseline), R1 tags + difficulty, R2 tags + title, R3 tags + statement,
   R4 tags + difficulty + statement. Title use is research only (memory: no title embeddings in matching or recommendation).
 - D-4 Order: snapshot refresh, then study 2 (within LeetCode), then study 1 (cross-platform).
-- D-5 Study 1 waits for the user: a tag-name mapping across platforms, whether AtCoder (mostly untagged) is compared at all, and how
-  Codeforces ratings map to Easy/Medium/Hard. Nothing is guessed before the user's answer.
+- D-5 Study 1 waits for the user: a tag-name mapping across platforms and whether AtCoder (mostly untagged) is compared at all.
+  Nothing is guessed before the user's answer.
+- D-6 (user, 2026-11-03) Provisional difficulty bands for cross-platform comparison: Codeforces problem rating 800-1100 = Easy,
+  1200-1500 = Medium, 1600+ = Hard. Source: community estimate the user supplied, not an official conversion. It is used only to
+  place problems on the same axis in research maps; it is never a training label, and LeetCode difficulty stays categorical while
+  Codeforces rating stays continuous.
+- D-7 (user, 2026-11-03) Statements already in the 2026-01 snapshot are reused; only problems added since then are requested.
 
 ## Snapshot (step 0)
 
@@ -23,7 +28,10 @@ Status: accepted by the user (2026-11-03). Private research only; nothing here c
 - LS-3 The fetch SHALL be resumable and idempotent: a rerun skips slugs already stored, and an interrupted run loses at most the
   request in flight. Rows are appended (JSONL) and never rewritten.
 - LS-4 Paid-only problems, missing content and request errors SHALL be recorded as such (`content: null` with a reason), never
-  filled from another source or the old snapshot.
+  filled from another source.
+- LS-4a (D-7) A problem whose slug has a statement in the 2026-01 snapshot SHALL be copied from it without a request and marked
+  `source: snapshot-2026-01`; fetched rows are marked `source: live`. The old file is read only. `--no-reuse` fetches everything.
+  Reused statements may be older than the live page (edits since 2026-01 are not detected).
 - LS-5 Each phase SHALL write a receipt (counts, sha256 of outputs, start/end time, errors) next to the data. Outputs and receipts
   stay private; only aggregate counts may be quoted in committed reports.
 - LS-6 The fetcher SHALL send no credentials or cookies and SHALL stop after a bounded number of consecutive errors.

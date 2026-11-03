@@ -16,7 +16,8 @@ phase content  POST https://leetcode.com/graphql  question(titleSlug)           
   included) and print how to resume.
 - No cookies, no login, fixed User-Agent naming the project. Paid-only rows are written with `reason: "paid_only"` without a request.
 - `--limit N` fetches only N statements (a quick first check). `--dry-run` prints what would be requested and exits.
-- The old snapshot is read only to report overlap counts (rows added/removed since 2026-01), never copied.
+- Reuse (D-7): statements of slugs present in `data/raw/leetcode_raw_data.jsonl` are copied (source `snapshot-2026-01`, no request);
+  only new slugs are fetched (source `live`). The receipt reports `ok_by_source`. A renamed slug counts as new and is fetched.
 
 ## Representations (study 2)
 

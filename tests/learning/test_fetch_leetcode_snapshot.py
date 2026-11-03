@@ -95,6 +95,25 @@ class FetchSnapshotTest(unittest.TestCase):
         self.assertEqual(one['by_reason']['error'], 1)
         self.assertEqual(one['remaining'], 1)
 
+    def test_reuse_copies_2026_01_statements_and_fetches_only_new_problems(self):
+        fetcher.fetch_list(self.out, post=FakeLeetCode(), sleep=lambda s: None)
+        old = self.out / 'old.jsonl'
+        # 1-100 existed in the old snapshot (authored text); 50 is paid now but was stored then; 101-150 are new.
+        old.write_text(''.join(json.dumps({'id': str(i), 'titleSlug': f'authored-{i}', 'title': '', 'difficulty': 'Easy', 'tags': [],
+                                           'content': f'<p>old {i}</p>'}) + '\n' for i in range(1, 101)))
+        before = old.read_bytes()
+        fake = FakeLeetCode()
+        receipt = fetcher.fetch_content(self.out, post=fake, sleep=lambda s: None, log=lambda m: None, reuse=old)
+        requested = [p['variables']['titleSlug'] for p in fake.payloads]
+        self.assertEqual(requested, [f'authored-{i}' for i in range(101, 151) if i % 50 != 0], 'only problems added since the old snapshot')
+        self.assertEqual(receipt['reused_this_run'], 100)
+        self.assertEqual(receipt['ok_by_source'], {'live': 49, 'snapshot-2026-01': 100})
+        self.assertEqual(receipt['remaining'], 0)
+        latest = {r['slug']: r for r in rows(self.out / 'statements.jsonl')}
+        self.assertEqual(latest['authored-1']['content'], '<p>old 1</p>')
+        self.assertEqual(latest['authored-120']['source'], 'live')
+        self.assertEqual(old.read_bytes(), before, 'the old snapshot is read only')
+
     def test_cli_guards(self):
         with self.assertRaises(ValueError):
             fetcher.main(['content', '--gap', '0.5', '--output', str(self.out)])
