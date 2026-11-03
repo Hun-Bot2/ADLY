@@ -56,7 +56,7 @@ The existing `providers.mjs` importer stays for compatibility; its `submissionEv
 1. Group submissions by (problem_key, KST date of submitted_at).
 2. Drop a group if a `platform_import` event carries the same platform id (SC-10).
 3. If a daily-log attempt exists for the same problem-day: emit one attempt with the log's id, user fields and time; outcome from the
-   platform group; flag `outcome_conflict` when they differ (SC-9). Otherwise emit a submission attempt
+   platform group (SC-9, no conflict flag). Otherwise emit a submission attempt
    (`evidence_source = 'platform_submission'`, `self_minutes = null`).
 4. Attempt carries `submissions`, `failed_before_accept`, `first_submitted_at`, `accepted_at` as extra read-only fields; policy v2 may
    ignore them until an ADR changes it.
@@ -75,13 +75,10 @@ ledger change. No change to core/policy.mjs, calibration.mjs or progression.mjs.
 
 ## Open decisions
 
-- **D-1** Write synced problem-days into the Markdown log? Recommendation: yes for today's and future syncs (review/memo stay in one
-  editable place), no rewriting of past logs; backfill stays database-only.
-- **D-2** On disagreement between a typed result and the platform verdict, platform wins and a flag is shown. Recommendation: yes.
-- **D-3** Codeforces `includeSources` for own code: out of v1; needs separate verification of access conditions.
+Decided 2026-11-03: **D-1** yes, auto-append to the date's log (SC-12; backfill after a count confirmation). **D-2** platform verdict,
+no conflict flag. **D-3** no code in v1; the guide tells users to paste code (SC-17). LeetCode reacts to Submit only (SC-16).
 
 ## Validation
 
 Migration test (fresh and upgraded DB, VACUUM INTO snapshot path unchanged), validator tests per field, normalizer fixtures per
-platform, projection tests (no-submission identity, log+submission dedupe, import dedupe, WA×5→AC sequence preserved, conflict
-flag), idempotent re-sync, interrupted backfill resume, and the existing Node suite unchanged.
+platform, projection tests (no-submission identity, log+submission dedupe, import dedupe, WA×5→AC sequence preserved), idempotent re-sync, interrupted backfill resume, and the existing Node suite unchanged.

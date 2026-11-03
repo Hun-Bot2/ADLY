@@ -37,17 +37,19 @@ Status: draft for review (2026-11-03). Plan order agreed with the user:
 - SC-8 The engine SHALL keep reading one attempt per problem per KST date. A problem-day with submissions SHALL project to: solved if
   any submission that day is `accepted`, else failed; plus counts `submissions`, `failed_before_accept`, first/last submitted-at.
 - SC-9 WHEN a daily-log row and submissions exist for the same problem-day THE SYSTEM SHALL produce one attempt, not two. The log keeps
-  the user fields (review flag, memo, self-reported time); the outcome follows the platform verdict and a disagreement SHALL be
-  flagged, not silently resolved. **D-2:** confirm platform verdict wins over a typed result.
+  the user fields (review flag, memo, self-reported time); the outcome follows the platform verdict. No conflict flag is needed
+  (D-2 decided 2026-11-03: the user does not record false results).
 - SC-10 Existing `platform_import` events SHALL be treated as the same submission as a submission row with the same platform id
   (no double count).
 - SC-11 WHEN no submission rows exist THE SYSTEM SHALL produce exactly the current attempt stream (existing logs, tests, Today and
   recommendations unchanged).
 
 ### Markdown log
-- SC-12 **D-1:** whether synced submissions also append a row to the day's Markdown log (visible and editable review/memo) or stay in
-  the database only. If written, the row SHALL use the existing table format with the result filled from the platform, and SC-9 dedupe
-  SHALL prevent the later Git ingestion from double counting.
+- SC-12 (D-1 decided 2026-11-03: yes) Synced problem-days SHALL be appended automatically to the Markdown log of their KST date
+  (`<platform>/YY-MM-DD.md`, created from the template if missing), one row per problem-day, result filled from the platform, review
+  `0`, time only when SC-5 has a value, memo empty. A problem already in that day's table SHALL NOT get a second row. Existing rows
+  SHALL NOT be edited. SC-9 dedupe SHALL prevent the later Git ingestion from double counting. Large backfills SHALL show the number
+  of files/rows first and write only after the user confirms. Commits stay explicit (Git panel).
 
 ### Sync state
 - SC-13 Each source SHALL keep an append-only sync mark (cursor, status, count, error) so an interrupted backfill resumes and an
@@ -58,3 +60,8 @@ Status: draft for review (2026-11-03). Plan order agreed with the user:
 ### ML readiness
 - SC-15 The stored fields SHALL be sufficient to rebuild, per learner, an ordered sequence of (problem, concepts, difficulty,
   verdict, attempt index, timestamps, time fields with source/confidence), with schema_version on every row.
+
+### Platform rules and code (decided 2026-11-03)
+- SC-16 LeetCode capture (step 3) SHALL react only to a final **Submit** result, never to **Run**/custom-test results.
+- SC-17 (D-3) Source code is not collected in v1. The user guide SHALL tell users to paste their final code into the day's log
+  under the problem's section if they want to keep it.
